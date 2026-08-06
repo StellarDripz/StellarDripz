@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rateLimiter";
-import { createSession, validateSession } from "@/lib/server/sessionManager";
+import { createSession } from "@/lib/server/sessionManager";
 
 export async function POST(request: NextRequest) {
   // Rate limit
