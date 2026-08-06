@@ -651,3 +651,5 @@ For rate-limited, logged, and validated operations:
 **Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
 
 
+
+## 🤝 Contributing Guidelines
