@@ -171,3 +171,4 @@ jobs:
           NEXT_PUBLIC_SOROBAN_RPC_URL: ${{ vars.NEXT_PUBLIC_SOROBAN_RPC_URL }}
           NEXT_PUBLIC_HORIZON_URL: ${{ vars.NEXT_PUBLIC_HORIZON_URL }}
           NEXT_PUBLIC_STELLAR_NETWORK: ${{ vars.NEXT_PUBLIC_STELLAR_NETWORK }}
+# CI/CD pipeline: contracts → tests → lint → build → deploy
