@@ -9,11 +9,20 @@ const nextConfig = {
         ...config.resolve.fallback,
         sodium: false,
         'sodium-native': false,
+        'require-addon': false,
+        'fs': false,
+        'path': false,
+        'crypto': false,
       };
     }
-    // Suppress require-addon warnings from stellar-sdk
+    // Suppress webpack warnings from Stellar SDK native addon detection
     config.module = config.module || {};
     config.module.exprContextCritical = false;
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      { module: /require-addon/ },
+      { module: /sodium-native/ },
+    ];
     return config;
   },
 };
