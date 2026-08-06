@@ -662,3 +662,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 | Event poll | ~60 | ~130 |
 
 ### 🔒 Security Considerations
+- All writes go through rate-limited API proxy
