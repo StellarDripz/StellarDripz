@@ -650,12 +650,6 @@ For rate-limited, logged, and validated operations:
 
 **Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
 
-### 🔒 Security Considerations
-- All writes go through rate-limited API proxy
-- Wallet signing occurs client-side only
-- No private keys stored server-side
-- Environment variables validated at startup
-
 ### 🚦 Rate Limiting Strategy
 | Endpoint | Window | Max Requests |
 |----------|--------|--------------|
