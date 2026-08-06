@@ -174,6 +174,11 @@ export function getActiveSessions(): SessionEntry[] {
 
 // ---- Cleanup ----
 
+/** Clear all database data (for testing). */
+export function clearDb(): void {
+  writeDb(getEmptyDb());
+}
+
 export function runPeriodicCleanup(): void {
   const db = readDb();
   const now = Date.now();
