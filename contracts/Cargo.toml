@@ -7,11 +7,11 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-soroban-sdk = "22.0.0"
+soroban-sdk = "27.0.4"
 ed25519-dalek = "=2.2.0"  # Pin to 2.2.0 to resolve rand_core version conflict in soroban-env-host testutils
 
 [dev-dependencies]
-soroban-sdk = { version = "22.0.0", features = ["testutils"] }
+soroban-sdk = { version = "27.0.4", features = ["testutils"] }
 
 [profile.release]
 opt-level = "z"
