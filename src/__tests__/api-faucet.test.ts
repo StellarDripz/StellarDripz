@@ -1,4 +1,9 @@
 /**
+ * Test isolation: each test suite uses jest.mock for external dependencies.
+ * API route tests mock next/server to avoid "Request is not defined" in jsdom.
+ * All mocks are cleared between tests via beforeEach jest.clearAllMocks().
+ */
+/**
  * Tests for POST /api/faucet/fund route.
  */
 
