@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, IntoVal, String, Symbol, symbol_short};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
 use crate::common::storage as s;
 use crate::common::events as e;
 
@@ -46,7 +46,7 @@ impl DripBadge {
         s::set_persistent(&env, &s::KEY_ADMIN, &admin);
         s::set_persistent(&env, &KEY_BADGE_COUNT, &0u64);
 
-        e::publish(&env, (symbol_short!("badge_init"), &admin), 0u64);
+        e::publish(&env, (symbol_short!("bdg_init"), &admin), 0u64);
     }
 
     /// Create a new badge definition. Only admin.
@@ -82,7 +82,7 @@ impl DripBadge {
         let key = (KEY_BADGE, count);
         env.storage().persistent().set(&key, &badge);
 
-        e::publish(&env, (symbol_short!("badge_create"), &admin, count), name);
+        e::publish(&env, (symbol_short!("bdg_creat"), &admin, count), name);
         count
     }
 
