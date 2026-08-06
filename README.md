@@ -293,3 +293,36 @@ MIT — feel free to use, modify, and distribute.
 ---
 
 **Built with 💧 for the Stellar developer community.**
+
+### 📁 Final Project Structure
+
+```
+src/
+├── app/
+│   ├── page.tsx                    # Main faucet UI
+│   ├── admin/page.tsx              # Analytics dashboard
+│   └── api/
+│       ├── fund/route.ts           # Rate-limited faucet endpoint
+│       ├── batch/route.ts          # Batch funding endpoint (max 10)
+│       └── status/route.ts         # Network health check (Horizon/Soroban/Friendbot)
+├── components/
+│   ├── WalletConnect.tsx           # Multi-wallet selector (Freighter/xBull/Albedo/LOBSTR/Rabet)
+│   ├── BalanceCard.tsx             # Multi-asset balance display
+│   ├── TransactionFeedback.tsx      # Live tx status (pending/success/error)
+│   ├── CooldownTimer.tsx           # Rate-limit countdown UI
+│   ├── QRFundModal.tsx             # Cross-device QR funding
+│   └── SorobanDemo.tsx            # Sample contract interaction (counter + greeting)
+├── lib/
+│   ├── stellar/
+│   │   ├── horizon.ts              # Balance fetch + sendPayment + faucet
+│   │   ├── soroban.ts             # Contract simulate/call/events
+│   │   └── network.ts             # Testnet config and passphrase
+│   ├── wallets/
+│   │   ├── freighter.ts           # Freighter connect/sign/detect
+│   │   └── walletKit.ts           # Multi-wallet abstraction layer
+│   ├── rateLimiter.ts             # Per-address faucet cooldown (60s)
+│   └── db.ts                      # Analytics tracking (localStorage → Supabase-ready)
+├── types/
+│   └── stellar.d.ts               # All TypeScript types (wallet, tx, contract, analytics)
+└── services/                       # Re-export shims → lib/ (backwards-compatible)
+```
