@@ -68,3 +68,4 @@ export async function detectFreighterNetwork(): Promise<NetworkType> {
     return "UNKNOWN";
   }
 }
+// Freighter → Stellar wallet browser extension with first-class support
