@@ -115,3 +115,4 @@ describe("POST /api/faucet/fund", () => {
     expect(res.status).toBe(500);
   });
 });
+// Edge case: handles empty address string gracefully
