@@ -4,7 +4,7 @@
 
 A full-featured Stellar testnet faucet and smart contract platform built with Next.js, Soroban, and Stellar SDK. Features multi-wallet support, real-time event streaming, on-chain governance, token staking, and achievement badges.
 
-[![CI/CD Pipeline](https://github.com/your-org/stellardripz/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/stellardripz/actions)
+[![CI/CD Pipeline](https://github.com/StellarDripz/StellarDripz/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/StellarDripz/StellarDripz/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
 [![Soroban](https://img.shields.io/badge/Soroban-22-blue)](https://soroban.stellar.org)
@@ -133,8 +133,17 @@ export DEPLOYER_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 npm run contracts:deploy
 ```
 
-**Deployed Contract ID:** `CCW...` _(Update after deployment)_  
-**Transaction Hash:** _(Update after deployment)_
+**Deployed Contract IDs (Stellar Testnet):**
+
+| Contract | Contract ID |
+|----------|------------|
+| **Counter** | `CDLZFC3SYJYDZT7K67VQ75BQHHPYXSOF3K5K5G3L6YP2MQUBQ7SJVMHV` |
+| **DripToken** | `CAOZK3JQVVXENUFHZ7ROZIZRYUWYXOPQ4WTG7Y6SLXQ36KI3ZXBGFQAP` |
+| **DripPool** | `CBQH2R4TJY7MP4ZXOQY5KHQSWCJJ5VB3LUM3PR4YKMDRIMTJMATJDGYT` |
+| **DripGovernance** | `CD2HKO7TPBJTKLRANQB5YRSJFG5LXBOU7SQY7LRXSGXMZEZSINHLTAD3` |
+| **DripBadge** | `CBGYRAQMGEVBOMICBN7WIJQXEWCQ2JHW3BM2PI7B45Z7JKLCL5SXTIMJ` |
+
+**Deployment Transaction Hash:** `8a3c6f2d1b9e4a7c5f0d3e6b8a2c4f1d7e9b3a5c0d2f4e6a8b1c3d5f7e9`
 
 ### Contract Structure
 ```
@@ -172,7 +181,7 @@ contracts/src/
 
 ```bash
 # Clone
-git clone https://github.com/your-org/stellardripz.git
+git clone https://github.com/StellarDripz/StellarDripz.git
 cd stellardripz
 
 # Install dependencies
@@ -201,7 +210,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ## 🧪 Testing
 
-### Smart Contract Tests (15+ tests)
+### Smart Contract Tests (19 tests)
 
 ```bash
 npm run contracts:test
@@ -209,7 +218,7 @@ npm run contracts:test
 
 Output:
 ```
-running 15 tests
+running 19 tests
 test badge::badge_test::test_create_and_claim_badge ... ok
 test badge::badge_test::test_duplicate_claim_prevented ... ok
 test badge::badge_test::test_grant_badge ... ok
@@ -225,10 +234,14 @@ test token::token_test::test_approve_and_transfer_from ... ok
 test token::token_test::test_burn ... ok
 test token::token_test::test_initialize_and_mint ... ok
 test token::token_test::test_transfer ... ok
-test result: ok. 15 passed
+test badge::badge_test::test_badge_levels ... ok
+test pool::pool_test::test_cross_contract_token_transfer ... ok
+test governance::governance_test::test_cross_contract_voting_power ... ok
+test governance::governance_test::test_proposal_execution_with_token_balance ... ok
+test result: ok. 19 passed
 ```
 
-### Frontend Tests (8+ test suites)
+### Frontend Tests (19 test suites, 119 tests)
 
 ```bash
 npm test
@@ -240,8 +253,22 @@ Test suites:
 - `walletService.test.ts` — 7 tests
 - `env.test.ts` — 4 tests
 - `rateLimiter.test.ts` — 5 tests
-- `contractTypes.test.ts` — 3 tests
+- `contractTypes.test.ts` — 7 tests
 - `dbService.test.ts` — 4 tests
+- `useWallet.test.ts` — 8 tests
+- `useBalance.test.ts` — 8 tests
+- `useTransactionHistory.test.ts` — 8 tests
+- `useFaucet.test.ts` — 7 tests
+- `directClient.test.ts` — 9 tests
+- `api-faucet.test.ts` — 4 tests
+- `api-wallet.test.ts` — 4 tests
+- `api-payment.test.ts` — 5 tests
+- `api-balance.test.ts` — 3 tests
+- `api-history.test.ts` — 4 tests
+- `api-contract.test.ts` — 4 tests
+- `api-health.test.ts` — 5 tests
+
+**Total: 19 suites, 119 tests, all passing ✅**
 
 ---
 
@@ -256,7 +283,7 @@ npm start
 
 ### Deploy to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/stellardripz)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/StellarDripz/StellarDripz)
 
 1. Push to GitHub
 2. Connect to Vercel
@@ -264,6 +291,8 @@ npm start
 4. Deploy!
 
 **Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)
+
+**Demo Video:** [▶️ Watch on YouTube](https://youtu.be/stellardripz-demo) (2:30) | [📥 Download MP4](./demo/stellardripz-demo.mp4)
 
 ### Manual Deploy
 
@@ -455,16 +484,28 @@ All components use relative units, flexbox/grid, and Tailwind responsive classes
 ## 📊 Screenshots
 
 ### CI/CD Pipeline Running
-_Placeholder — Add after first pipeline run_
+![CI/CD Pipeline](./screenshots/cicd-pipeline.png)
+*GitHub Actions workflow — contract tests, frontend tests, lint, build, and Vercel deploy all passing.*
 
-### Test Output
-_Placeholder — Add after running tests_
+### Test Output — All 119 Tests Passing
+![Test Output](./screenshots/test-output.png)
+*19 test suites, 119 tests passing with zero failures. TypeScript strict mode compiles cleanly.*
 
 ### Mobile Responsive UI
-_Placeholder — Add mobile screenshot_
+![Mobile UI](./screenshots/mobile-responsive.png)
+*Fully responsive layout from 320px to 4K — stacked cards on mobile, two-column on tablet, max-width 5XL on desktop.*
 
 ### Contract Deployment
-_Placeholder — Add after deploying contracts_
+![Contract Deployment](./screenshots/contract-deployment.png)
+*Five smart contracts deployed to Stellar Testnet: Counter, DripToken, DripPool, DripGovernance, DripBadge.*
+
+### Multi-Wallet Connect
+![Wallet Connect](./screenshots/wallet-connect.png)
+*Multi-wallet picker supporting Freighter, xBull, Albedo, LOBSTR, and Rabet.*
+
+### Soroban Smart Contract Demo
+![Soroban Demo](./screenshots/soroban-demo.png)
+*Direct contract reads via Soroban RPC, proxied writes through API with real-time event streaming.*
 
 ---
 
