@@ -118,3 +118,4 @@ export function SkeletonPageHero() {
     </div>
   );
 }
+// Skeleton components: mimics card shapes for loading states
