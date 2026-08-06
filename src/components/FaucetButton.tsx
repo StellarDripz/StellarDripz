@@ -9,8 +9,6 @@ export default function FaucetButton() {
   const { wallet, txInProgress, cooldown } = state;
   const prevTxRef = useRef(txInProgress);
 
-  if (!wallet.connected) return null;
-
   const isPending = txInProgress === "pending";
   const isOnMainnet = wallet.network === "MAINNET";
   const isOnCooldown = cooldown ? !cooldown.canRequest : false;
@@ -24,6 +22,8 @@ export default function FaucetButton() {
     }
     prevTxRef.current = txInProgress;
   }, [txInProgress]);
+
+  if (!wallet.connected) return null;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md animate-slide-up">
