@@ -1,0 +1,32 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "StellarDripz",
+    "Dripz",
+    "Stellar",
+    "Soroban",
+    "DripToken",
+    "DripPool",
+    "DripBadge",
+    "DripGovernance",
+    "wasm",
+    "freighter",
+    "nextjs",
+    "tailwindcss",
+    "Vercel",
+    "codegen",
+    "struct",
+    "testutils",
+    "soroban",
+    "stellardripz",
+    "unoptimized"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "contracts/target",
+    "*.lock",
+    "package-lock.json"
+  ]
+}

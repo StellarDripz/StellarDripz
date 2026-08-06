@@ -1,0 +1,30 @@
+# Auto-label rules for PRs
+# See https://github.com/actions/labeler
+
+"contracts":
+  - changed-files:
+      - any-glob-to-any-file: "contracts/**"
+
+"frontend":
+  - changed-files:
+      - any-glob-to-any-file: ["src/**", "app/**", "components/**"]
+
+"documentation":
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.md", "docs/**", "demo/**"]
+
+"ci-cd":
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+"dependencies":
+  - changed-files:
+      - any-glob-to-any-file: ["package.json", "package-lock.json", "contracts/Cargo.toml", "contracts/Cargo.lock"]
+
+"tests":
+  - changed-files:
+      - any-glob-to-any-file: ["**/*.test.ts", "**/*.test.tsx", "contracts/src/test.rs"]
+
+"config":
+  - changed-files:
+      - any-glob-to-any-file: ["*.config.*", "*.json", "tsconfig.json", "tailwind.config.ts"]
