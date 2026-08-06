@@ -660,3 +660,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 | Balance fetch | ~50 | ~120 |
 | Contract simulate | ~80 | ~150 |
 | Event poll | ~60 | ~130 |
+
