@@ -14,3 +14,4 @@ export async function connectAndRegister(
 }
 
 export { signTxLib as signTx };
+
