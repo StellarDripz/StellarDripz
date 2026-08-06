@@ -657,3 +657,4 @@ For rate-limited, logged, and validated operations:
 We welcome contributions! Please follow the conventional commits style and ensure all tests pass before submitting a PR.
 
 ### PR Checklist
+- [ ] All tests pass (`npm test`)
