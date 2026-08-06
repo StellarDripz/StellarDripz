@@ -661,3 +661,4 @@ We welcome contributions! Please follow the conventional commits style and ensur
 - [ ] TypeScript compiles cleanly (`npx tsc --noEmit`)
 - [ ] Contracts build (`npm run contracts:build`)
 - [ ] Code follows existing conventions
+- [ ] Commit messages use conventional commits format
