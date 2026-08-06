@@ -83,7 +83,13 @@ export default function SendForm() {
           label="Payment Request"
         />
       )}
-    <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md animate-slide-up">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSend();
+      }}
+      className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md animate-slide-up"
+    >
       <div className="flex items-center gap-3 mb-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-blue/10">
           <span className="text-xl">📤</span>
@@ -146,7 +152,6 @@ export default function SendForm() {
           }}
         />
 
-        {/* Amount */}
         {/* Asset selector */}
         <div>
           <label className="block text-xs font-medium text-white/60 mb-1.5">
@@ -156,7 +161,7 @@ export default function SendForm() {
             value={selectedAsset}
             onChange={(e) => setSelectedAsset(e.target.value)}
             disabled={isPending || isOnMainnet}
-            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all focus:outline-none focus:ring-2 focus:border-stellar-blue/50 focus:ring-stellar-blue/30 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all focus:outline-none focus:ring-2 focus:border-stellar-blue/50 focus:ring-stellar-blue/30 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2394A3B8%22%20stroke-width%3D%222%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_12px_center] bg-no-repeat pr-9"
           >
             <option value="XLM">XLM (native)</option>
             {state.balance.assets
@@ -199,7 +204,7 @@ export default function SendForm() {
         {/* Submit */}
         <div className="flex gap-2">
           <button
-            onClick={handleSend}
+            type="submit"
             disabled={isPending || isOnMainnet || !destination || !amount}
             className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.98] ${
               isPending
@@ -215,7 +220,7 @@ export default function SendForm() {
             ) : (
               <span className="flex items-center justify-center gap-2">
                 <span className="text-lg">📤</span>
-                Send XLM
+                Send {selectedAsset}
               </span>
             )}
           </button>
@@ -232,7 +237,7 @@ export default function SendForm() {
           )}
         </div>
       </div>
-    </div>
+    </form>
     </>
   );
 }

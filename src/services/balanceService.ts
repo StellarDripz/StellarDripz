@@ -12,7 +12,7 @@ function parseBalance(b: {
   asset_type: string;
   asset_code?: string;
   asset_issuer?: string;
-}): AssetBalance {
+}): AssetBalance | null {
   const raw = b.balance;
 
   if (b.asset_type === "native") {
@@ -24,6 +24,11 @@ function parseBalance(b: {
         maximumFractionDigits: 7,
       }),
     };
+  }
+
+  // Skip liquidity pool shares — not supported for sending
+  if (b.asset_type === "liquidity_pool_shares") {
+    return null;
   }
 
   // Custom asset (alphanum4 or alphanum12)
@@ -54,7 +59,9 @@ export async function fetchBalance(
   try {
     const account = await server.loadAccount(publicKey);
 
-    const assets: AssetBalance[] = account.balances.map(parseBalance);
+    const assets: AssetBalance[] = account.balances
+      .map(parseBalance)
+      .filter((a): a is AssetBalance => a !== null);
 
     const xlmAsset = assets.find((a) => a.asset.type === "native");
     const xlm = xlmAsset?.formatted || "0.0000000";

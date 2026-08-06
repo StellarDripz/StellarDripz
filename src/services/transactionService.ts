@@ -41,12 +41,12 @@ export async function requestFaucetFunds(
     data?.transaction_hash ||
     data?.hash ||
     data?.id ||
-    `faucet-${Date.now()}`;
+    null;
 
   // Fetch updated balance
   const balance = await fetchBalance(publicKey);
 
-  return { hash, newBalance: balance.xlm };
+  return { hash: hash || `faucet-${Date.now()}`, newBalance: balance.xlm };
 }
 
 function toStellarAsset(asset: StellarAsset): StellarSdk.Asset {
@@ -74,14 +74,25 @@ export async function sendPayment(
     throw new Error("Network mismatch — expected Testnet.");
   }
 
+  // Validate destination address
+  try {
+    StellarSdk.StrKey.decodeEd25519PublicKey(destination);
+  } catch {
+    throw new Error("Invalid destination Stellar address.");
+  }
+
   // Load the sender's account from Horizon
   const sourceAccount = await server.loadAccount(senderPublicKey);
+
+  // Fetch dynamic fee from the network
+  const feeStats = await server.fetchBaseFee();
+  const fee = String(Math.floor(Number(feeStats) * 2));
 
   const stellarAsset = asset ? toStellarAsset(asset) : StellarSdk.Asset.native();
 
   // Build the transaction
   const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
-    fee: StellarSdk.BASE_FEE,
+    fee, // 2x the network base fee
     networkPassphrase: STELLAR_CONFIG.networkPassphrase,
   })
     .addOperation(
