@@ -150,3 +150,4 @@ mod token_test {
         assert_eq!(client.total_supply(), 300);
     }
 }
+
