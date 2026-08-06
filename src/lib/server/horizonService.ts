@@ -159,3 +159,4 @@ export async function buildPaymentTransaction(
 
   return { xdr: tx.toXDR() };
 }
+// Horizon balance parsing handles native, credit_alphanum4, and credit_alphanum12
