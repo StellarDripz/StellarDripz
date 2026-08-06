@@ -55,3 +55,4 @@ clean: ## Clean build artifacts
 	@echo "🧹 Cleaning..."
 	rm -rf .next contracts/target
 	@echo "✅ Clean"
+# Lint: runs ESLint on all source files
