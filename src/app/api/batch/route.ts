@@ -81,3 +81,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+// Batch endpoint: processes up to 10 operations in single request
