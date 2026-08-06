@@ -546,3 +546,19 @@ Subscribes to real-time Soroban contract events via SSE with automatic polling f
 | **Total** | **18** | **110** |
 
 All 110 tests pass with zero failures. TypeScript strict mode compiles cleanly.
+
+### Running Tests
+
+\`\`\`bash
+# Run all tests
+npm test
+
+# Run specific test suite
+npx jest src/__tests__/api-faucet.test.ts
+
+# Run tests in watch mode
+npm run test:watch
+
+# TypeScript type check
+npm run typecheck
+\`\`\`
