@@ -37,3 +37,4 @@ pub fn emit_transfer(env: &Env, from: &Address, to: &Address, amount: i128) {
         amount,
     );
 }
+// Event emitter helpers for contract lifecycle notifications
