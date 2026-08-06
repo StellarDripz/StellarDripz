@@ -78,9 +78,7 @@ export function useContractEvents({
         setError(err instanceof Error ? err.message : "Poll failed");
       }
     }, pollInterval);
-  }, [contractId, pollInterval]);
-
-  // Main effect: connect SSE or fall back to polling
+  }, [contractId, pollInterval]);    // Main effect: connect SSE or fall back to polling
   useEffect(() => {
     if (!enabled || !contractId) return;
 
@@ -91,6 +89,8 @@ export function useContractEvents({
     }
     stopPolling();
 
+    let cancelled = false;
+
     // Try SSE first
     try {
       const es = new EventSource(
@@ -99,13 +99,13 @@ export function useContractEvents({
       eventSourceRef.current = es;
 
       es.onopen = () => {
-        if (!mountedRef.current) return;
+        if (cancelled || !mountedRef.current) return;
         setConnected(true);
         setError(null);
       };
 
       es.onmessage = (event) => {
-        if (!mountedRef.current) return;
+        if (cancelled || !mountedRef.current) return;
         try {
           const parsed: ContractEvent = JSON.parse(event.data);
           setEvents((prev) => [parsed, ...prev].slice(0, 100));
@@ -115,7 +115,7 @@ export function useContractEvents({
       };
 
       es.onerror = () => {
-        if (!mountedRef.current) return;
+        if (cancelled || !mountedRef.current) return;
         setConnected(false);
         es.close();
         eventSourceRef.current = null;
@@ -128,6 +128,7 @@ export function useContractEvents({
     }
 
     return () => {
+      cancelled = true;
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
