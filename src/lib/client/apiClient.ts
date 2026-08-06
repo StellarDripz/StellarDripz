@@ -2,10 +2,6 @@
  * API client — proxied writes through backend API routes.
  * For direct reads, use `@/lib/client/directClient` instead.
  */
-/**
- * Frontend API client — all requests go through our backend API.
- * The backend handles rate limiting, validation, logging, and routing to Stellar services.
- */
 
 const BASE_URL = "";
 
@@ -155,4 +151,3 @@ export function fetchAnalytics(type?: string, summary?: boolean) {
     `/api/analytics?${params.toString()}`
   );
 }
-export * from "./directClient";
