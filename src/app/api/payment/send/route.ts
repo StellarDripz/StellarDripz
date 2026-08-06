@@ -48,3 +48,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+// Supports both build (return XDR) and submit (sign+send) modes
