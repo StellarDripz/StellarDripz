@@ -44,3 +44,4 @@ data/
 
 # Turbo
 .turbo/
+# Rust WASM build artifacts (contract compilation)
