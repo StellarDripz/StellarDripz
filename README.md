@@ -667,3 +667,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 - No private keys stored server-side
 - Environment variables validated at startup
 
+### 🚦 Rate Limiting Strategy
