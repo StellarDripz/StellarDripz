@@ -1,6 +1,4 @@
-#![no_std]
-
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::token;

@@ -1,6 +1,4 @@
-#![no_std]
-
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, IntoVal, String, Symbol, symbol_short, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
 
@@ -135,7 +133,7 @@ impl DripToken {
     }
 
     /// Approve a spender to use tokens on behalf of the owner.
-    pub fn approve(env: Env, owner: Address, spender: Address, amount: i128, expiration_ledger: u32) {
+    pub fn approve(env: Env, owner: Address, spender: Address, amount: i128, _expiration_ledger: u32) {
         owner.require_auth();
 
         let key = (KEY_ALLOWANCES, &owner, &spender);

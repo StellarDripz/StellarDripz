@@ -18,7 +18,6 @@ opt-level = "z"
 overflow-checks = true
 debug = 0
 strip = "symbols"
-debuginfo = 0
 lto = true
 panic = "abort"
 codegen-units = 1

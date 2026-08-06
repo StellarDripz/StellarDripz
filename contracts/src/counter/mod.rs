@@ -1,4 +1,3 @@
-#![no_std]
 use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol, String};
 
 const GLOBAL_COUNTER: Symbol = symbol_short!("GLOBAL");
