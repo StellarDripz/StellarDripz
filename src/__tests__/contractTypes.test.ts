@@ -231,3 +231,4 @@ describe("useContractEvents", () => {
     });
   });
 });
+// Edge case: handles contract events when no events emitted yet
