@@ -125,3 +125,4 @@ export function useWallet(): UseWalletReturn {
 
 /** Re-export wallet types for convenience */
 export type { WalletState, SupportedWallet };
+
