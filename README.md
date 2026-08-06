@@ -562,3 +562,37 @@ npm run test:watch
 # TypeScript type check
 npm run typecheck
 \`\`\`
+
+## 🔀 Hybrid Architecture
+
+StellarDripz uses a **hybrid direct/proxied architecture**:
+
+### Direct Reads (Browser → Stellar)
+For low-latency queries, the browser talks directly to Horizon and Soroban RPC:
+- **Balance fetching** (`directFetchBalance`) — direct Horizon `loadAccount`
+- **Contract simulation** (`directSimulateContract`) — direct Soroban `simulateTransaction`
+- **Event polling** (`directFetchContractEvents`) — direct Soroban `getEvents`
+- **Latest ledger** (`directGetLatestLedger`) — direct Soroban `getLatestLedger`
+
+### Proxied Writes (Browser → API → Stellar)
+For rate-limited, logged, and validated operations:
+- **Faucet funding** — `/api/faucet/fund` with per-address cooldown
+- **Payment sending** — `/api/payment/send` with build/sign/submit flow
+- **Contract invocation** — `/api/contract/invoke` with fee estimation
+- **Event streaming (SSE)** — `/api/events` server-side event proxy
+- **Transaction history** — `/api/history` from server database
+- **Analytics** — `/api/analytics` from server database
+
+```
+┌──────────────────────────────────────────┐
+│              Browser                      │
+│  ┌──────────┐  ┌──────────────────────┐  │
+│  │  Reads   │──│  Horizon / Soroban   │  │
+│  │ (direct) │  │  (direct connection) │  │
+│  └──────────┘  └──────────────────────┘  │
+│  ┌──────────┐  ┌────────┐  ┌──────────┐ │
+│  │  Writes  │──│  API   │──│  Stellar │ │
+│  │ (proxied)│  │ Routes │  │  Network │ │
+│  └──────────┘  └────────┘  └──────────┘ │
+└──────────────────────────────────────────┘
+```
