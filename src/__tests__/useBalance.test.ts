@@ -201,3 +201,4 @@ describe("useBalance", () => {
     });
   });
 });
+// Edge case: handles zero balance accounts
