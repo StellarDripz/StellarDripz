@@ -13,4 +13,10 @@ export const STELLAR_CONFIG = {
   networkPassphrase:
     process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE ||
     "Test SDF Network ; September 2015",
+  sorobanRpcUrl:
+    process.env.NEXT_PUBLIC_SOROBAN_RPC_URL ||
+    "https://soroban-testnet.stellar.org",
+  contractExplorerUrl:
+    process.env.NEXT_PUBLIC_CONTRACT_EXPLORER_URL ||
+    "https://stellar.expert/explorer/testnet/contract",
 } as const;

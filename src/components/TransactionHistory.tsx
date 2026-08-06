@@ -37,10 +37,10 @@ function TxRow({ tx }: { tx: TransactionRecord }) {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-sm">
-            {tx.type === "faucet" ? "💧" : "📤"}
+            {tx.type === "faucet" ? "💧" : tx.type === "contract" ? "📜" : "📤"}
           </span>
           <span className="text-xs font-semibold text-white/80">
-            {tx.type === "faucet" ? "Faucet Request" : "Send Payment"}
+            {tx.type === "faucet" ? "Faucet Request" : tx.type === "contract" ? "Contract Call" : "Send Payment"}
           </span>
         </div>
         <TxStatusBadge status={tx.status} />

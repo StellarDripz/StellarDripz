@@ -108,8 +108,8 @@ export async function sendPayment(
   // Get the XDR to sign
   const xdr = transaction.toXDR();
 
-  // Sign via Freighter
-  const signedXdr = await signTx(xdr);
+  // Sign via wallet (multi-wallet support)
+  const signedXdr = await signTx(xdr, senderPublicKey);
 
   // Create a transaction from the signed XDR
   const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
