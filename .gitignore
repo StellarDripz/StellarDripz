@@ -30,6 +30,17 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+
 # Environment files
 .env.local
 .env*.local
+
+# Rust / Cargo build artifacts
+contracts/target/
+**/*.rs.bk
+
+# Database (JSON file for local dev)
+data/
+
+# Turbo
+.turbo/
