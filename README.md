@@ -503,3 +503,35 @@ Built with:
 - [Stellar SDK](https://stellar.org/sdk)
 - [Soroban SDK](https://soroban.stellar.org)
 - [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-Wallets-Kit)
+
+## 🔌 Hook API Reference
+
+### useWallet
+```tsx
+const { wallet, connecting, error, connect, disconnect, refreshWallets } = useWallet();
+```
+Manages wallet connection state with auto-reconnection from persisted sessions.
+
+### useBalance
+```tsx
+const { balance, loading, error, refresh } = useBalance({ address, refreshInterval: 30000 });
+```
+Fetches Stellar account balances with optional auto-refresh polling.
+
+### useTransactionHistory
+```tsx
+const { transactions, loading, error, total, refresh } = useTransactionHistory({ address, type: "faucet" });
+```
+Retrieves filtered transaction history with auto-refresh support.
+
+### useFaucet
+```tsx
+const { requesting, success, error, lastHash, canRequest, request, cooldownRemaining } = useFaucet({ address });
+```
+Requests testnet XLM with built-in cooldown timer to prevent spamming.
+
+### useContractEvents
+```tsx
+const { events, connected, error, clearEvents } = useContractEvents({ contractId, pollInterval: 5000 });
+```
+Subscribes to real-time Soroban contract events via SSE with automatic polling fallback.
