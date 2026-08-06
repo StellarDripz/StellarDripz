@@ -60,3 +60,4 @@ impl StellarDripzCounter {
             .unwrap_or(String::from_str(&env, "Hello from StellarDripz!"))
     }
 }
+// Increment counter: increases per-user value by 1 and emits event
