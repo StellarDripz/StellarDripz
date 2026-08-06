@@ -1,6 +1,8 @@
 {
   "name": "stellardripz",
   "version": "2.0.0",
+  "keywords": ["stellar", "soroban", "faucet", "smart-contracts", "nextjs", "blockchain", "web3", "testnet"],
+  "repository": "https://github.com/StellarDripz/StellarDripz",
   "private": true,
   "description": "StellarDripz — Production-grade Stellar dApp with advanced Soroban smart contracts (DripToken, DripPool, DripGovernance, DripBadge), multi-wallet faucet, real-time event streaming, and CI/CD pipeline.",
   "scripts": {
