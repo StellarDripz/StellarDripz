@@ -3,10 +3,9 @@
 import { useState, useCallback } from "react";
 import { useAppContext } from "@/context/AppContext";
 import { directSimulateContract } from "@/lib/client/directClient";
-import * as StellarSdk from "@stellar/stellar-sdk";
+
 import { buildContractCall, submitContract } from "@/lib/client/apiClient";
 import { signTx } from "@/lib/wallets/walletKit";
-import { showToast } from "./Toast";
 
 interface SorobanDemoProps { contractId: string; }
 
