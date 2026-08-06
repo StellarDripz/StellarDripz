@@ -129,3 +129,4 @@ describe("POST /api/payment/send", () => {
     });
   });
 });
+// Edge case: validates minimum payment amount > 0
