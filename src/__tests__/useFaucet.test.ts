@@ -176,3 +176,4 @@ describe("useFaucet", () => {
     });
   });
 });
+// Edge case: validates request during active cooldown
