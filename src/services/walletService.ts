@@ -1,7 +1,6 @@
 import {
   isConnected,
   requestAccess,
-  getAddress,
   signTransaction,
   getNetwork,
 } from "@stellar/freighter-api";
@@ -20,8 +19,7 @@ export interface StoredWallet {
  */
 export function checkFreighterInstalled(): boolean {
   if (typeof window === "undefined") return false;
-  // Freighter injects itself into the global scope
-  return typeof window !== "undefined" && "freighterApi" in window;
+  return "freighterApi" in window;
 }
 
 /**

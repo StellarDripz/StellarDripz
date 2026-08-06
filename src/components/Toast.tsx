@@ -81,21 +81,29 @@ export default function ToastContainer() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // Expose to global for context use
+  // Expose to global for context use (with cleanup on unmount)
   useEffect(() => {
-    (window as unknown as Record<string, unknown>).__stellardripz_toast = (
-      toast: ToastMessage
-    ) => {
+    const fn = (toast: ToastMessage) => {
       setToasts((prev) => {
-        // Replace pending toasts of same type
+        // Replace pending toasts with the same title, otherwise append
         if (toast.type === "pending") {
-          return [...prev, toast];
+          const withoutSamePending = prev.filter(
+            (t) => !(t.type === "pending" && t.title === toast.title)
+          );
+          return [...withoutSamePending, toast];
         }
         const filtered = prev.filter(
           (t) => !(t.type === "pending" && t.title === toast.title)
         );
         return [...filtered, toast];
       });
+    };
+
+    (window as unknown as Record<string, unknown>).__stellardripz_toast = fn;
+
+    return () => {
+      delete (window as unknown as Record<string, unknown>)
+        .__stellardripz_toast;
     };
   }, []);
 

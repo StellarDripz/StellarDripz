@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
   createContext,
   useContext,
   useReducer,
@@ -210,25 +210,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         ...pendingTx,
         status: "success",
         hash,
-        explorerUrl: hash.startsWith("faucet-")
-          ? undefined
-          : getExplorerUrl(hash),
+        explorerUrl:
+          hash && !hash.startsWith("faucet-")
+            ? getExplorerUrl(hash)
+            : undefined,
       };
 
       dispatch({ type: "UPDATE_TRANSACTION", payload: successTx });
       dispatch({ type: "SET_TX_IN_PROGRESS", payload: "success" });
 
-      // Update balance
-      dispatch({
-        type: "SET_BALANCE",
-        payload: {
-          xlm: newBalance,
-          raw: newBalance,
-          lastFetched: new Date(),
-          loading: false,
-          error: null,
-        },
-      });
+      // Refresh full balance to preserve custom asset data
+      await refreshBalance();
     } catch (err) {
       const errorTx: TransactionRecord = {
         ...pendingTx,
@@ -251,9 +243,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const found = state.balance.assets.find(
           (a) => a.asset.code === assetCode
         );
-        if (found) {
-          asset = found.asset;
+        if (!found) {
+          throw new Error(
+            `Asset "${assetCode}" not found in your balance. You may not hold this token.`
+          );
         }
+        asset = found.asset;
       }
 
       const txId = `send-${Date.now()}`;
