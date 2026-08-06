@@ -148,3 +148,4 @@ export default function BalanceCard() {
   );
 }
 
+// Renders inline asset rows with code icon and formatted balance
