@@ -652,13 +652,22 @@ For rate-limited, logged, and validated operations:
 
 
 
-## 🤝 Contributing Guidelines
+## 🤝 Contributing
 
-We welcome contributions! Please follow the conventional commits style and ensure all tests pass before submitting a PR.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for full guidelines.
 
-### PR Checklist
-- [ ] All tests pass (`npm test`)
-- [ ] TypeScript compiles cleanly (`npx tsc --noEmit`)
-- [ ] Contracts build (`npm run contracts:build`)
-- [ ] Code follows existing conventions
-- [ ] Commit messages use conventional commits format
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m "feat: add amazing feature"`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Commit Convention
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `docs:` — Documentation
+- `test:` — Tests
+- `refactor:` — Code restructuring
+- `ci:` — CI/CD changes
+- `chore:` — Maintenance
