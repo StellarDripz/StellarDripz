@@ -1,4 +1,3 @@
-\n// Type-safe direct access — all functions return strongly-typed results.\n// Use these for read operations to avoid the API proxy round-trip.\n// Writes MUST still go through apiClient for rate limiting and logging.\n
 /**
  * Direct Stellar client — browser-side reads that bypass the API proxy.
  *
