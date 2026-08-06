@@ -145,3 +145,4 @@ describe("POST /api/contract/invoke", () => {
     });
   });
 });
+// Edge case: validates malformed contract IDs
