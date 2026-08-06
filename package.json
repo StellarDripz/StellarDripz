@@ -1,6 +1,7 @@
 {
   "name": "stellardripz",
   "version": "2.0.0",
+  "license": "MIT",
   "keywords": ["stellar", "soroban", "faucet", "smart-contracts", "nextjs", "blockchain", "web3", "testnet"],
   "repository": "https://github.com/StellarDripz/StellarDripz",
   "private": true,
