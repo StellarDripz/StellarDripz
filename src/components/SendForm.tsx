@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import * as StellarSdk from "@stellar/stellar-sdk";
 import QrModal from "./QrModal";
+import AddressBook from "./AddressBook";
 
 export default function SendForm() {
   const { state, doSendPayment } = useAppContext();
@@ -15,6 +16,7 @@ export default function SendForm() {
   const [amountError, setAmountError] = useState("");
   const [showPaymentQr, setShowPaymentQr] = useState(false);
   const [selectedAsset, setSelectedAsset] = useState("XLM");
+  const [showAddressBook, setShowAddressBook] = useState(false);
 
   if (!wallet.connected) return null;
 
@@ -103,25 +105,46 @@ export default function SendForm() {
       <div className="space-y-3">
         {/* Destination */}
         <div>
-          <label className="block text-xs font-medium text-white/60 mb-1.5">
-            Recipient Address
-          </label>
-          <input
-            type="text"
-            value={destination}
-            onChange={(e) => validateDestination(e.target.value)}
-            placeholder="G..."
-            disabled={isPending || isOnMainnet}
-            className={`w-full rounded-xl border bg-white/5 px-4 py-2.5 font-mono text-sm text-white placeholder:text-white/20 transition-all focus:outline-none focus:ring-2 ${
-              destError
-                ? "border-red-500/50 focus:ring-red-500/30"
-                : "border-white/10 focus:border-stellar-blue/50 focus:ring-stellar-blue/30"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          />
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-medium text-white/60">
+              Recipient Address
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowAddressBook(true)}
+              disabled={isPending || isOnMainnet}
+              className="text-xs text-stellar-blue/60 hover:text-stellar-blue transition-colors disabled:opacity-30"
+            >
+              📖 Address Book
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              value={destination}
+              onChange={(e) => validateDestination(e.target.value)}
+              placeholder="G..."
+              disabled={isPending || isOnMainnet}
+              className={`w-full rounded-xl border bg-white/5 px-4 py-2.5 pr-9 font-mono text-sm text-white placeholder:text-white/20 transition-all focus:outline-none focus:ring-2 ${
+                destError
+                  ? "border-red-500/50 focus:ring-red-500/30"
+                  : "border-white/10 focus:border-stellar-blue/50 focus:ring-stellar-blue/30"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            />
+          </div>
           {destError && (
             <p className="mt-1 text-xs text-red-400">{destError}</p>
           )}
         </div>
+
+        <AddressBook
+          open={showAddressBook}
+          onClose={() => setShowAddressBook(false)}
+          onSelect={(addr) => {
+            setDestination(addr);
+            validateDestination(addr);
+          }}
+        />
 
         {/* Amount */}
         {/* Asset selector */}
