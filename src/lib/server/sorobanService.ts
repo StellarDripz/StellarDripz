@@ -153,3 +153,4 @@ export async function getContractEventsServer(
     return { events: [], latestLedger: startLedger };
   }
 }
+// Validates and normalizes Soroban RPC event responses
