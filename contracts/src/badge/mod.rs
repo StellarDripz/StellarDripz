@@ -275,3 +275,4 @@ mod badge_test {
     }
 }
 // Badge tiers: Bronze (10 stakes) → Silver (50) → Gold (200) → Platinum (1000)
+
