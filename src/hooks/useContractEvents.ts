@@ -137,3 +137,4 @@ export function useContractEvents({
 
   return { events, connected, error, clearEvents };
 }
+// The polling fallback queries Soroban RPC directly, bypassing the API proxy
