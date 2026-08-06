@@ -61,3 +61,4 @@ export default function CooldownTimer({ address, onReady }: CooldownTimerProps) 
     </div>
   );
 }
+
