@@ -1,3 +1,7 @@
+/**
+ * TypeScript types for StellarDripz — shared across hooks, components, and services.
+ * All exported types use strict mode with no `any` in the consumer-facing API.
+ */
 // --- Wallet Types ---
 
 export type NetworkType = "TESTNET" | "MAINNET" | "UNKNOWN";
