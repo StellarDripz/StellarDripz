@@ -596,3 +596,15 @@ For rate-limited, logged, and validated operations:
 │  └──────────┘  └────────┘  └──────────┘ │
 └──────────────────────────────────────────┘
 ```
+
+## 📐 Architecture Decision: Hybrid Reads/Writes
+
+**Decision:** The browser talks directly to Stellar Horizon/Soroban RPC for read operations but routes writes through the Next.js API proxy.
+
+**Rationale:**
+- Reads are idempotent and latency-sensitive — direct connection eliminates a round-trip
+- Writes need rate limiting, logging, and validation — proxying ensures consistent enforcement
+- Horizon and Soroban RPC both allow CORS from browser contexts
+- The API proxy remains the single source of truth for analytics and transaction history
+
+**Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
