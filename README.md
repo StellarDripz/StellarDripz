@@ -650,10 +650,4 @@ For rate-limited, logged, and validated operations:
 
 **Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
 
-### 🚦 Rate Limiting Strategy
-| Endpoint | Window | Max Requests |
-|----------|--------|--------------|
-| Faucet | 60s | 1 per address |
-| Payment | 60s | 10 per address |
-| Contract | 60s | 5 per address |
 
