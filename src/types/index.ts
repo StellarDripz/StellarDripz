@@ -59,10 +59,8 @@ export interface TransactionRecord {
   errorMessage?: string;
   explorerUrl?: string;
   assetCode?: string;
-  // Contract-specific fields
   contractId?: string;
   functionName?: string;
-  // Event tracking
   ledgerSequence?: number;
 }
 
@@ -78,6 +76,30 @@ export interface ContractEvent {
   txHash: string;
 }
 
+// --- Rate Limit Types ---
+
+export interface CooldownState {
+  address: string;
+  remainingMs: number;
+  canRequest: boolean;
+}
+
+// --- Analytics Types ---
+
+export interface FaucetAnalytics {
+  totalRequests: number;
+  successfulRequests: number;
+  failedRequests: number;
+  uniqueAddresses: number;
+  rateLimitedRequests: number;
+}
+
+export interface NetworkStatus {
+  horizon: { status: "ok" | "error"; latency?: number; error?: string };
+  sorobanRpc: { status: "ok" | "error"; latency?: number; error?: string };
+  friendbot: { status: "ok" | "error"; latency?: number; error?: string };
+}
+
 // --- App State ---
 
 export interface AppState {
@@ -86,4 +108,5 @@ export interface AppState {
   transactions: TransactionRecord[];
   txInProgress: TxStatus;
   contractEvents: ContractEvent[];
+  cooldown: CooldownState | null;
 }
