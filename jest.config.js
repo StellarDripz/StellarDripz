@@ -14,3 +14,4 @@ module.exports = {
     "node_modules/(?!@stellar/stellar-sdk|@creit.tech/stellar-wallets-kit)",
   ],
 };
+// Jest: transform TypeScript with ts-jest, ignore node_modules
