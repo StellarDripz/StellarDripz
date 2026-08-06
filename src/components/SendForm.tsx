@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
 import * as StellarSdk from "@stellar/stellar-sdk";
+import QrModal from "./QrModal";
 
 export default function SendForm() {
   const { state, doSendPayment } = useAppContext();
@@ -12,6 +13,7 @@ export default function SendForm() {
   const [amount, setAmount] = useState("");
   const [destError, setDestError] = useState("");
   const [amountError, setAmountError] = useState("");
+  const [showPaymentQr, setShowPaymentQr] = useState(false);
 
   if (!wallet.connected) return null;
 
@@ -63,7 +65,20 @@ export default function SendForm() {
     setAmount("");
   };
 
+  const hasValidPaymentInfo =
+    destination.trim() && !destError && amount.trim() && !amountError;
+
   return (
+    <>
+      {hasValidPaymentInfo && (
+        <QrModal
+          open={showPaymentQr}
+          onClose={() => setShowPaymentQr(false)}
+          address={destination.trim()}
+          amount={amount.trim()}
+          label="Payment Request"
+        />
+      )}
     <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md animate-slide-up">
       <div className="flex items-center gap-3 mb-4">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-blue/10">
@@ -131,28 +146,42 @@ export default function SendForm() {
         </div>
 
         {/* Submit */}
-        <button
-          onClick={handleSend}
-          disabled={isPending || isOnMainnet || !destination || !amount}
-          className={`w-full rounded-xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.98] ${
-            isPending
-              ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 cursor-not-allowed"
-              : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed"
-          }`}
-        >
-          {isPending ? (
-            <span className="flex items-center justify-center gap-2">
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-400/30 border-t-yellow-400" />
-              Sending...
-            </span>
-          ) : (
-            <span className="flex items-center justify-center gap-2">
-              <span className="text-lg">📤</span>
-              Send XLM
-            </span>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSend}
+            disabled={isPending || isOnMainnet || !destination || !amount}
+            className={`flex-1 rounded-xl px-5 py-3 text-sm font-semibold transition-all active:scale-[0.98] ${
+              isPending
+                ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 cursor-not-allowed"
+                : "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed"
+            }`}
+          >
+            {isPending ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-yellow-400/30 border-t-yellow-400" />
+                Sending...
+              </span>
+            ) : (
+              <span className="flex items-center justify-center gap-2">
+                <span className="text-lg">📤</span>
+                Send XLM
+              </span>
+            )}
+          </button>
+          {hasValidPaymentInfo && (
+            <button
+              type="button"
+              onClick={() => setShowPaymentQr(true)}
+              disabled={isPending || isOnMainnet}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white/60 transition-all hover:bg-white/10 hover:text-white/80 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed"
+              title="Generate payment QR"
+            >
+              📱
+            </button>
           )}
-        </button>
+        </div>
       </div>
     </div>
+    </>
   );
 }

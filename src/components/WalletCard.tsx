@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
+import QrModal from "./QrModal";
 
 export default function WalletCard() {
   const { state, connect, disconnect } = useAppContext();
   const { wallet } = state;
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showQr, setShowQr] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const handleConnect = async () => {
     setConnecting(true);
@@ -49,33 +52,72 @@ export default function WalletCard() {
     );
   }
 
+  const handleCopyAddress = async () => {
+    if (!wallet.publicKey) return;
+    try {
+      await navigator.clipboard.writeText(wallet.publicKey);
+    } catch {
+      const ta = document.createElement("textarea");
+      ta.value = wallet.publicKey;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // Connected state
   if (wallet.connected && wallet.publicKey) {
     return (
-      <div className="rounded-2xl border border-stellar-green/20 bg-surface-800/60 p-6 backdrop-blur-md">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-green/10">
-              <span className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-stellar-green opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-stellar-green" />
-              </span>
+      <>
+        <QrModal
+          open={showQr}
+          onClose={() => setShowQr(false)}
+          address={wallet.publicKey}
+          label="Your Wallet Address"
+        />
+        <div className="rounded-2xl border border-stellar-green/20 bg-surface-800/60 p-6 backdrop-blur-md">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-green/10">
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-stellar-green opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-stellar-green" />
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">Connected</p>
+                <p className="font-mono text-xs text-stellar-green truncate max-w-[200px]">
+                  {wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-6)}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-white">Connected</p>
-              <p className="font-mono text-xs text-stellar-green truncate max-w-[200px]">
-                {wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-6)}
-              </p>
-            </div>
+            <button
+              onClick={disconnect}
+              className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2 text-xs font-semibold text-red-400 transition-all hover:bg-red-500/10 hover:border-red-500/40 active:scale-95"
+            >
+              Disconnect
+            </button>
           </div>
-          <button
-            onClick={disconnect}
-            className="rounded-xl border border-red-500/20 bg-red-500/5 px-4 py-2 text-xs font-semibold text-red-400 transition-all hover:bg-red-500/10 hover:border-red-500/40 active:scale-95"
-          >
-            Disconnect
-          </button>
+          {/* Action buttons row */}
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={handleCopyAddress}
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/60 transition-all hover:bg-white/10 hover:text-white/80 active:scale-95"
+            >
+              {copied ? "✅ Copied!" : "📋 Copy Address"}
+            </button>
+            <button
+              onClick={() => setShowQr(true)}
+              className="flex-1 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white/60 transition-all hover:bg-white/10 hover:text-white/80 active:scale-95"
+            >
+              📱 Show QR Code
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
