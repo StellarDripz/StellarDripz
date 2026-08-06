@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import QrModal from "./QrModal";
+import { QRCodeSVG } from "qrcode.react";
 import { STELLAR_NETWORK } from "@/lib/stellar/network";
 
 interface QRFundModalProps {
@@ -29,13 +29,6 @@ export default function QRFundModal({ address }: QRFundModalProps) {
         📱 Fund via QR
       </button>
 
-      <QrModal
-        open={open}
-        onClose={() => setOpen(false)}
-        address={address}
-        label="Cross-Device Funding"
-      />
-
       {open && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           <div
@@ -53,14 +46,8 @@ export default function QRFundModal({ address }: QRFundModalProps) {
               </button>
             </div>
 
-            <div className="rounded-xl bg-white p-4 mb-4">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(faucetUrl)}`}
-                alt="Faucet QR"
-                className="mx-auto"
-                width={200}
-                height={200}
-              />
+            <div className="rounded-xl bg-white p-4 mb-4 flex justify-center">
+              <QRCodeSVG value={faucetUrl} size={200} level="M" />
             </div>
 
             <p className="text-xs text-white/50 text-center mb-3">
