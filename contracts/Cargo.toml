@@ -21,3 +21,4 @@ debuginfo = 0
 lto = true
 panic = "abort"
 codegen-units = 1
+# Soroban SDK version pinned for reproducible builds
