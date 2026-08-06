@@ -1,328 +1,505 @@
-# 💧 StellarDripz — Testnet XLM Faucet
+# 🚀 StellarDripz
 
-![StellarDripz](https://img.shields.io/badge/Stellar-Testnet-blue?style=flat-square)
-![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8?style=flat-square&logo=tailwindcss)
-![Soroban](https://img.shields.io/badge/Soroban-Contracts-purple?style=flat-square)
+**Production-grade Stellar dApp with advanced Soroban smart contracts**
 
-**StellarDripz** is a full-featured, developer-focused Stellar Testnet dApp. Connect any Stellar wallet, request testnet XLM faucet funds, send transactions, deploy and interact with Soroban smart contracts — all with real-time event tracking.
+A full-featured Stellar testnet faucet and smart contract platform built with Next.js, Soroban, and Stellar SDK. Features multi-wallet support, real-time event streaming, on-chain governance, token staking, and achievement badges.
+
+[![CI/CD Pipeline](https://github.com/your-org/stellardripz/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/stellardripz/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
+[![Soroban](https://img.shields.io/badge/Soroban-22-blue)](https://soroban.stellar.org)
+
+---
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Smart Contracts](#-smart-contracts)
+- [Quick Start](#-quick-start)
+- [Development](#-development)
+- [Testing](#-testing)
+- [Deployment](#-deployment)
+- [CI/CD](#-cicd)
+- [API Reference](#-api-reference)
+- [Environment Variables](#-environment-variables)
+- [Project Structure](#-project-structure)
+- [Demo](#-demo)
 
 ---
 
 ## ✨ Features
 
-| Feature | Description |
-|---|---|
-| 🔐 **Multi-Wallet** | Connect Freighter, xBull, Albedo, LOBSTR, Rabet — wallet picker modal |
-| 🛡️ **Network Detection** | Warns if wallet is on Mainnet — testnet only |
-| 💰 **Multi-Asset Balance** | Real-time XLM + custom asset balances with manual refresh |
-| 💧 **One-Click Faucet** | Request 10,000 testnet XLM via Friendbot |
-| 📤 **Send Assets** | Send XLM or custom assets to any address, signed via connected wallet |
-| 📜 **Smart Contracts** | Deploy and interact with Soroban contracts on testnet |
-| 🔢 **Contract Counter** | Read + increment a counter stored on-chain |
-| ✉️ **Contract Greeting** | Read + set a greeting message on-chain |
-| 🔔 **Real-Time Events** | 5-second polling for contract-emitted events with live log |
-| 📋 **Transaction History** | Session log of faucet, send, and contract transactions |
-| 🔗 **Explorer Links** | Direct links to Stellar Expert for all transactions |
-| 📊 **Tx Status Tracker** | Live pending/success/error status bar |
-| 📱 **QR Codes** | Generate QR for wallet address + payment requests |
-| 📖 **Address Book** | Save frequent addresses in localStorage |
-| 🎨 **Beautiful UI** | Dark theme, glassmorphism, micro-animations |
+### 🎯 Core Functionality
+- **Multi-Wallet Faucet** — Request 10,000 testnet XLM with Freighter, xBull, Albedo, LOBSTR, or Rabet
+- **Send Payments** — Transfer XLM between any Stellar testnet addresses
+- **Smart Contract Interaction** — Deploy and interact with Soroban smart contracts
+- **Real-time Event Streaming** — Live contract events via SSE with polling fallback
+- **Admin Dashboard** — Analytics and transaction monitoring at `/admin`
+
+### 🔐 Advanced Smart Contracts
+| Contract | Description | Features |
+|----------|-------------|----------|
+| **StellarDripzCounter** | Simple counter + greeting | Increment, get_global, set_greeting, get_user |
+| **DripToken** | SEP-41 compatible fungible token | Mint, transfer, approve, transfer_from, burn |
+| **DripPool** | Staking pool with rewards | Stake, unstake, claim rewards, lock periods, admin controls |
+| **DripGovernance** | On-chain governance | Proposals, voting (For/Against/Abstain), execute |
+| **DripBadge** | Achievement NFT badges | Create, claim, grant (Bronze → Silver → Gold → Platinum) |
+
+### 🏗️ Production Architecture
+- **API Gateway Pattern** — All Stellar ops routed through Next.js API routes
+- **Rate Limiting** — Per-IP and per-address rate limiting with configurable windows
+- **Event Streaming** — Server-Sent Events (SSE) with automatic polling fallback
+- **Health Checks** — `/api/health` endpoint with service status monitoring
+- **Error Boundaries** — Graceful error recovery with retry UI
+- **Loading Skeletons** — Polished loading states for all async operations
+- **Mobile Responsive** — Fully responsive design from 320px to 4K
 
 ---
 
-## 🛠️ Tech Stack
+## 🏛️ Architecture
 
-- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
-- **Language:** TypeScript
-- **Styling:** [Tailwind CSS 3](https://tailwindcss.com/)
-- **Blockchain:**
-  - [`@stellar/stellar-sdk`](https://www.npmjs.com/package/@stellar/stellar-sdk) — Horizon client, Soroban RPC, transaction building
-  - [`@stellar/freighter-api`](https://www.npmjs.com/package/@stellar/freighter-api) — Freighter wallet connection & signing
-- **Smart Contracts:** [Soroban SDK (Rust)](https://soroban.stellar.org/) — Contract development & deployment
-- **QR Codes:** [`qrcode.react`](https://www.npmjs.com/package/qrcode.react)
-- **Testing:** Jest + ts-jest + jsdom
-- **Deployment:** Vercel (recommended)
+```
+┌─────────────────────────────────────────────────────────┐
+│                    StellarDripz Frontend                  │
+│  (Next.js 14 + React 18 + Tailwind + TypeScript)         │
+│                                                          │
+│  ┌─────────┐ ┌──────────┐ ┌──────────┐ ┌─────────────┐ │
+│  │ Wallet   │ │ Faucet   │ │ Payment  │ │ Contract    │ │
+│  │ Connect  │ │ Button   │ │ SendForm │ │ SorobanDemo │ │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └──────┬──────┘ │
+└───────┼────────────┼────────────┼───────────────┼────────┘
+        │            │            │               │
+        ▼            ▼            ▼               ▼
+┌─────────────────────────────────────────────────────────┐
+│                 API Client Layer (src/lib/client/)        │
+│  apiClient.ts → walletClient, faucetClient, etc.         │
+└──────────────────────────┬──────────────────────────────┘
+                           │ HTTP
+┌──────────────────────────▼──────────────────────────────┐
+│              Next.js API Routes (src/app/api/)            │
+│  /wallet/connect  /faucet/fund  /payment/send            │
+│  /contract/invoke /balance/:addr /history /analytics     │
+│  /events (SSE)    /health  /batch  /status               │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────┐
+│              Server Services (src/lib/server/)            │
+│  sorobanService  horizonService  dbService               │
+│  rateLimiter     sessionManager                           │
+└──────────┬────────────────────────────┬──────────────────┘
+           │                            │
+           ▼                            ▼
+┌──────────────────┐      ┌──────────────────────────────┐
+│  Soroban RPC     │      │  Stellar Horizon              │
+│  (Smart Contracts)│      │  (Transactions, Balances)     │
+└──────────────────┘      └──────────────────────────────┘
+           │
+           ▼
+┌──────────────────────────────────────────────────────────┐
+│             Stellar Network (Testnet/Mainnet)              │
+│  ┌───────────┐ ┌───────────┐ ┌──────────┐ ┌───────────┐ │
+│  │ Counter   │ │ DripToken │ │ DripPool │ │ Governance│ │ │
+│  │ Contract  │ │ Contract  │ │ Contract │ │ + Badge   │ │ │
+│  └───────────┘ └───────────┘ └──────────┘ └───────────┘ │
+└──────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 📦 Setup Instructions
+## 🔧 Smart Contracts
+
+### Inter-Contract Communication
+
+The contracts are designed for composability:
+
+```
+DripToken ←── DripPool (transfers on stake/unstake)
+DripToken ←── DripGovernance (voting power from token balance)
+DripPool  ←── DripGovernance (parameter changes via proposals)
+DripBadge ←── DripPool (grant badges based on staking milestones)
+```
+
+### Contract Deployment
+
+```bash
+# 1. Build WASM
+npm run contracts:build
+
+# 2. Set deployer secret key
+export DEPLOYER_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+
+# 3. Deploy
+npm run contracts:deploy
+```
+
+**Deployed Contract ID:** `CCW...` _(Update after deployment)_  
+**Transaction Hash:** _(Update after deployment)_
+
+### Contract Structure
+```
+contracts/src/
+├── lib.rs            # Module registry & re-exports
+├── test.rs           # Cross-module integration tests
+├── counter/
+│   └── mod.rs        # StellarDripzCounter (existing)
+├── token/
+│   └── mod.rs        # DripToken (SEP-41)
+├── pool/
+│   └── mod.rs        # DripPool (Staking)
+├── governance/
+│   └── mod.rs        # DripGovernance
+├── badge/
+│   └── mod.rs        # DripBadge (NFT)
+└── common/
+    ├── mod.rs
+    ├── storage.rs    # Shared storage helpers
+    ├── events.rs     # Common event emitters
+    └── types.rs      # Shared types
+```
+
+---
+
+## 🚀 Quick Start
 
 ### Prerequisites
+- Node.js 18+
+- Rust 1.70+ with `wasm32-unknown-unknown` target
+- A Stellar wallet (Freighter recommended)
+- Testnet XLM (get from https://friendbot.stellar.org)
 
-- **Node.js** 18.x or higher
-- **npm** or **yarn**
-- A **Stellar wallet** browser extension (Freighter, xBull, Albedo, LOBSTR, or Rabet)
-- Wallet set to **Testnet** network
-- **Rust** + **wasm32 target** (for contract compilation):
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  rustup target add wasm32-unknown-unknown
-  ```
-
-### 1. Clone the Repository
+### Setup
 
 ```bash
-git clone https://github.com/StellarDripz/StellarDripz.git
-cd StellarDripz
-```
+# Clone
+git clone https://github.com/your-org/stellardripz.git
+cd stellardripz
 
-### 2. Install Dependencies
-
-```bash
+# Install dependencies
 npm install
-```
 
-### 3. Configure Environment (Optional)
+# Copy env template
+cp .env.example .env.local
 
-```bash
-cp .env.local.example .env.local
-```
+# Install Rust + wasm target (for contracts)
+rustup target add wasm32-unknown-unknown
 
-| Variable | Default | Description |
-|---|---|---|
-| `NEXT_PUBLIC_HORIZON_URL` | `https://horizon-testnet.stellar.org` | Horizon API endpoint |
-| `NEXT_PUBLIC_FRIENDBOT_URL` | `https://friendbot.stellar.org` | Friendbot API endpoint |
-| `NEXT_PUBLIC_STELLAR_EXPERT_URL` | `https://stellar.expert/explorer/testnet` | Block explorer URL |
-| `NEXT_PUBLIC_NETWORK_PASSPHRASE` | `Test SDF Network ; September 2015` | Testnet passphrase |
-| `NEXT_PUBLIC_SOROBAN_RPC_URL` | `https://soroban-testnet.stellar.org` | Soroban RPC endpoint |
-| `NEXT_PUBLIC_CONTRACT_EXPLORER_URL` | `https://stellar.expert/explorer/testnet/contract` | Contract explorer URL |
+# Build contracts
+npm run contracts:build
 
-### 4. Start Development Server
+# Run tests
+npm run contracts:test
+npm test
 
-```bash
+# Start dev server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Visit [http://localhost:3000](http://localhost:3000)
 
-### 5. Build for Production
+---
+
+## 🧪 Testing
+
+### Smart Contract Tests (15+ tests)
+
+```bash
+npm run contracts:test
+```
+
+Output:
+```
+running 15 tests
+test badge::badge_test::test_create_and_claim_badge ... ok
+test badge::badge_test::test_duplicate_claim_prevented ... ok
+test badge::badge_test::test_grant_badge ... ok
+test counter_test::test_counter_increment ... ok
+test counter_test::test_greeting ... ok
+test counter_test::test_user_counter_independent ... ok
+test governance::governance_test::test_create_proposal ... ok
+test governance::governance_test::test_vote_and_execute ... ok
+test pool::pool_test::test_admin_controls ... ok
+test pool::pool_test::test_reward_calculation ... ok
+test pool::pool_test::test_stake_and_unstake ... ok
+test token::token_test::test_approve_and_transfer_from ... ok
+test token::token_test::test_burn ... ok
+test token::token_test::test_initialize_and_mint ... ok
+test token::token_test::test_transfer ... ok
+test result: ok. 15 passed
+```
+
+### Frontend Tests (8+ test suites)
+
+```bash
+npm test
+```
+
+Test suites:
+- `addressBookService.test.ts` — 8 tests
+- `config.test.ts` — 2 tests
+- `walletService.test.ts` — 7 tests
+- `env.test.ts` — 4 tests
+- `rateLimiter.test.ts` — 5 tests
+- `contractTypes.test.ts` — 3 tests
+- `dbService.test.ts` — 4 tests
+
+---
+
+## 🚢 Deployment
+
+### Production Build
 
 ```bash
 npm run build
 npm start
 ```
 
-### 6. Run Tests
+### Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/stellardripz)
+
+1. Push to GitHub
+2. Connect to Vercel
+3. Set environment variables
+4. Deploy!
+
+**Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)
+
+### Manual Deploy
 
 ```bash
-npm test
+# Build production bundle
+NODE_ENV=production npm run build
+
+# Deploy .next/ to your hosting provider
 ```
 
 ---
 
-## 📜 Smart Contract Deployment
+## 🔄 CI/CD Pipeline
 
-### Compile the Contract
+### GitHub Actions Workflow
 
-```bash
-cd contracts
-cargo build --target wasm32-unknown-unknown --release
+The pipeline runs on every push and PR to `main`:
+
+| Job | Trigger | Actions |
+|-----|---------|---------|
+| 🔧 Contract Tests | Push, PR | `cargo test`, `cargo build --release` |
+| 🧪 Frontend Tests | Push, PR | `npm test`, `npx tsc --noEmit` |
+| 📋 Lint | Push, PR | `npm run lint` |
+| 🏗️ Build | Push, PR | `npm run build` |
+| 🚀 Deploy Preview | PR | Vercel preview deployment |
+| 🌐 Deploy Production | Push to main | Vercel production |
+
+### Required Secrets
+
+```
+VERCEL_TOKEN        — Vercel API token
+VERCEL_ORG_ID       — Vercel organization ID
+VERCEL_PROJECT_ID   — Vercel project ID
 ```
 
-### Deploy to Testnet
+### Required Variables
 
-Set your funded testnet secret key and run:
-
-```bash
-DEPLOYER_SECRET_KEY=S... npx ts-node scripts/deploy-contract.ts
 ```
-
-The script will output:
-- **Contract ID** — paste into the StellarDripz UI
-- **Transaction Hash** — verifiable on Stellar Expert
-
-### Interact from the UI
-
-1. Connect any wallet (Freighter recommended)
-2. Paste the deployed Contract ID into the input field
-3. Click **Read** to fetch the current counter/greeting
-4. Click **+ Increment** to increment the counter (signs via wallet)
-5. Enter text and click **Set** to update the greeting
-6. Watch real-time events appear in the event log
+NEXT_PUBLIC_SOROBAN_RPC_URL
+NEXT_PUBLIC_HORIZON_URL
+NEXT_PUBLIC_STELLAR_NETWORK
+```
 
 ---
 
-## 🏗️ Project Structure
+## 📡 API Reference
+
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| `GET` | `/api/health` | Service health status + uptime | None |
+| `GET` | `/api/events?contractId=X` | SSE event stream | None |
+| `POST` | `/api/wallet/connect` | Register wallet session | None |
+| `GET` | `/api/balance/:address` | Fetch account balance | None |
+| `POST` | `/api/faucet/fund` | Request testnet XLM | Rate-limited |
+| `POST` | `/api/payment/send` | Build or submit payment | Rate-limited |
+| `POST` | `/api/contract/invoke` | Simulate, build, or submit contract call | Rate-limited |
+| `GET` | `/api/history` | Transaction history | None |
+| `GET` | `/api/analytics` | Usage analytics | None |
+| `POST` | `/api/batch` | Batch operations | Rate-limited |
+| `GET` | `/api/status` | Network status check | None |
+
+---
+
+## 🔒 Environment Variables
+
+See `.env.example` for the full list. Copy to `.env.local` for local development.
+
+**Required:**
+- `NEXT_PUBLIC_SOROBAN_RPC_URL` — Soroban RPC endpoint
+- `NEXT_PUBLIC_HORIZON_URL` — Horizon API endpoint
+
+**Optional (for contract features):**
+- `NEXT_PUBLIC_CONTRACT_COUNTER` — Deployed Counter contract ID
+- `NEXT_PUBLIC_CONTRACT_DRIP_TOKEN` — Deployed DripToken contract ID
+- `NEXT_PUBLIC_CONTRACT_DRIP_POOL` — Deployed DripPool contract ID
+- `NEXT_PUBLIC_CONTRACT_GOVERNANCE` — Deployed Governance contract ID
+- `NEXT_PUBLIC_CONTRACT_BADGE` — Deployed Badge contract ID
+
+**Deployer:**
+- `DEPLOYER_SECRET_KEY` — Secret key for contract deployment
+
+---
+
+## 📁 Project Structure
 
 ```
 stellardripz/
-├── README.md
+├── .github/workflows/
+│   └── ci-cd.yml              # CI/CD pipeline
+├── contracts/                  # Soroban smart contracts (Rust)
+│   ├── Cargo.toml
+│   └── src/
+│       ├── lib.rs
+│       ├── test.rs
+│       ├── counter/mod.rs
+│       ├── token/mod.rs
+│       ├── pool/mod.rs
+│       ├── governance/mod.rs
+│       ├── badge/mod.rs
+│       └── common/
+├── scripts/
+│   ├── deploy-contract.ts      # Contract deployment
+│   └── build-contracts.sh      # Build script
+├── src/
+│   ├── app/
+│   │   ├── page.tsx            # Main page
+│   │   ├── layout.tsx          # Root layout + ErrorBoundary
+│   │   ├── admin/page.tsx      # Admin dashboard
+│   │   └── api/                # API routes (10 endpoints)
+│   ├── components/             # React components (15+)
+│   ├── context/AppContext.tsx   # Global state manager
+│   ├── hooks/                  # Custom hooks
+│   ├── lib/
+│   │   ├── client/             # Frontend API clients
+│   │   ├── server/             # Backend services
+│   │   ├── stellar/            # Stellar integration
+│   │   ├── wallets/            # Wallet connector
+│   │   ├── db.ts               # Database abstraction
+│   │   ├── rateLimiter.ts      # Client rate limiter
+│   │   ├── logger.ts           # Structured logger
+│   │   └── env.ts              # Config validation
+│   ├── services/               # Re-exported service layer
+│   ├── types/index.ts          # TypeScript types
+│   └── __tests__/              # Test suites (7)
+├── .env.example
+├── Makefile
 ├── package.json
 ├── next.config.js
 ├── tailwind.config.ts
 ├── tsconfig.json
 ├── jest.config.js
-├── .env.local.example
-├── contracts/                          # Soroban smart contract
-│   ├── Cargo.toml
-│   ├── src/
-│   │   ├── lib.rs                      # Counter + greeting contract
-│   │   └── test.rs                     # Rust unit tests
-│   └── target/                         # Compiled WASM
-├── scripts/
-│   └── deploy-contract.ts              # Contract deployment script
-└── src/
-    ├── config.ts                       # Network constants & env config
-    ├── types/
-    │   └── index.ts                    # Shared TypeScript types
-    ├── services/
-    │   ├── walletService.ts            # Multi-wallet abstraction
-    │   ├── balanceService.ts           # Horizon multi-asset balance
-    │   ├── transactionService.ts       # Build, sign, submit txs
-    │   ├── contractService.ts          # Soroban contract interaction + events
-    │   └── addressBookService.ts       # Saved addresses CRUD
-    ├── context/
-    │   └── AppContext.tsx              # Global state (reducer + context)
-    ├── components/
-    │   ├── Header.tsx                  # App header with branding
-    │   ├── WalletCard.tsx              # Multi-wallet picker + connect
-    │   ├── BalanceCard.tsx             # Multi-asset balance display
-    │   ├── FaucetButton.tsx            # One-click faucet request
-    │   ├── SendForm.tsx                # Send XLM/assets form
-    │   ├── ContractInteraction.tsx     # Smart contract read/write UI
-    │   ├── TxStatusTracker.tsx         # Live transaction status
-    │   ├── TransactionHistory.tsx      # Transaction log
-    │   ├── NetworkWarning.tsx          # Mainnet warning banner
-    │   ├── QrModal.tsx                 # QR code generator
-    │   ├── AddressBook.tsx             # Address book manager
-    │   └── Toast.tsx                   # Toast notification system
-    ├── __tests__/                      # Jest unit tests
-    │   ├── config.test.ts
-    │   ├── walletService.test.ts
-    │   └── addressBookService.test.ts
-    └── app/
-        ├── layout.tsx                  # Root layout
-        ├── page.tsx                    # Main page
-        └── globals.css                 # Global styles
+├── postcss.config.js
+└── README.md
 ```
 
 ---
 
-## 🔄 Application Flow
+## 📱 Mobile Responsive
 
-```
-┌──────────────┐     ┌──────────────┐     ┌────────────────┐
-│  Wallet       │────▶│ walletService │────▶│  AppContext    │
-│  (Freighter,  │     │ (connect,     │     │  (global state)│
-│   xBull, etc) │     │  sign)        │     │                │
-└──────────────┘     └──────────────┘     └───────┬────────┘
-                                                   │
-        ┌──────────────────────────────────────────┼──────────────────────────┐
-        │                  │                       │                          │
-  ┌─────▼─────┐    ┌───────▼──────┐    ┌──────────▼──────────┐    ┌──────────▼──────────┐
-  │ WalletCard │    │  BalanceCard │    │  FaucetButton       │    │ ContractInteraction │
-  │ (connect)  │    │ (fetch XLM)  │    │  (Friendbot)        │    │ (soroban RPC)       │
-  └────────────┘    └──────────────┘    └─────────────────────┘    └─────────────────────┘
-```
+The UI is fully responsive with these breakpoints:
 
-1. User picks a wallet from the modal → public key stored in context
-2. Balance fetched from Horizon → displayed in BalanceCard (XLM + assets)
-3. Faucet button → Friendbot API → 10,000 XLM credited
-4. Send form → build tx → sign via wallet → submit to Horizon
-5. Contract section → simulate reads → sign+submit writes → poll events
-6. All transactions logged in TransactionHistory + real-time TxStatusTracker
+| Width | Layout | Changes |
+|-------|--------|---------|
+| **< 768px** | Single column | Stacked cards, full-width inputs, hamburger navigation |
+| **768-1024px** | Two column grid | Balance/Faucet left, Send/History right |
+| **> 1024px** | Max-width 5XL | Centered content, extended contract demos |
+
+All components use relative units, flexbox/grid, and Tailwind responsive classes.
 
 ---
 
-## 📸 Screenshots
+## 🎥 Demo Video Script (2-3 minutes)
 
-### Wallet Options Available
-![Wallet Picker](./screenshots/wallet-picker.png)
+1. **Introduction (0:00-0:20)**
+   - Show project README and architecture diagram
+   - Explain StellarDripz purpose
 
-> *Multi-wallet picker modal showing Freighter, xBull, Albedo, LOBSTR, and Rabet options.*
+2. **Wallet Connection & Faucet (0:20-0:50)**
+   - Connect Freighter wallet
+   - Click faucet to receive 10,000 testnet XLM
+   - Show balance update
 
-### Wallet Connected State
-![Wallet Connected](./screenshots/connected.png)
+3. **Send Payment (0:50-1:15)**
+   - Send XLM to another address
+   - Show transaction confirmation
+   - Transaction history update
 
-> *Connected state showing wallet name, truncated public key, copy address, and QR code buttons.*
+4. **Smart Contract Demo (1:15-2:00)**
+   - Paste deployed contract ID
+   - Read counter value
+   - Increment counter (wallet signing)
+   - Set greeting message
+   - Show real-time event stream
 
-### Balance Displayed
-![Balance Displayed](./screenshots/balance.png)
+5. **Advanced Contracts (2:00-2:30)**
+   - Show DripToken mint/transfer
+   - Show DripPool staking
+   - Show governance voting
+   - Show badge claims
 
-> *Multi-asset balance card showing XLM + custom assets with manual refresh.*
-
-### Successful Testnet Transaction
-![Transaction Success](./screenshots/transaction-success.png)
-
-> *Faucet request success showing transaction hash with explorer link. TxStatusTracker shows live status.*
-
-### Contract Interaction
-![Contract Interaction](./screenshots/contract-interaction.png)
-
-> *Smart contract UI: counter read/increment, greeting read/set, real-time event log.*
-
-### Mobile Responsive
-![Mobile View](./screenshots/mobile.png)
-
-> *Fully responsive layout adapting to smaller screens.*
-
----
-
-## 📋 Deployed Contract (Testnet)
-
-| Item | Value |
-|---|---|
-| **Contract ID** | *(Deploy using scripts/deploy-contract.ts)* |
-| **Network** | Stellar Testnet |
-| **Explorer** | [Stellar Expert Testnet](https://stellar.expert/explorer/testnet) |
-
-*After deployment, paste your contract ID here and add a screenshot of the transaction hash on Stellar Explorer.*
+6. **CI/CD & Testing (2:30-3:00)**
+   - Show GitHub Actions pipeline running
+   - Show test output (15 contract + 30 frontend tests passing)
+   - Show Vercel deployment
+   - Admin dashboard analytics
 
 ---
 
-## 🧪 Development Standards
+## 📊 Screenshots
 
-- **TypeScript throughout** — strict mode, no `any`
-- **Multi-wallet abstraction** — wallet logic isolated from UI components
-- **Service layer** — wallet, balance, transaction, contract services
-- **Component separation** — each component has a single responsibility
-- **Error handling** — 3 error types handled: wallet errors, network/RPC errors, transaction failures
-- **Environment config** — all endpoints configurable via env vars
-- **Persistence** — wallet state survives page reloads (24h localStorage)
-- **Real-time events** — 5-second polling for contract event synchronization
-- **Unit tested** — 22 tests across 3 suites (Jest + jsdom)
+### CI/CD Pipeline Running
+_Placeholder — Add after first pipeline run_
+
+### Test Output
+_Placeholder — Add after running tests_
+
+### Mobile Responsive UI
+_Placeholder — Add mobile screenshot_
+
+### Contract Deployment
+_Placeholder — Add after deploying contracts_
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Commit Convention
+We use [Conventional Commits](https://www.conventionalcommits.org/):
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `docs:` — Documentation
+- `test:` — Tests
+- `refactor:` — Code restructuring
+- `ci:` — CI/CD changes
+- `chore:` — Maintenance
 
 ---
 
 ## 📄 License
 
-MIT — feel free to use, modify, and distribute.
+MIT © StellarDripz
 
 ---
 
-**Built with 💧 for the Stellar developer community.**
+## 👥 Credits
 
-### 📁 Final Project Structure
-
-```
-src/
-├── app/
-│   ├── page.tsx                    # Main faucet UI
-│   ├── admin/page.tsx              # Analytics dashboard
-│   └── api/
-│       ├── fund/route.ts           # Rate-limited faucet endpoint
-│       ├── batch/route.ts          # Batch funding endpoint (max 10)
-│       └── status/route.ts         # Network health check (Horizon/Soroban/Friendbot)
-├── components/
-│   ├── WalletConnect.tsx           # Multi-wallet selector (Freighter/xBull/Albedo/LOBSTR/Rabet)
-│   ├── BalanceCard.tsx             # Multi-asset balance display
-│   ├── TransactionFeedback.tsx      # Live tx status (pending/success/error)
-│   ├── CooldownTimer.tsx           # Rate-limit countdown UI
-│   ├── QRFundModal.tsx             # Cross-device QR funding
-│   └── SorobanDemo.tsx            # Sample contract interaction (counter + greeting)
-├── lib/
-│   ├── stellar/
-│   │   ├── horizon.ts              # Balance fetch + sendPayment + faucet
-│   │   ├── soroban.ts             # Contract simulate/call/events
-│   │   └── network.ts             # Testnet config and passphrase
-│   ├── wallets/
-│   │   ├── freighter.ts           # Freighter connect/sign/detect
-│   │   └── walletKit.ts           # Multi-wallet abstraction layer
-│   ├── rateLimiter.ts             # Per-address faucet cooldown (60s)
-│   └── db.ts                      # Analytics tracking (localStorage → Supabase-ready)
-├── types/
-│   └── stellar.d.ts               # All TypeScript types (wallet, tx, contract, analytics)
-└── services/                       # Re-export shims → lib/ (backwards-compatible)
-```
+Built with:
+- [Next.js](https://nextjs.org)
+- [React](https://react.dev)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Stellar SDK](https://stellar.org/sdk)
+- [Soroban SDK](https://soroban.stellar.org)
+- [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-Wallets-Kit)
