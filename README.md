@@ -666,3 +666,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 - Wallet signing occurs client-side only
 - No private keys stored server-side
 - Environment variables validated at startup
+
