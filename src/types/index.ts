@@ -9,12 +9,27 @@ export interface WalletState {
   isFreighterInstalled: boolean;
 }
 
+// --- Asset Types ---
+
+export interface StellarAsset {
+  code: string;
+  issuer: string;
+  type: "native" | "credit_alphanum4" | "credit_alphanum12";
+}
+
+export interface AssetBalance {
+  asset: StellarAsset;
+  balance: string;
+  formatted: string;
+}
+
 // --- Balance Types ---
 
 export interface BalanceInfo {
   xlm: string;
   raw: string;
   lastFetched: Date | null;
+  assets: AssetBalance[];
 }
 
 // --- Transaction Types ---
@@ -33,6 +48,7 @@ export interface TransactionRecord {
   timestamp: Date;
   errorMessage?: string;
   explorerUrl?: string;
+  assetCode?: string;
 }
 
 // --- App State ---

@@ -1,38 +1,75 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { STELLAR_CONFIG } from "@/config";
-import type { BalanceInfo } from "@/types";
+import type { BalanceInfo, AssetBalance, StellarAsset } from "@/types";
 
 const server = new StellarSdk.Horizon.Server(STELLAR_CONFIG.horizonUrl);
 
 /**
- * Fetch the XLM balance for a given Stellar public key.
- * Returns the formatted balance string or throws.
+ * Parse a Horizon balance line into our AssetBalance type.
+ */
+function parseBalance(b: {
+  balance: string;
+  asset_type: string;
+  asset_code?: string;
+  asset_issuer?: string;
+}): AssetBalance {
+  const raw = b.balance;
+
+  if (b.asset_type === "native") {
+    return {
+      asset: { code: "XLM", issuer: "", type: "native" },
+      balance: raw,
+      formatted: parseFloat(raw).toLocaleString("en-US", {
+        minimumFractionDigits: 7,
+        maximumFractionDigits: 7,
+      }),
+    };
+  }
+
+  // Custom asset (alphanum4 or alphanum12)
+  const asset: StellarAsset = {
+    code: b.asset_code || "???",
+    issuer: b.asset_issuer || "",
+    type: b.asset_type as "credit_alphanum4" | "credit_alphanum12",
+  };
+
+  const decimals = asset.type === "credit_alphanum4" ? 7 : 12;
+  return {
+    asset,
+    balance: raw,
+    formatted: parseFloat(raw).toLocaleString("en-US", {
+      minimumFractionDigits: Math.min(decimals, 7),
+      maximumFractionDigits: Math.min(decimals, 7),
+    }),
+  };
+}
+
+/**
+ * Fetch all asset balances for a given Stellar public key.
+ * Returns XLM balance plus all custom asset balances.
  */
 export async function fetchBalance(
   publicKey: string
 ): Promise<BalanceInfo> {
   try {
     const account = await server.loadAccount(publicKey);
-    const xlmBalance = account.balances.find(
-      (b) => b.asset_type === "native"
-    );
 
-    if (!xlmBalance) {
-      return { xlm: "0.0000000", raw: "0", lastFetched: new Date() };
-    }
+    const assets: AssetBalance[] = account.balances.map(parseBalance);
 
-    const raw = xlmBalance.balance;
-    // Format to 7 decimal places (Stellar standard)
-    const formatted = parseFloat(raw).toLocaleString("en-US", {
-      minimumFractionDigits: 7,
-      maximumFractionDigits: 7,
-    });
+    const xlmAsset = assets.find((a) => a.asset.type === "native");
+    const xlm = xlmAsset?.formatted || "0.0000000";
+    const raw = xlmAsset?.balance || "0";
 
-    return { xlm: formatted, raw, lastFetched: new Date() };
+    return { xlm, raw, assets, lastFetched: new Date() };
   } catch (err: unknown) {
     // NotFoundError means the account hasn't been funded yet
     if (err instanceof StellarSdk.NotFoundError) {
-      return { xlm: "0.0000000", raw: "0", lastFetched: new Date() };
+      return {
+        xlm: "0.0000000",
+        raw: "0",
+        assets: [],
+        lastFetched: new Date(),
+      };
     }
     throw err;
   }

@@ -50,7 +50,8 @@ function TxRow({ tx }: { tx: TransactionRecord }) {
         <div>
           <span className="text-white/30">Amount: </span>
           <span className="font-mono text-white/60">
-            {tx.type === "faucet" ? "10,000" : tx.amount} XLM
+            {tx.type === "faucet" ? "10,000" : tx.amount}{" "}
+            {tx.assetCode || "XLM"}
           </span>
         </div>
         <div>

@@ -90,6 +90,7 @@ const initialState: AppState = {
   balance: {
     xlm: "0.0000000",
     raw: "0",
+    assets: [],
     lastFetched: null,
     loading: false,
     error: null,
@@ -106,7 +107,7 @@ interface AppContextValue {
   disconnect: () => void;
   refreshBalance: () => Promise<void>;
   doFaucetRequest: () => Promise<void>;
-  doSendPayment: (destination: string, amount: string) => Promise<void>;
+  doSendPayment: (destination: string, amount: string, assetCode?: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -241,8 +242,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [state.wallet.publicKey]);
 
   const doSendPayment = useCallback(
-    async (destination: string, amount: string) => {
+    async (destination: string, amount: string, assetCode?: string) => {
       if (!state.wallet.publicKey) return;
+
+      // Resolve asset from balance if an asset code is given
+      let asset: import("@/types").StellarAsset | undefined;
+      if (assetCode && assetCode !== "XLM") {
+        const found = state.balance.assets.find(
+          (a) => a.asset.code === assetCode
+        );
+        if (found) {
+          asset = found.asset;
+        }
+      }
 
       const txId = `send-${Date.now()}`;
       const pendingTx: TransactionRecord = {
@@ -252,6 +264,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         hash: null,
         amount,
         destination,
+        assetCode: assetCode || "XLM",
         timestamp: new Date(),
       };
 
@@ -262,7 +275,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const { hash } = await sendPayment(
           state.wallet.publicKey,
           destination,
-          amount
+          amount,
+          asset
         );
 
         const successTx: TransactionRecord = {
@@ -287,7 +301,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         dispatch({ type: "SET_TX_IN_PROGRESS", payload: "error" });
       }
     },
-    [state.wallet.publicKey, refreshBalance]
+    [state.wallet.publicKey, state.balance.assets, refreshBalance]
   );
 
   return (

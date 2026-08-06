@@ -14,6 +14,7 @@ export default function SendForm() {
   const [destError, setDestError] = useState("");
   const [amountError, setAmountError] = useState("");
   const [showPaymentQr, setShowPaymentQr] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState("XLM");
 
   if (!wallet.connected) return null;
 
@@ -60,7 +61,8 @@ export default function SendForm() {
     }
     if (!valid) return;
 
-    await doSendPayment(destination.trim(), amount.trim());
+    const assetCode = selectedAsset !== "XLM" ? selectedAsset : undefined;
+    await doSendPayment(destination.trim(), amount.trim(), assetCode);
     setDestination("");
     setAmount("");
   };
@@ -85,9 +87,9 @@ export default function SendForm() {
           <span className="text-xl">📤</span>
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-white">Send XLM</h3>
+          <h3 className="text-sm font-semibold text-white">Send</h3>
           <p className="text-xs text-white/50">
-            Transfer testnet XLM to another address
+            Transfer assets to another address
           </p>
         </div>
       </div>
@@ -122,9 +124,35 @@ export default function SendForm() {
         </div>
 
         {/* Amount */}
+        {/* Asset selector */}
         <div>
           <label className="block text-xs font-medium text-white/60 mb-1.5">
-            Amount (XLM)
+            Asset
+          </label>
+          <select
+            value={selectedAsset}
+            onChange={(e) => setSelectedAsset(e.target.value)}
+            disabled={isPending || isOnMainnet}
+            className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white transition-all focus:outline-none focus:ring-2 focus:border-stellar-blue/50 focus:ring-stellar-blue/30 disabled:opacity-50 disabled:cursor-not-allowed appearance-none"
+          >
+            <option value="XLM">XLM (native)</option>
+            {state.balance.assets
+              .filter((a) => a.asset.type !== "native")
+              .map((a) => (
+                <option
+                  key={`${a.asset.code}-${a.asset.issuer}`}
+                  value={a.asset.code}
+                >
+                  {a.asset.code} ({a.formatted})
+                </option>
+              ))}
+          </select>
+        </div>
+
+        {/* Amount */}
+        <div>
+          <label className="block text-xs font-medium text-white/60 mb-1.5">
+            Amount
           </label>
           <input
             type="number"

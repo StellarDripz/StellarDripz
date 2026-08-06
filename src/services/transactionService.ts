@@ -2,6 +2,7 @@ import * as StellarSdk from "@stellar/stellar-sdk";
 import { signTx } from "./walletService";
 import { STELLAR_CONFIG } from "@/config";
 import { fetchBalance } from "./balanceService";
+import type { StellarAsset } from "@/types";
 
 const server = new StellarSdk.Horizon.Server(STELLAR_CONFIG.horizonUrl);
 
@@ -48,14 +49,23 @@ export async function requestFaucetFunds(
   return { hash, newBalance: balance.xlm };
 }
 
+function toStellarAsset(asset: StellarAsset): StellarSdk.Asset {
+  if (asset.type === "native") {
+    return StellarSdk.Asset.native();
+  }
+  return new StellarSdk.Asset(asset.code, asset.issuer);
+}
+
 /**
  * Build, sign (via Freighter), and submit a payment transaction.
+ * Supports native XLM and custom Stellar assets.
  * Returns the transaction hash on success.
  */
 export async function sendPayment(
   senderPublicKey: string,
   destination: string,
-  amount: string
+  amount: string,
+  asset?: StellarAsset
 ): Promise<{ hash: string }> {
   // Validate network passphrase
   if (
@@ -67,6 +77,8 @@ export async function sendPayment(
   // Load the sender's account from Horizon
   const sourceAccount = await server.loadAccount(senderPublicKey);
 
+  const stellarAsset = asset ? toStellarAsset(asset) : StellarSdk.Asset.native();
+
   // Build the transaction
   const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
     fee: StellarSdk.BASE_FEE,
@@ -75,7 +87,7 @@ export async function sendPayment(
     .addOperation(
       StellarSdk.Operation.payment({
         destination,
-        asset: StellarSdk.Asset.native(),
+        asset: stellarAsset,
         amount,
       })
     )
