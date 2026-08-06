@@ -125,3 +125,4 @@ export function showToast(toast: Omit<ToastMessage, "id">) {
     fn({ ...toast, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` });
   }
 }
+// Toast system uses window-level event bus for cross-component communication
