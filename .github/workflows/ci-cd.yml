@@ -1,0 +1,173 @@
+name: StellarDripz CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: "20"
+  RUST_TOOLCHAIN: "stable"
+
+jobs:
+  # ─── Contract Tests ───────────────────────────────────────────────
+  contract-tests:
+    name: 🔧 Smart Contract Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          target: wasm32-unknown-unknown
+          override: true
+
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Test contracts
+        run: cargo test --verbose
+
+      - name: Build WASM (check compilation)
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Check WASM size
+        run: |
+          SIZE=$(stat -c%s target/wasm32-unknown-unknown/release/stellardripz.wasm 2>/dev/null || echo "0")
+          echo "WASM size: $(( SIZE / 1024 )) KB"
+          if [ "$SIZE" -gt 128000 ]; then
+            echo "⚠️  WASM exceeds 128KB — optimise before deploying"
+          fi
+
+  # ─── Frontend Tests ───────────────────────────────────────────────
+  frontend-tests:
+    name: 🧪 Frontend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Jest tests
+        run: npm test -- --verbose
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+  # ─── Lint ─────────────────────────────────────────────────────────
+  lint:
+    name: 📋 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  # ─── Build ────────────────────────────────────────────────────────
+  build:
+    name: 🏗️ Build
+    needs: [contract-tests, frontend-tests, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Check build output
+        run: |
+          if [ -d ".next" ]; then
+            echo "✅ Build successful"
+            ls -la .next
+          else
+            echo "❌ Build failed"
+            exit 1
+          fi
+
+  # ─── Deploy Preview (Vercel) ─────────────────────────────────────
+  deploy-preview:
+    name: 🚀 Deploy Preview
+    if: github.event_name == 'pull_request'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (preview)
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod=false"
+        env:
+          NEXT_PUBLIC_SOROBAN_RPC_URL: ${{ vars.NEXT_PUBLIC_SOROBAN_RPC_URL }}
+          NEXT_PUBLIC_HORIZON_URL: ${{ vars.NEXT_PUBLIC_HORIZON_URL }}
+          NEXT_PUBLIC_STELLAR_NETWORK: ${{ vars.NEXT_PUBLIC_STELLAR_NETWORK }}
+
+  # ─── Deploy Production ───────────────────────────────────────────
+  deploy-production:
+    name: 🌐 Deploy Production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://stellardripz.vercel.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Vercel (production)
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: "--prod"
+        env:
+          NEXT_PUBLIC_SOROBAN_RPC_URL: ${{ vars.NEXT_PUBLIC_SOROBAN_RPC_URL }}
+          NEXT_PUBLIC_HORIZON_URL: ${{ vars.NEXT_PUBLIC_HORIZON_URL }}
+          NEXT_PUBLIC_STELLAR_NETWORK: ${{ vars.NEXT_PUBLIC_STELLAR_NETWORK }}
