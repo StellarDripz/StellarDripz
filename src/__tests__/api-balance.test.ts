@@ -88,3 +88,4 @@ describe("GET /api/balance/[address]", () => {
     expect(res.status).toBe(500);
   });
 });
+// Edge case: handles uninitialized accounts (404 from Horizon)
