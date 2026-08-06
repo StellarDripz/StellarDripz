@@ -56,3 +56,4 @@ clean: ## Clean build artifacts
 	rm -rf .next contracts/target
 	@echo "✅ Clean"
 # Lint: runs ESLint on all source files
+# Deploy: push to Vercel production
