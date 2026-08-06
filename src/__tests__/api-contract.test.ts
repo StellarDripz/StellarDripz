@@ -1,0 +1,147 @@
+/**
+ * Tests for POST /api/contract/invoke route.
+ */
+
+jest.mock("next/server", () => {
+  class MockNextRequest {
+    url: string; method: string;
+    headers: { get: (name: string) => string | null };
+    private bodyStr: string;
+    constructor(input: string, init?: RequestInit) {
+      this.url = input;
+      this.method = init?.method || "GET";
+      this.headers = {
+        get: (name: string) =>
+          (init?.headers as Record<string, string> | undefined)?.[name.toLowerCase()] ?? null,
+      };
+      this.bodyStr = (init as { body?: string } | undefined)?.body || "";
+    }
+    async json() { try { return JSON.parse(this.bodyStr); } catch { return {}; } }
+  }
+  class MockNextResponse {
+    status: number;
+    private body: unknown;
+    constructor(body: unknown, init?: ResponseInit) {
+      this.status = init?.status || 200;
+      this.body = body;
+    }
+    static json(body: unknown, init?: ResponseInit) {
+      return new MockNextResponse(body, init);
+    }
+    async json() {
+      if (typeof this.body === "string") { try { return JSON.parse(this.body); } catch { return this.body; } }
+      return this.body;
+    }
+  }
+  return { NextRequest: MockNextRequest, NextResponse: MockNextResponse };
+});
+
+jest.mock("@/lib/server/rateLimiter", () => ({
+  checkRateLimit: jest.fn().mockReturnValue(null),
+  clearRateLimits: jest.fn(),
+}));
+
+const mockSimulate = jest.fn();
+const mockBuild = jest.fn();
+const mockSubmit = jest.fn();
+jest.mock("@/lib/server/sorobanService", () => ({
+  simulateContractCallServer: (...args: unknown[]) => mockSimulate(...args),
+  buildContractInvocation: (...args: unknown[]) => mockBuild(...args),
+  submitContractInvocation: (...args: unknown[]) => mockSubmit(...args),
+}));
+
+import { NextRequest, NextResponse } from "next/server";
+
+let POST: (req: InstanceType<typeof NextRequest>) => Promise<InstanceType<typeof NextResponse>>;
+
+beforeAll(async () => {
+  const mod = await import("@/app/api/contract/invoke/route");
+  POST = mod.POST;
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockSimulate.mockResolvedValue({ resultValue: "42" });
+  mockBuild.mockResolvedValue({ xdr: "AAAA...==" });
+  mockSubmit.mockResolvedValue({ hash: "contract-hash-abc", resultValue: "42" });
+});
+
+function createReq(body: unknown): InstanceType<typeof NextRequest> {
+  return new NextRequest("http://localhost:3000/api/contract/invoke", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  } as any);
+}
+
+describe("POST /api/contract/invoke", () => {
+  describe("validation", () => {
+    it("returns 400 when required fields missing", async () => {
+      const req = createReq({});
+      const res = await POST(req);
+      expect(res.status).toBe(400);
+    });
+  });
+
+  describe("simulate mode", () => {
+    it("simulates a contract call and returns result", async () => {
+      const req = createReq({
+        contractId: "CCONTRACT123",
+        functionName: "get_counter",
+        signerAddress: "GSIGNER12345678901234567890123456789012345678",
+        simulate: true,
+        args: [],
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.resultValue).toBe("42");
+    });
+  });
+
+  describe("build mode", () => {
+    it("builds a contract invocation and returns XDR", async () => {
+      const req = createReq({
+        contractId: "CCONTRACT123",
+        functionName: "increment",
+        signerAddress: "GSIGNER12345678901234567890123456789012345678",
+        args: ["test_arg"],
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect((await res.json()).xdr).toBe("AAAA...==");
+    });
+  });
+
+  describe("submit mode", () => {
+    it("submits signed contract invocation", async () => {
+      const req = createReq({
+        contractId: "CCONTRACT123",
+        functionName: "increment",
+        signerAddress: "GSIGNER12345678901234567890123456789012345678",
+        signedXdr: "AAAA...==",
+        args: [],
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+
+      const json = await res.json();
+      expect(json.success).toBe(true);
+      expect(json.hash).toBe("contract-hash-abc");
+    });
+
+    it("returns 500 on contract error", async () => {
+      mockSubmit.mockRejectedValueOnce(new Error("Contract call reverted"));
+      const req = createReq({
+        contractId: "CCONTRACT123",
+        functionName: "bad_function",
+        signerAddress: "GSIGNER12345678901234567890123456789012345678",
+        signedXdr: "AAAA...==",
+        args: [],
+      });
+      const res = await POST(req);
+      expect(res.status).toBe(500);
+    });
+  });
+});
