@@ -150,3 +150,4 @@ export default function WalletConnect() {
   );
 }
 
+// Wallet icons mapped by ID for consistent UI rendering
