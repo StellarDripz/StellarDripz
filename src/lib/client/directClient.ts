@@ -198,3 +198,4 @@ export async function directGetLatestLedger(): Promise<number> {
 
 export { STELLAR_NETWORK };
 // CORS: Horizon and Soroban RPC allow browser-origin requests
+
