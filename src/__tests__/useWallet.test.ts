@@ -178,3 +178,4 @@ describe("useWallet", () => {
     });
   });
 });
+// Edge case: handles wallet disconnect during async operation
