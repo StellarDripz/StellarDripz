@@ -141,3 +141,4 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
     default: throw new Error(`Signing not supported for wallet: ${walletId}`);
   }
 }
+// Wallet registry maps supported wallet IDs to detection functions
