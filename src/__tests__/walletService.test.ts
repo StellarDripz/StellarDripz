@@ -6,7 +6,7 @@ import {
   persistWallet,
   loadPersistedWallet,
   clearPersistedWallet,
-} from "@/services/walletService";
+} from "@/lib/wallets/walletKit";
 
 const STORAGE_KEY = "stellardripz_wallet";
 

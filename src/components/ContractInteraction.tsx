@@ -7,7 +7,7 @@ import {
   callContractFunction,
   getLatestLedger,
   fetchContractEvents,
-} from "@/services/contractService";
+} from "@/lib/stellar/soroban";
 import { showToast } from "./Toast";
 import * as StellarSdk from "@stellar/stellar-sdk";
 

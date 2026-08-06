@@ -1,20 +1,20 @@
 /**
  * Unit tests for config and transaction service pure functions
  */
-import { STELLAR_CONFIG } from "@/config";
-import { getExplorerUrl } from "@/services/transactionService";
+import { STELLAR_NETWORK } from "@/lib/stellar/network";
+import { getExplorerUrl } from "@/lib/stellar/horizon";
 
-describe("STELLAR_CONFIG", () => {
+describe("STELLAR_NETWORK", () => {
   it("has required Stellar testnet configuration", () => {
-    expect(STELLAR_CONFIG.network).toBe("TESTNET");
-    expect(STELLAR_CONFIG.horizonUrl).toBe(
+    expect(STELLAR_NETWORK.network).toBe("TESTNET");
+    expect(STELLAR_NETWORK.horizonUrl).toBe(
       "https://horizon-testnet.stellar.org"
     );
-    expect(STELLAR_CONFIG.friendbotUrl).toBe("https://friendbot.stellar.org");
-    expect(STELLAR_CONFIG.networkPassphrase).toBe(
+    expect(STELLAR_NETWORK.friendbotUrl).toBe("https://friendbot.stellar.org");
+    expect(STELLAR_NETWORK.networkPassphrase).toBe(
       "Test SDF Network ; September 2015"
     );
-    expect(STELLAR_CONFIG.stellarExpertUrl).toBe(
+    expect(STELLAR_NETWORK.stellarExpertUrl).toBe(
       "https://stellar.expert/explorer/testnet"
     );
   });

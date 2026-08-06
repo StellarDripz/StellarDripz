@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
 import QrModal from "./QrModal";
 import type { SupportedWallet } from "@/types/stellar";
-import { getSupportedWallets } from "@/services/walletService";
+import { getSupportedWallets } from "@/lib/wallets/walletKit";
 
 /** Simple wallet icon based on wallet ID */
 function walletIcon(id: string): string {
