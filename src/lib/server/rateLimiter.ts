@@ -39,6 +39,12 @@ const DEFAULTS: Record<string, RateLimitConfig> = {
 /**
  * Check rate limit. Returns null if allowed, or a NextResponse with 429 if blocked.
  */
+/** Clear all rate limit entries (for testing). */
+export function clearRateLimits(): void {
+  ipMap.clear();
+  addressMap.clear();
+}
+
 export function checkRateLimit(
   request: NextRequest,
   category: keyof typeof DEFAULTS,
