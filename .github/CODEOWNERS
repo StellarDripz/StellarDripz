@@ -1,0 +1,22 @@
+# Code owners — automatically assign PR reviewers
+
+# Root-level owners (review all PRs)
+* @StellarDripz/maintainers
+
+# Smart contracts (Rust/Soroban)
+contracts/     @StellarDripz/contract-devs
+scripts/       @StellarDripz/contract-devs
+
+# Frontend (Next.js/React/TypeScript)
+src/           @StellarDripz/frontend-devs
+app/           @StellarDripz/frontend-devs
+components/    @StellarDripz/frontend-devs
+
+# CI/CD and infrastructure
+.github/       @StellarDripz/devops
+Makefile       @StellarDripz/devops
+Dockerfile     @StellarDripz/devops
+
+# Documentation
+*.md           @StellarDripz/maintainers
+docs/          @StellarDripz/maintainers
