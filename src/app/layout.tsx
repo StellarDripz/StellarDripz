@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import Header from "@/components/Header";
 import ToastContainer from "@/components/Toast";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "StellarDripz — Testnet XLM Faucet",
@@ -28,9 +29,11 @@ export default function RootLayout({
       <body className="min-h-screen bg-surface-950 bg-grid">
         <AppProvider>
           <Header />
-          <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-            {children}
-          </main>
+          <ErrorBoundary>
+            <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+              {children}
+            </main>
+          </ErrorBoundary>
           <ToastContainer />
           <footer className="border-t border-white/5 py-6 text-center">
             <p className="text-xs text-white/20">
