@@ -19,3 +19,4 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
+// Next.js configuration with Stellar SDK externals for browser compatibility
