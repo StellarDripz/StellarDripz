@@ -84,3 +84,4 @@ describe("dbService", () => {
     });
   });
 });
+// Edge case: handles malformed JSON in localStorage
