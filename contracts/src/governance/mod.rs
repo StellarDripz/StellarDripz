@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, IntoVal, String, Symbol, symbol_short, Vec, Map};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec, Map};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::token;
@@ -212,7 +212,7 @@ impl DripGovernance {
     /// Get voting power by querying the token contract's balance.
     /// Uses cross-contract call to DripToken::balance().
     fn get_voting_power_internal(env: &Env, voter: &Address, token_id: &Address) -> i128 {
-        let token_client = token::Client::new(env, token_id);
+        let token_client = token::DripTokenClient::new(env, token_id);
         token_client.balance(voter)
     }
 
@@ -267,7 +267,7 @@ mod governance_test {
 
         // Deploy token and mint to proposer for voting power
         let token_id = env.register(DripToken, ());
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &proposer, &1000i128);
 
@@ -301,7 +301,7 @@ mod governance_test {
 
         // Deploy token and mint to both proposer and voter
         let token_id = env.register(DripToken, ());
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &proposer, &1000i128);
         token_client.mint(&admin, &voter, &5000i128);

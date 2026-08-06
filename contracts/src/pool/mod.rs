@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, IntoVal, String, Symbol, symbol_short, Vec};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::token;
@@ -60,13 +60,13 @@ impl DripPool {
         if amount < config.min_stake { panic!("Below minimum stake"); }
         let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
         let pool_address = env.current_contract_address();
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.transfer_from(&pool_address, &user, &pool_address, &amount);
         let stake_key = StakeKey::Stake(user.clone());
         let mut existing_stake: StakeInfo = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
         let new_total = existing_stake.amount + amount;
         if new_total > config.max_stake { panic!("Exceeds maximum stake"); }
-        if existing_stake.amount > 0 { let pending = Self::calculate_reward(&env, &user); if pending > 0 { existing_stake.reward_claimed += pending; } }
+        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed += pending; } }
         let current_ledger = env.ledger().sequence();
         existing_stake.amount = new_total;
         existing_stake.start_ledger = current_ledger;
@@ -86,7 +86,7 @@ impl DripPool {
         let current_ledger = env.ledger().sequence();
         let locked_until = existing_stake.start_ledger + config.lock_period;
         if current_ledger < locked_until { panic!("Tokens are locked"); }
-        if existing_stake.amount > 0 { let pending = Self::calculate_reward(&env, &user); if pending > 0 { existing_stake.reward_claimed += pending; } }
+        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed += pending; } }
         existing_stake.amount -= amount;
         existing_stake.start_ledger = current_ledger;
         if existing_stake.amount == 0 { env.storage().persistent().remove(&stake_key); } else { env.storage().persistent().set(&stake_key, &existing_stake); }
@@ -95,7 +95,7 @@ impl DripPool {
         s::set_persistent(&env, &KEY_TOTAL_STAKED, &total_staked);
         let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
         let pool_address = env.current_contract_address();
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.transfer(&pool_address, &user, &amount);
         e::publish(&env, (e::EVENT_UNSTAKE, &user), amount);
     }
@@ -104,7 +104,7 @@ impl DripPool {
         user.require_auth();
         let stake_key = StakeKey::Stake(user.clone());
         let mut existing_stake: StakeInfo = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
-        let pending = Self::calculate_reward(&env, &user);
+        let pending = Self::calculate_reward(env.clone(), user.clone());
         let total_reward = existing_stake.reward_claimed + pending;
         if total_reward <= 0 { return 0; }
         existing_stake.reward_claimed = 0;
@@ -114,8 +114,8 @@ impl DripPool {
         total_reward
     }
 
-    pub fn calculate_reward(env: &Env, user: &Address) -> i128 {
-        let config: PoolConfig = s::get_persistent(env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
+    pub fn calculate_reward(env: Env, user: Address) -> i128 {
+        let config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
         let stake_key = StakeKey::Stake(user.clone());
         let stake: StakeInfo = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
         if stake.amount == 0 || config.reward_rate == 0 { return 0; }
@@ -141,7 +141,7 @@ impl DripPool {
         let mut config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
         config.active = active;
         s::set_persistent(&env, &KEY_POOL_CONFIG, &config);
-        e::publish(&env, (symbol_short!("pool_active"), &admin), active);
+        e::publish(&env, (symbol_short!("pool_act"), &admin), active);
     }
 
     pub fn get_stake(env: Env, user: Address) -> StakeInfo {
@@ -175,7 +175,7 @@ mod pool_test {
         let admin = Address::random(&env);
         let user = Address::random(&env);
         let token_id = env.register(DripToken, ());
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.initialize(&admin, &String::from_str(&env, "DripToken"), &String::from_str(&env, "DRIP"), &7u32);
         token_client.mint(&admin, &user, &5000i128);
         let contract_id = env.register(DripPool, ());
@@ -198,7 +198,7 @@ mod pool_test {
         let admin = Address::random(&env);
         let user = Address::random(&env);
         let token_id = env.register(DripToken, ());
-        let token_client = token::Client::new(&env, &token_id);
+        let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &user, &5000i128);
         let contract_id = env.register(DripPool, ());

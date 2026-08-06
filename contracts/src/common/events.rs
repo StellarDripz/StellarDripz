@@ -12,8 +12,9 @@ pub const EVENT_PROPOSE: Symbol = symbol_short!("propose");
 pub const EVENT_BADGE_CLAIM: Symbol = symbol_short!("claim");
 pub const EVENT_APPROVE: Symbol = symbol_short!("approve");
 
-/// Publish a contract event with topic and data
-pub fn publish(env: &Env, topics: impl IntoVal<Env, soroban_sdk::Val>, data: impl IntoVal<Env, soroban_sdk::Val>) {
+/// Publish a contract event with topics and data.
+/// Topics must be a tuple of IntoVal<Env, Val> items (max 4).
+pub fn publish(env: &Env, topics: impl soroban_sdk::Topics, data: impl IntoVal<Env, soroban_sdk::Val>) {
     env.events().publish(topics, data);
 }
 
