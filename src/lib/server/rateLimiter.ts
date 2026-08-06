@@ -93,3 +93,4 @@ export function checkRateLimit(
 
   return null; // Allowed
 }
+// Enforces rate limits per-address with sliding window algorithm
