@@ -1,16 +1,127 @@
 "use client";
+
 import { useState, useCallback, useEffect } from "react";
-import type { WalletState } from "@/types/stellar";
+import type { WalletState, SupportedWallet } from "@/types/stellar";
+import {
+  connectWithWallet,
+  clearPersistedWallet,
+  checkAnyWalletInstalled,
+  getSupportedWallets,
+  loadPersistedWallet,
+  resetKit,
+} from "@/lib/wallets/walletKit";
+import { connectAndRegister } from "@/lib/client/walletClient";
 
 interface UseWalletReturn {
+  /** Current wallet state */
   wallet: WalletState;
+  /** Whether wallet connection is in progress */
   connecting: boolean;
+  /** Last connection error, if any */
   error: string | null;
+  /** Connect to a wallet by ID */
   connect: (walletId: string) => Promise<void>;
+  /** Disconnect and clear wallet state */
   disconnect: () => void;
+  /** Re-check which wallets are available */
   refreshWallets: () => void;
 }
 
+/**
+ * Hook for managing wallet connection state.
+ * Handles auto-reconnection from persisted wallet data.
+ */
 export function useWallet(): UseWalletReturn {
-  return { wallet: {} as WalletState, connecting: false, error: null, connect: async () => {}, disconnect: () => {}, refreshWallets: () => {} };
+  const [wallet, setWallet] = useState<WalletState>({
+    connected: false,
+    publicKey: null,
+    network: "UNKNOWN",
+    walletId: null,
+    walletName: null,
+    isAnyWalletInstalled: false,
+    availableWallets: [],
+  });
+  const [connecting, setConnecting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Initialise wallet detection and auto-reconnect
+  useEffect(() => {
+    setWallet((prev) => ({
+      ...prev,
+      isAnyWalletInstalled: checkAnyWalletInstalled(),
+      availableWallets: getSupportedWallets(),
+    }));
+
+    const persisted = loadPersistedWallet();
+    if (persisted) {
+      setConnecting(true);
+      connectWithWallet(persisted.walletId)
+        .then((result) => {
+          setWallet((prev) => ({
+            ...prev,
+            connected: true,
+            publicKey: result.publicKey,
+            network: result.network,
+            walletId: result.walletId,
+            walletName: result.walletName,
+          }));
+          return connectAndRegister(result.publicKey, result.walletId, result.walletName);
+        })
+        .catch(() => {
+          clearPersistedWallet();
+        })
+        .finally(() => setConnecting(false));
+    }
+  }, []);
+
+  const connect = useCallback(async (walletId: string) => {
+    setConnecting(true);
+    setError(null);
+    try {
+      const result = await connectWithWallet(walletId);
+      setWallet((prev) => ({
+        ...prev,
+        connected: true,
+        publicKey: result.publicKey,
+        network: result.network,
+        walletId: result.walletId,
+        walletName: result.walletName,
+      }));
+      await connectAndRegister(result.publicKey, result.walletId, result.walletName);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Wallet connection failed";
+      setError(message);
+      throw err;
+    } finally {
+      setConnecting(false);
+    }
+  }, []);
+
+  const disconnect = useCallback(() => {
+    clearPersistedWallet();
+    resetKit();
+    setWallet((prev) => ({
+      ...prev,
+      connected: false,
+      publicKey: null,
+      walletId: null,
+      walletName: null,
+      network: "UNKNOWN",
+    }));
+    setError(null);
+  }, []);
+
+  const refreshWallets = useCallback(() => {
+    setWallet((prev) => ({
+      ...prev,
+      isAnyWalletInstalled: checkAnyWalletInstalled(),
+      availableWallets: getSupportedWallets(),
+    }));
+  }, []);
+
+  return { wallet, connecting, error, connect, disconnect, refreshWallets };
 }
+
+/** Re-export wallet types for convenience */
+export type { WalletState, SupportedWallet };
