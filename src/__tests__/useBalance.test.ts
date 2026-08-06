@@ -1,12 +1,12 @@
 /**
- * Tests for useBalance hook.
+ * Tests for useBalance hook — now uses direct Horizon reads.
  */
 import { renderHook, act, waitFor } from "@testing-library/react";
 
-const mockFetchBalance = jest.fn();
+const mockDirectFetchBalance = jest.fn();
 
-jest.mock("@/lib/client/apiClient", () => ({
-  fetchBalance: (...args: unknown[]) => mockFetchBalance(...args),
+jest.mock("@/lib/client/directClient", () => ({
+  directFetchBalance: (...args: unknown[]) => mockDirectFetchBalance(...args),
 }));
 
 let useBalance: typeof import("@/hooks/useBalance").useBalance;
@@ -18,7 +18,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockFetchBalance.mockResolvedValue({
+  mockDirectFetchBalance.mockResolvedValue({
     xlm: "10.0000000",
     raw: "100000000",
     assets: [],
@@ -43,32 +43,31 @@ describe("useBalance", () => {
         useBalance({ address: "GADDR123", enabled: false })
       );
 
-      expect(mockFetchBalance).not.toHaveBeenCalled();
+      expect(mockDirectFetchBalance).not.toHaveBeenCalled();
     });
   });
 
-  describe("balance fetching", () => {
-    it("fetches balance on mount with valid address", async () => {
+  describe("direct balance fetching", () => {
+    it("fetches balance via direct Horizon on mount", async () => {
       const { result } = renderHook(() =>
         useBalance({ address: "GADDR123" })
       );
 
-      // Should be loading initially
       expect(result.current.loading).toBe(true);
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(mockFetchBalance).toHaveBeenCalledWith("GADDR123");
+      expect(mockDirectFetchBalance).toHaveBeenCalledWith("GADDR123");
       expect(result.current.balance.xlm).toBe("10.0000000");
       expect(result.current.balance.raw).toBe("100000000");
       expect(result.current.balance.lastFetched).not.toBeNull();
       expect(result.current.error).toBeNull();
     });
 
-    it("maps assets from API response", async () => {
-      mockFetchBalance.mockResolvedValueOnce({
+    it("maps assets from direct Horizon response", async () => {
+      mockDirectFetchBalance.mockResolvedValueOnce({
         xlm: "100.0000000",
         raw: "1000000000",
         assets: [
@@ -89,8 +88,8 @@ describe("useBalance", () => {
       expect(result.current.balance.assets[0].asset.code).toBe("USDC");
     });
 
-    it("handles fetch error", async () => {
-      mockFetchBalance.mockRejectedValueOnce(new Error("Network error"));
+    it("handles direct fetch error", async () => {
+      mockDirectFetchBalance.mockRejectedValueOnce(new Error("Horizon timeout"));
 
       const { result } = renderHook(() =>
         useBalance({ address: "GADDR123" })
@@ -100,7 +99,7 @@ describe("useBalance", () => {
         expect(result.current.loading).toBe(false);
       });
 
-      expect(result.current.error).toBe("Network error");
+      expect(result.current.error).toBe("Horizon timeout");
     });
 
     it("refetches when address changes", async () => {
@@ -110,11 +109,11 @@ describe("useBalance", () => {
       );
 
       await waitFor(() => {
-        expect(mockFetchBalance).toHaveBeenCalledWith("GADDR_A");
+        expect(mockDirectFetchBalance).toHaveBeenCalledWith("GADDR_A");
       });
 
       jest.clearAllMocks();
-      mockFetchBalance.mockResolvedValueOnce({
+      mockDirectFetchBalance.mockResolvedValueOnce({
         xlm: "50.0000000",
         raw: "500000000",
         assets: [],
@@ -123,7 +122,7 @@ describe("useBalance", () => {
       rerender({ addr: "GADDR_B" });
 
       await waitFor(() => {
-        expect(mockFetchBalance).toHaveBeenCalledWith("GADDR_B");
+        expect(mockDirectFetchBalance).toHaveBeenCalledWith("GADDR_B");
       });
     });
   });
@@ -139,7 +138,7 @@ describe("useBalance", () => {
       });
 
       jest.clearAllMocks();
-      mockFetchBalance.mockResolvedValueOnce({
+      mockDirectFetchBalance.mockResolvedValueOnce({
         xlm: "200.0000000",
         raw: "2000000000",
         assets: [],
@@ -149,7 +148,7 @@ describe("useBalance", () => {
         await result.current.refresh();
       });
 
-      expect(mockFetchBalance).toHaveBeenCalledWith("GADDR123");
+      expect(mockDirectFetchBalance).toHaveBeenCalledWith("GADDR123");
       expect(result.current.balance.xlm).toBe("200.0000000");
     });
   });
@@ -163,15 +162,14 @@ describe("useBalance", () => {
       );
 
       await waitFor(() => {
-        expect(mockFetchBalance).toHaveBeenCalledTimes(1);
+        expect(mockDirectFetchBalance).toHaveBeenCalledTimes(1);
       });
 
-      // Advance timer
       await act(async () => {
         jest.advanceTimersByTime(10000);
       });
 
-      expect(mockFetchBalance).toHaveBeenCalledTimes(2);
+      expect(mockDirectFetchBalance).toHaveBeenCalledTimes(2);
 
       jest.useRealTimers();
     });
@@ -183,7 +181,7 @@ describe("useBalance", () => {
       const pendingBalance = new Promise((resolve) => {
         resolveBalance = resolve;
       });
-      mockFetchBalance.mockReturnValueOnce(pendingBalance);
+      mockDirectFetchBalance.mockReturnValueOnce(pendingBalance);
 
       const { result, unmount } = renderHook(() =>
         useBalance({ address: "GADDR123" })
@@ -191,7 +189,6 @@ describe("useBalance", () => {
 
       unmount();
 
-      // Resolve after unmount — should not throw
       await act(async () => {
         resolveBalance!({
           xlm: "1.0000000",
