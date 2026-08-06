@@ -65,3 +65,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+// Simulate (read-only) and invoke (write) contract operations
