@@ -72,3 +72,4 @@ export function clearAnalytics(): void {
 }
 
 export type { AnalyticsEvent };
+// Analytics tracking via localStorage with event batching support
