@@ -25,3 +25,4 @@ export default function NetworkWarning() {
     </div>
   );
 }
+// NetworkWarning: blocks mainnet interactions for testnet-only safety
