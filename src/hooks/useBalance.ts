@@ -104,3 +104,4 @@ export function useBalance({
 
 export type { BalanceInfo, AssetBalance };
 // Performance note: direct Horizon reads avoid proxy round-trip (~70ms savings)
+
