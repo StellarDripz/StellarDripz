@@ -669,3 +669,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 
 ### 🚦 Rate Limiting Strategy
 | Endpoint | Window | Max Requests |
+|----------|--------|--------------|
