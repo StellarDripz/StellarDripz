@@ -659,3 +659,4 @@ We welcome contributions! Please follow the conventional commits style and ensur
 ### PR Checklist
 - [ ] All tests pass (`npm test`)
 - [ ] TypeScript compiles cleanly (`npx tsc --noEmit`)
+- [ ] Contracts build (`npm run contracts:build`)
