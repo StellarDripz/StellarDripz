@@ -1,6 +1,30 @@
 /**
  * Database service — transaction history, analytics, and session storage.
- * Uses a JSON file for persistence (production: swap with PostgreSQL/Supabase).
+ *
+ * CURRENT: JSON file persistence (data/stellardripz-db.json)
+ *
+ * PRODUCTION MIGRATION (Supabase/PostgreSQL):
+ *   1. Create tables: transactions, analytics, sessions (see schema below)
+ *   2. Set up @supabase/supabase-js client
+ *   3. Replace readDb/writeDb with Supabase queries
+ *   4. Add Row Level Security (RLS) policies for multi-tenancy
+ *   5. Run migration: npx supabase migration new init
+ *
+ * Schema:
+ *   CREATE TABLE transactions (
+ *     id TEXT PRIMARY KEY, type TEXT, status TEXT, hash TEXT,
+ *     amount TEXT, sender_address TEXT, destination_address TEXT,
+ *     function_name TEXT, contract_id TEXT, error_message TEXT,
+ *     timestamp BIGINT, ip TEXT, user_agent TEXT
+ *   );
+ *   CREATE TABLE analytics (
+ *     id TEXT PRIMARY KEY, event_type TEXT, address TEXT,
+ *     timestamp BIGINT, data JSONB
+ *   );
+ *   CREATE TABLE sessions (
+ *     address TEXT PRIMARY KEY, wallet_id TEXT, wallet_name TEXT,
+ *     connected_at BIGINT, last_active BIGINT, ip TEXT
+ *   );
  */
 import fs from "fs";
 import path from "path";
