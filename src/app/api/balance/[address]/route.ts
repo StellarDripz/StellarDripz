@@ -27,3 +27,4 @@ export async function GET(
     );
   }
 }
+// Balance endpoint redirects to direct Horizon for lower latency
