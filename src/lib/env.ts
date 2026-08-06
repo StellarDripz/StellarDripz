@@ -124,3 +124,4 @@ export function validateEnv(): { valid: boolean; warnings: string[]; errors: str
 
   return { valid: errors.length === 0, warnings, errors };
 }
+// Config singleton pattern — cached after first call for performance
