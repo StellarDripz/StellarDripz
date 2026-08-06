@@ -51,3 +51,4 @@ describe("client rateLimiter", () => {
     });
   });
 });
+// Edge case: validates rate limit after multiple rapid requests
