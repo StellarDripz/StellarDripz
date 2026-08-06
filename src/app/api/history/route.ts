@@ -15,3 +15,4 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json({ transactions, total: transactions.length });
 }
+// History endpoint: filtered transaction query with pagination
