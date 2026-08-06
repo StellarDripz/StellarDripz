@@ -1,0 +1,21 @@
+name: Lighthouse Audit
+
+on:
+  deployment_status:
+    states: [success]
+
+jobs:
+  lighthouse:
+    name: Performance Audit
+    if: github.event.deployment.environment == 'Preview'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: |
+            ${{ github.event.deployment_status.target_url }}
+            ${{ github.event.deployment_status.target_url }}/admin
+          budgetPath: .github/lighthouse/budget.json
+          uploadArtifacts: true
+          temporaryPublicStorage: true

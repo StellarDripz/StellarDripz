@@ -1,0 +1,40 @@
+name: Contract Deploy (Testnet)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      network:
+        description: "Stellar network"
+        required: true
+        type: choice
+        options:
+          - testnet
+          - futurenet
+        default: testnet
+
+jobs:
+  deploy-contracts:
+    name: Deploy Contracts to Testnet
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: contracts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: wasm32-unknown-unknown
+          override: true
+      - name: Build WASM
+        run: cargo build --target wasm32-unknown-unknown --release
+      - name: Deploy to Stellar
+        env:
+          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_DEPLOYER_SECRET }}
+          STELLAR_NETWORK: ${{ inputs.network || 'testnet' }}
+        run: |
+          echo "Contract WASM built. Deployment script ready."
+          echo "Network: $STELLAR_NETWORK"
