@@ -5,6 +5,12 @@ import { renderHook, act } from "@testing-library/react";
 import { useContractEvents } from "@/hooks/useContractEvents";
 import type { ContractEvent } from "@/types/stellar";
 
+// Mock direct client
+jest.mock("@/lib/client/directClient", () => ({
+  directFetchContractEvents: jest.fn().mockResolvedValue({ events: [], latestLedger: 5000 }),
+  directGetLatestLedger: jest.fn().mockResolvedValue(5000),
+}));
+
 // Mock EventSource
 class MockEventSource {
   onopen: ((this: EventSource, ev: Event) => void) | null = null;
@@ -25,12 +31,8 @@ class MockEventSource {
 // @ts-expect-error: mock EventSource globally
 global.EventSource = MockEventSource;
 
-const mockFetch = jest.fn();
-global.fetch = mockFetch;
-
 beforeEach(() => {
   jest.clearAllMocks();
-  mockFetch.mockReset();
   jest.useRealTimers();
   // @ts-expect-error: reset EventSource mock
   global.EventSource = MockEventSource;
@@ -93,9 +95,7 @@ describe("useContractEvents", () => {
             if (this.onmessage) this.onmessage(event);
           };
         }
-        close() {
-          this.readyState = 2;
-        }
+        close() { this.readyState = 2; }
       }
       // @ts-expect-error: override mock
       global.EventSource = CaptureEventSource;
@@ -127,34 +127,34 @@ describe("useContractEvents", () => {
   });
 
   describe("polling fallback", () => {
-    it("falls back to polling when EventSource throws on construction", async () => {
+    it("falls back to direct Soroban polling when EventSource throws", async () => {
       jest.useFakeTimers();
 
       // Make EventSource constructor throw
       // @ts-expect-error: make EventSource throw
       global.EventSource = class {
-        constructor() {
-          throw new Error("SSE not available");
-        }
+        constructor() { throw new Error("SSE not available"); }
         close() {}
       };
 
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ resultValue: "0", events: [] }),
+      const mockDirectEvents = jest.requireMock("@/lib/client/directClient");
+      mockDirectEvents.directFetchContractEvents.mockResolvedValue({
+        events: [],
+        latestLedger: 5000,
       });
+      mockDirectEvents.directGetLatestLedger.mockResolvedValue(5000);
 
       renderHook(() =>
         useContractEvents({ contractId: "CCONTRACT123", pollInterval: 5000 })
       );
 
-      // Advance past the poll interval
+      // Advance past poll interval
       await act(async () => {
         jest.advanceTimersByTime(5001);
       });
 
-      // Polling should have fired — fetch should be called
-      expect(mockFetch).toHaveBeenCalled();
+      // Should have called direct Soroban RPC
+      expect(mockDirectEvents.directGetLatestLedger).toHaveBeenCalled();
     });
   });
 
@@ -166,12 +166,8 @@ describe("useContractEvents", () => {
         onmessage: ((event: { data: string }) => void) | null = null;
         onerror: (() => void) | null = null;
         readyState: number = 0;
-        constructor(url: string) {
-          this.url = url;
-        }
-        close() {
-          this.readyState = 2;
-        }
+        constructor(url: string) { this.url = url; }
+        close() { this.readyState = 2; }
       }
       // @ts-expect-error: override mock
       global.EventSource = SilentEventSource;
@@ -204,9 +200,7 @@ describe("useContractEvents", () => {
             if (this.onmessage) this.onmessage(event);
           };
         }
-        close() {
-          this.readyState = 2;
-        }
+        close() { this.readyState = 2; }
       }
       // @ts-expect-error: override mock
       global.EventSource = CaptureEventSource;
@@ -215,7 +209,6 @@ describe("useContractEvents", () => {
         useContractEvents({ contractId: "CCONTRACT123" })
       );
 
-      // Send 150 events
       for (let i = 0; i < 150; i++) {
         act(() => {
           if (capturedOnMessage) {
