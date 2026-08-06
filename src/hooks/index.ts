@@ -11,3 +11,5 @@ export { useWallet } from "./useWallet";
 export { useBalance } from "./useBalance";
 export { useTransactionHistory } from "./useTransactionHistory";
 export { useFaucet } from "./useFaucet";
+// Also available via directClient for browser-side reads
+export { directFetchBalance, directSimulateContract, directFetchContractEvents, directGetLatestLedger } from "@/lib/client/directClient";
