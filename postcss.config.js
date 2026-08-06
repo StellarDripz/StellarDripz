@@ -4,3 +4,4 @@ module.exports = {
     autoprefixer: {},
   },
 };
+// PostCSS: Tailwind CSS + Autoprefixer pipeline
