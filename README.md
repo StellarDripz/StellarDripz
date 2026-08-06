@@ -663,3 +663,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 
 ### 🔒 Security Considerations
 - All writes go through rate-limited API proxy
+- Wallet signing occurs client-side only
