@@ -657,3 +657,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 ### 📊 Performance Benchmarks
 | Operation | Direct (ms) | Proxied (ms) |
 |-----------|-------------|--------------|
+| Balance fetch | ~50 | ~120 |
