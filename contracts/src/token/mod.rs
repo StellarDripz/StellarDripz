@@ -307,3 +307,4 @@ mod token_test {
         assert_eq!(client.total_supply(), 600i128);
     }
 }
+// Mints new tokens to recipient with admin authorization check
