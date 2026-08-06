@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Build all StellarDripz smart contracts
+# Requirements: Rust toolchain with wasm32-unknown-unknown target
+set -euo pipefail
+
+echo "🏗️  Building StellarDripz smart contracts..."
+echo "============================================"
+
+cd "$(dirname "$0")/../contracts"
+
+# Ensure wasm target is installed
+if ! rustup target list --installed | grep -q wasm32-unknown-unknown; then
+    echo "📦 Installing wasm32-unknown-unknown target..."
+    rustup target add wasm32-unknown-unknown
+fi
+
+# Optimized release build
+echo "🔨 Compiling contracts (release, optimized)..."
+cargo build --target wasm32-unknown-unknown --release
+
+# Output
+WASM_PATH="target/wasm32-unknown-unknown/release/stellardripz.wasm"
+if [ -f "$WASM_PATH" ]; then
+    SIZE=$(ls -lh "$WASM_PATH" | awk '{print $5}')
+    echo ""
+    echo "✅ Build successful!"
+    echo "📦 WASM: $WASM_PATH ($SIZE)"
+    echo ""
+    echo "📋 Next steps:"
+    echo "  1. Run tests:      cd contracts && cargo test"
+    echo "  2. Deploy:         ts-node scripts/deploy-contract.ts"
+else
+    echo "❌ Build failed — WASM not found at $WASM_PATH"
+    exit 1
+fi
