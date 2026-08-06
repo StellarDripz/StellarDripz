@@ -290,9 +290,12 @@ npm start
 3. Set environment variables
 4. Deploy!
 
-**Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)
+### Live Deployment
 
-**Demo Video:** [▶️ Watch on YouTube](https://youtu.be/stellardripz-demo) (2:30) | [📥 Download MP4](./demo/stellardripz-demo.mp4)
+[![Live](https://img.shields.io/badge/Live-stellardripz.vercel.app-000?style=flat-square&logo=vercel&logoColor=white&labelColor=000)](https://stellardripz.vercel.app)
+
+**🔗 Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)  
+**🎥 Demo Video:** [▶️ Watch on YouTube](https://youtu.be/stellardripz-demo) (2:30) | [📥 Download MP4](./demo/stellardripz-demo.mp4)
 
 ### Manual Deploy
 
@@ -649,55 +652,6 @@ For rate-limited, logged, and validated operations:
 - The API proxy remains the single source of truth for analytics and transaction history
 
 **Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
-
-
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for full guidelines.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m "feat: add amazing feature"`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Commit Convention
-We use [Conventional Commits](https://www.conventionalcommits.org/):
-- `feat:` — New feature
-- `fix:` — Bug fix
-- `docs:` — Documentation
-- `test:` — Tests
-- `refactor:` — Code restructuring
-- `ci:` — CI/CD changes
-- `chore:` — Maintenance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
