@@ -4,7 +4,7 @@
  */
 import { STELLAR_NETWORK } from "../stellar/network";
 import { connectFreighter, signFreighter } from "./freighter";
-import type { NetworkType, SupportedWallet } from "@/types";
+import type { NetworkType, SupportedWallet } from "@/types/stellar";
 
 // ---- Wallet Registry ----
 

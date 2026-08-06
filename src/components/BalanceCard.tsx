@@ -2,7 +2,7 @@
 
 import { useAppContext } from "@/context/AppContext";
 import { useState } from "react";
-import type { AssetBalance } from "@/types";
+import type { AssetBalance } from "@/types/stellar";
 
 function AssetRow({ asset }: { asset: AssetBalance }) {
   return (

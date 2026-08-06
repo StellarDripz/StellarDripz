@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppContext } from "@/context/AppContext";
-import type { TransactionRecord } from "@/types";
+import type { TransactionRecord } from "@/types/stellar";
 
 function TxStatusBadge({ status }: { status: TransactionRecord["status"] }) {
   const styles = {

@@ -4,7 +4,7 @@
  */
 import { STELLAR_NETWORK } from "../stellar/network";
 import { persistWallet } from "./walletKit";
-import type { NetworkType } from "@/types";
+import type { NetworkType } from "@/types/stellar";
 
 export function isFreighterInstalled(): boolean {
   return typeof window !== "undefined" && "freighterApi" in window;

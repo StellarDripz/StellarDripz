@@ -6,7 +6,7 @@ import {
 import type {
   AppState, WalletState, BalanceInfo, TransactionRecord, TxStatus,
   ContractEvent, CooldownState,
-} from "@/types";
+} from "@/types/stellar";
 import {
   connectWithWallet, clearPersistedWallet, checkAnyWalletInstalled,
   getSupportedWallets, loadPersistedWallet, resetKit,

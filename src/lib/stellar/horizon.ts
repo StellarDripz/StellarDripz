@@ -4,7 +4,7 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { STELLAR_NETWORK } from "./network";
 import { signTx } from "../wallets/walletKit";
-import type { BalanceInfo, AssetBalance, StellarAsset } from "@/types";
+import type { BalanceInfo, AssetBalance, StellarAsset } from "@/types/stellar";
 
 const server = new StellarSdk.Horizon.Server(STELLAR_NETWORK.horizonUrl);
 
