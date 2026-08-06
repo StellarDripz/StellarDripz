@@ -649,3 +649,4 @@ For rate-limited, logged, and validated operations:
 - The API proxy remains the single source of truth for analytics and transaction history
 
 **Trade-off:** Direct reads forgo server-side logging of balance queries, but the latency improvement (50-100ms) outweighs this for a testnet faucet.
+
