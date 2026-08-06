@@ -13,13 +13,15 @@ import type {
   BalanceInfo,
   TransactionRecord,
   TxStatus,
+  ContractEvent,
 } from "@/types";
 import {
-  connectWallet,
+  connectWithWallet,
   clearPersistedWallet,
-  checkFreighterInstalled,
-  detectFreighterNetwork,
+  checkAnyWalletInstalled,
+  getSupportedWallets,
   loadPersistedWallet,
+  resetKit,
 } from "@/services/walletService";
 import { fetchBalance } from "@/services/balanceService";
 import {
@@ -38,6 +40,8 @@ type Action =
   | { type: "ADD_TRANSACTION"; payload: TransactionRecord }
   | { type: "UPDATE_TRANSACTION"; payload: TransactionRecord }
   | { type: "SET_TX_IN_PROGRESS"; payload: TxStatus }
+  | { type: "ADD_CONTRACT_EVENT"; payload: ContractEvent }
+  | { type: "CLEAR_CONTRACT_EVENTS" }
   | { type: "RESET" };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -45,25 +49,13 @@ function reducer(state: AppState, action: Action): AppState {
     case "SET_WALLET":
       return { ...state, wallet: { ...state.wallet, ...action.payload } };
     case "SET_BALANCE":
-      return {
-        ...state,
-        balance: {
-          ...state.balance,
-          ...action.payload,
-        },
-      };
+      return { ...state, balance: { ...state.balance, ...action.payload } };
     case "SET_BALANCE_LOADING":
       return { ...state, balance: { ...state.balance, loading: action.payload } };
     case "SET_BALANCE_ERROR":
-      return {
-        ...state,
-        balance: { ...state.balance, loading: false, error: action.payload },
-      };
+      return { ...state, balance: { ...state.balance, loading: false, error: action.payload } };
     case "ADD_TRANSACTION":
-      return {
-        ...state,
-        transactions: [action.payload, ...state.transactions].slice(0, 20),
-      };
+      return { ...state, transactions: [action.payload, ...state.transactions].slice(0, 50) };
     case "UPDATE_TRANSACTION":
       return {
         ...state,
@@ -73,8 +65,19 @@ function reducer(state: AppState, action: Action): AppState {
       };
     case "SET_TX_IN_PROGRESS":
       return { ...state, txInProgress: action.payload };
+    case "ADD_CONTRACT_EVENT":
+      return { ...state, contractEvents: [action.payload, ...state.contractEvents].slice(0, 50) };
+    case "CLEAR_CONTRACT_EVENTS":
+      return { ...state, contractEvents: [] };
     case "RESET":
-      return { ...initialState, wallet: { ...initialState.wallet, isFreighterInstalled: state.wallet.isFreighterInstalled } };
+      return {
+        ...initialState,
+        wallet: {
+          ...initialState.wallet,
+          isAnyWalletInstalled: state.wallet.isAnyWalletInstalled,
+          availableWallets: state.wallet.availableWallets,
+        },
+      };
     default:
       return state;
   }
@@ -85,7 +88,10 @@ const initialState: AppState = {
     connected: false,
     publicKey: null,
     network: "UNKNOWN",
-    isFreighterInstalled: false,
+    walletId: null,
+    walletName: null,
+    isAnyWalletInstalled: false,
+    availableWallets: [],
   },
   balance: {
     xlm: "0.0000000",
@@ -97,17 +103,20 @@ const initialState: AppState = {
   },
   transactions: [],
   txInProgress: "idle",
+  contractEvents: [],
 };
 
 // --- Context ---
 
 interface AppContextValue {
   state: AppState;
-  connect: () => Promise<void>;
+  connect: (walletId: string) => Promise<void>;
   disconnect: () => void;
   refreshBalance: () => Promise<void>;
   doFaucetRequest: () => Promise<void>;
   doSendPayment: (destination: string, amount: string, assetCode?: string) => Promise<void>;
+  addContractEvent: (event: ContractEvent) => void;
+  clearContractEvents: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -115,33 +124,39 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  // Check Freighter on mount
+  // Check available wallets on mount
   useEffect(() => {
-    const installed = checkFreighterInstalled();
+    const installed = checkAnyWalletInstalled();
+    const wallets = getSupportedWallets();
     dispatch({
       type: "SET_WALLET",
-      payload: { isFreighterInstalled: installed },
+      payload: { isAnyWalletInstalled: installed, availableWallets: wallets },
     });
 
-    // Attempt to reconnect from persisted state
+    // Auto-reconnect from persisted state
     const persisted = loadPersistedWallet();
     if (persisted) {
       (async () => {
         try {
-          const network = await detectFreighterNetwork();
+          // Reconnect using the persisted wallet
+          const result = await connectWithWallet(persisted.walletId);
           dispatch({
             type: "SET_WALLET",
             payload: {
               connected: true,
-              publicKey: persisted.publicKey,
-              network,
+              publicKey: result.publicKey,
+              network: result.network,
+              walletId: result.walletId,
+              walletName: result.walletName,
             },
           });
         } catch {
-          // Persisted state is stale — ignore
+          // Stale persisted state — ignore, clear it
+          clearPersistedWallet();
         }
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch balance when wallet connects
@@ -152,17 +167,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.wallet.connected, state.wallet.publicKey]);
 
-  const connect = useCallback(async () => {
+  const connect = useCallback(async (walletId: string) => {
     dispatch({ type: "SET_WALLET", payload: { connected: false } });
-    const { publicKey, network } = await connectWallet();
+    const { publicKey, network, walletId: wid, walletName } = await connectWithWallet(walletId);
     dispatch({
       type: "SET_WALLET",
-      payload: { connected: true, publicKey, network },
+      payload: { connected: true, publicKey, network, walletId: wid, walletName },
     });
   }, []);
 
   const disconnect = useCallback(() => {
     clearPersistedWallet();
+    resetKit();
     dispatch({ type: "RESET" });
   }, []);
 
@@ -202,9 +218,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: "SET_TX_IN_PROGRESS", payload: "pending" });
 
     try {
-      const { hash, newBalance } = await requestFaucetFunds(
-        state.wallet.publicKey
-      );
+      const { hash } = await requestFaucetFunds(state.wallet.publicKey);
 
       const successTx: TransactionRecord = {
         ...pendingTx,
@@ -218,8 +232,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       dispatch({ type: "UPDATE_TRANSACTION", payload: successTx });
       dispatch({ type: "SET_TX_IN_PROGRESS", payload: "success" });
-
-      // Refresh full balance to preserve custom asset data
       await refreshBalance();
     } catch (err) {
       const errorTx: TransactionRecord = {
@@ -231,13 +243,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: "UPDATE_TRANSACTION", payload: errorTx });
       dispatch({ type: "SET_TX_IN_PROGRESS", payload: "error" });
     }
-  }, [state.wallet.publicKey]);
+  }, [state.wallet.publicKey, refreshBalance]);
 
   const doSendPayment = useCallback(
     async (destination: string, amount: string, assetCode?: string) => {
       if (!state.wallet.publicKey) return;
 
-      // Resolve asset from balance if an asset code is given
       let asset: import("@/types").StellarAsset | undefined;
       if (assetCode && assetCode !== "XLM") {
         const found = state.balance.assets.find(
@@ -245,7 +256,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         );
         if (!found) {
           throw new Error(
-            `Asset "${assetCode}" not found in your balance. You may not hold this token.`
+            `Asset "${assetCode}" not found in your balance.`
           );
         }
         asset = found.asset;
@@ -282,8 +293,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         };
         dispatch({ type: "UPDATE_TRANSACTION", payload: successTx });
         dispatch({ type: "SET_TX_IN_PROGRESS", payload: "success" });
-
-        // Refresh balance
         await refreshBalance();
       } catch (err) {
         const errorTx: TransactionRecord = {
@@ -299,6 +308,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [state.wallet.publicKey, state.balance.assets, refreshBalance]
   );
 
+  const addContractEvent = useCallback((event: ContractEvent) => {
+    dispatch({ type: "ADD_CONTRACT_EVENT", payload: event });
+  }, []);
+
+  const clearContractEvents = useCallback(() => {
+    dispatch({ type: "CLEAR_CONTRACT_EVENTS" });
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -308,6 +325,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshBalance,
         doFaucetRequest,
         doSendPayment,
+        addContractEvent,
+        clearContractEvents,
       }}
     >
       {children}

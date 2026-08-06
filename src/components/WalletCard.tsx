@@ -1,8 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
 import QrModal from "./QrModal";
+import type { SupportedWallet } from "@/types";
+import { getSupportedWallets } from "@/services/walletService";
+
+/** Simple wallet icon based on wallet ID */
+function walletIcon(id: string): string {
+  if (id.includes("freighter")) return "🦊";
+  if (id.includes("xbull")) return "🐂";
+  if (id.includes("albedo")) return "☀️";
+  if (id.includes("lobstr")) return "🐙";
+  if (id.includes("rabet")) return "🚀";
+  return "🔑";
+}
 
 export default function WalletCard() {
   const { state, connect, disconnect } = useAppContext();
@@ -11,12 +23,24 @@ export default function WalletCard() {
   const [error, setError] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [showWalletPicker, setShowWalletPicker] = useState(false);
 
-  const handleConnect = async () => {
+  // Close picker on Escape
+  useEffect(() => {
+    if (!showWalletPicker) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowWalletPicker(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showWalletPicker]);
+
+  const handleConnect = async (walletId: string) => {
     setConnecting(true);
     setError(null);
+    setShowWalletPicker(false);
     try {
-      await connect();
+      await connect(walletId);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Connection failed";
       setError(msg);
@@ -24,33 +48,6 @@ export default function WalletCard() {
       setConnecting(false);
     }
   };
-
-  // Not installed state
-  if (!wallet.isFreighterInstalled) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md text-center">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-stellar-blue/10">
-          <span className="text-3xl">🦊</span>
-        </div>
-        <h2 className="text-lg font-semibold text-white mb-2">
-          Freighter Wallet Required
-        </h2>
-        <p className="mb-4 text-sm text-white/60 max-w-xs mx-auto">
-          StellarDripz requires the Freighter browser extension to interact with
-          the Stellar network.
-        </p>
-        <a
-          href="https://www.freighter.app/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-stellar-blue px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-stellar-blue-light hover:shadow-lg hover:shadow-stellar-blue/25 active:scale-95"
-        >
-          Install Freighter
-          <span className="text-xs">↗</span>
-        </a>
-      </div>
-    );
-  }
 
   const handleCopyAddress = async () => {
     if (!wallet.publicKey) return;
@@ -68,7 +65,7 @@ export default function WalletCard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Connected state
+  // --- Connected State ---
   if (wallet.connected && wallet.publicKey) {
     return (
       <>
@@ -81,14 +78,13 @@ export default function WalletCard() {
         <div className="rounded-2xl border border-stellar-green/20 bg-surface-800/60 p-6 backdrop-blur-md">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-green/10">
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-stellar-green opacity-75" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-stellar-green" />
-                </span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-stellar-green/10 text-lg">
+                {wallet.walletId ? walletIcon(wallet.walletId) : "🔑"}
               </div>
               <div>
-                <p className="text-sm font-semibold text-white">Connected</p>
+                <p className="text-sm font-semibold text-white">
+                  {wallet.walletName || "Connected"}
+                </p>
                 <p className="font-mono text-xs text-stellar-green truncate max-w-[200px]">
                   {wallet.publicKey.slice(0, 8)}...{wallet.publicKey.slice(-6)}
                 </p>
@@ -101,7 +97,6 @@ export default function WalletCard() {
               Disconnect
             </button>
           </div>
-          {/* Action buttons row */}
           <div className="mt-4 flex items-center gap-2">
             <button
               onClick={handleCopyAddress}
@@ -121,9 +116,68 @@ export default function WalletCard() {
     );
   }
 
-  // Disconnected state
+  // --- Wallet Picker Modal ---
+  const renderWalletPicker = () => {
+    const wallets = wallet.availableWallets.length > 0
+      ? wallet.availableWallets
+      : getDefaultWallets();
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowWalletPicker(false)}
+        />
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-surface-800 p-6 shadow-2xl animate-scale-in">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-white">Choose a Wallet</h3>
+            <button
+              onClick={() => setShowWalletPicker(false)}
+              className="text-white/40 hover:text-white/80 transition-colors text-lg"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="space-y-2 max-h-[320px] overflow-y-auto">
+            {wallets.map((w) => (
+              <button
+                key={w.id}
+                onClick={() => handleConnect(w.id)}
+                disabled={connecting}
+                className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-left transition-all hover:bg-white/10 hover:border-stellar-blue/30 active:scale-[0.98] disabled:opacity-50"
+              >
+                <span className="text-2xl">{walletIcon(w.id)}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white">{w.name}</p>
+                  <p className="text-[10px] text-white/40">
+                    {w.installed ? "Available" : "Extension may be needed"}
+                  </p>
+                </div>
+                <span className="text-white/20">→</span>
+              </button>
+            ))}
+          </div>
+          <p className="mt-4 text-center text-[10px] text-white/30">
+            Don&apos;t have a wallet?{" "}
+            <a
+              href="https://www.freighter.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stellar-blue hover:underline"
+            >
+              Install Freighter
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // --- Disconnected State ---
   return (
     <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md text-center">
+      {showWalletPicker && renderWalletPicker()}
+
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-stellar-blue/10">
         <svg
           className="h-8 w-8 text-stellar-blue"
@@ -143,25 +197,23 @@ export default function WalletCard() {
         Connect Your Wallet
       </h2>
       <p className="mb-4 text-sm text-white/60 max-w-xs mx-auto">
-        Link your Freighter wallet to request testnet XLM and send transactions.
+        Link your Stellar wallet to request testnet XLM, send transactions, and interact with smart contracts.
       </p>
+
       {error && (
         <p className="mb-3 text-sm text-red-400 bg-red-500/5 rounded-lg py-2 px-3 border border-red-500/20">
-          {error === "FREIGHTER_NOT_INSTALLED"
-            ? "Freighter is not installed."
-            : error === "FREIGHTER_LOCKED"
-            ? "Freighter is locked. Please unlock it."
-            : error === "USER_REJECTED"
+          {error === "USER_REJECTED"
             ? "Connection was rejected."
             : error === "CONNECTION_FAILED"
-            ? "Could not connect to Freighter."
+            ? "Could not connect to wallet."
             : error === "NO_ACCOUNT"
-            ? "No Stellar account found in Freighter."
+            ? "No Stellar account found."
             : error}
         </p>
       )}
+
       <button
-        onClick={handleConnect}
+        onClick={() => setShowWalletPicker(true)}
         disabled={connecting}
         className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-stellar-blue to-stellar-purple px-6 py-3 text-sm font-semibold text-white transition-all hover:shadow-lg hover:shadow-stellar-blue/25 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
       >
@@ -189,6 +241,31 @@ export default function WalletCard() {
           </>
         )}
       </button>
+
+      {/* Supported wallets badges */}
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+        {getDefaultWallets().map((w) => (
+          <span
+            key={w.id}
+            className="inline-flex items-center gap-1 rounded-full border border-white/5 bg-white/[0.02] px-2.5 py-1 text-[10px] text-white/30"
+          >
+            <span className="text-xs">{walletIcon(w.id)}</span>
+            {w.name}
+          </span>
+        ))}
+      </div>
     </div>
   );
+}
+
+/** Fallback wallet list when modules haven't loaded yet. */
+function getDefaultWallets(): SupportedWallet[] {
+  return getSupportedWallets().length > 0
+    ? getSupportedWallets()
+    : [
+        { id: "freighter", name: "Freighter", iconUrl: "🦊", installed: true },
+        { id: "xbull", name: "xBull", iconUrl: "🐂", installed: true },
+        { id: "albedo", name: "Albedo", iconUrl: "☀️", installed: true },
+        { id: "lobstr", name: "LOBSTR", iconUrl: "🐙", installed: true },
+      ];
 }

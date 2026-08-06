@@ -1,13 +1,12 @@
 /**
  * Unit tests for walletService (persistence layer)
- * Uses jsdom's real localStorage — no mocking needed.
+ * Uses jsdom's real localStorage.
  */
 import {
   persistWallet,
   loadPersistedWallet,
   clearPersistedWallet,
 } from "@/services/walletService";
-import type { StoredWallet } from "@/services/walletService";
 
 const STORAGE_KEY = "stellardripz_wallet";
 
@@ -16,8 +15,10 @@ beforeEach(() => {
 });
 
 describe("walletService (persistence)", () => {
-  const mockWallet: StoredWallet = {
+  const mockWallet = {
     publicKey: "GDEST123456789012345678901234567890123456",
+    walletId: "freighter",
+    walletName: "Freighter",
     connectedAt: Date.now(),
   };
 
@@ -30,6 +31,7 @@ describe("walletService (persistence)", () => {
 
       const parsed = JSON.parse(stored!);
       expect(parsed.publicKey).toBe(mockWallet.publicKey);
+      expect(parsed.walletId).toBe(mockWallet.walletId);
     });
   });
 
@@ -44,6 +46,7 @@ describe("walletService (persistence)", () => {
       const loaded = loadPersistedWallet();
       expect(loaded).not.toBeNull();
       expect(loaded!.publicKey).toBe(mockWallet.publicKey);
+      expect(loaded!.walletId).toBe(mockWallet.walletId);
     });
 
     it("returns null when stored data is invalid JSON", () => {
@@ -53,10 +56,10 @@ describe("walletService (persistence)", () => {
       expect(loaded).toBeNull();
     });
 
-    it("returns null and clears storage when wallet expired (>24h)", () => {
-      const expiredWallet: StoredWallet = {
-        publicKey: "GOLD123456789012345678901234567890123456789",
-        connectedAt: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
+    it("returns null when wallet expired (>24h)", () => {
+      const expiredWallet = {
+        ...mockWallet,
+        connectedAt: Date.now() - 25 * 60 * 60 * 1000,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(expiredWallet));
@@ -69,7 +72,17 @@ describe("walletService (persistence)", () => {
     it("returns null when stored wallet has no publicKey", () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ connectedAt: Date.now() })
+        JSON.stringify({ walletId: "freighter", connectedAt: Date.now() })
+      );
+
+      const loaded = loadPersistedWallet();
+      expect(loaded).toBeNull();
+    });
+
+    it("returns null when stored wallet has no walletId", () => {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ publicKey: "G...", connectedAt: Date.now() })
       );
 
       const loaded = loadPersistedWallet();

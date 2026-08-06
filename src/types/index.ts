@@ -2,11 +2,21 @@
 
 export type NetworkType = "TESTNET" | "MAINNET" | "UNKNOWN";
 
+export interface SupportedWallet {
+  id: string;
+  name: string;
+  iconUrl: string;
+  installed: boolean;
+}
+
 export interface WalletState {
   connected: boolean;
   publicKey: string | null;
   network: NetworkType;
-  isFreighterInstalled: boolean;
+  walletId: string | null;
+  walletName: string | null;
+  isAnyWalletInstalled: boolean;
+  availableWallets: SupportedWallet[];
 }
 
 // --- Asset Types ---
@@ -36,7 +46,7 @@ export interface BalanceInfo {
 
 export type TxStatus = "idle" | "pending" | "success" | "error";
 
-export type TxType = "faucet" | "send";
+export type TxType = "faucet" | "send" | "contract";
 
 export interface TransactionRecord {
   id: string;
@@ -49,6 +59,23 @@ export interface TransactionRecord {
   errorMessage?: string;
   explorerUrl?: string;
   assetCode?: string;
+  // Contract-specific fields
+  contractId?: string;
+  functionName?: string;
+  // Event tracking
+  ledgerSequence?: number;
+}
+
+// --- Contract Event Types ---
+
+export interface ContractEvent {
+  id: string;
+  contractId: string;
+  topic: string;
+  value: string;
+  ledgerSequence: number;
+  timestamp: Date;
+  txHash: string;
 }
 
 // --- App State ---
@@ -58,4 +85,5 @@ export interface AppState {
   balance: BalanceInfo & { loading: boolean; error: string | null };
   transactions: TransactionRecord[];
   txInProgress: TxStatus;
+  contractEvents: ContractEvent[];
 }
