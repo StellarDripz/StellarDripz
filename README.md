@@ -671,3 +671,4 @@ The SSE endpoint at `/api/events` provides real-time contract event streaming wi
 | Endpoint | Window | Max Requests |
 |----------|--------|--------------|
 | Faucet | 60s | 1 per address |
+| Payment | 60s | 10 per address |
