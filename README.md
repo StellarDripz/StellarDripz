@@ -655,3 +655,4 @@ For rate-limited, logged, and validated operations:
 The SSE endpoint at `/api/events` provides real-time contract event streaming with automatic fallback to direct Soroban RPC polling when SSE is unavailable.
 
 ### 📊 Performance Benchmarks
+| Operation | Direct (ms) | Proxied (ms) |
