@@ -295,21 +295,21 @@ mod governance_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let proposer = Address::random(&env);
-        let voter = Address::random(&env);
+        let admin = Address::generate(&env);
+        let proposer = Address::generate(&env);
+        let voter = Address::generate(&env);
 
         // Deploy token and mint to both proposer and voter
         let token_id = env.register(DripToken, ());
         let token_client = token::DripTokenClient::new(&env, &token_id);
-        token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
+        token_client.initialize_token(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &proposer, &1000i128);
         token_client.mint(&admin, &voter, &5000i128);
 
-        let pool_id = Address::random(&env);
+        let pool_id = Address::generate(&env);
         let contract_id = env.register(DripGovernance, ());
         let client = DripGovernanceClient::new(&env, &contract_id);
-        client.initialize(&admin, &token_id, &pool_id, &100u32, &0i128);
+        client.initialize_governance(&admin, &token_id, &pool_id, &100u32, &0i128);
 
         let id = client.propose(
             &proposer,
@@ -319,7 +319,7 @@ mod governance_test {
 
         // Vote with real token balance as voting power
         client.vote(&voter, &id, &VoteChoice::For);
-        let vote = client.get_vote(voter.clone(), id).unwrap();
+        let vote = client.get_vote(&voter, &id).unwrap();
         assert_eq!(vote.vote, VoteChoice::For);
         assert_eq!(vote.power, 5000i128);
 
