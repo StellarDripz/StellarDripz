@@ -30,7 +30,7 @@
     "clean": "rm -rf .next contracts/target"
   },
   "dependencies": {
-    "@creit.tech/stellar-wallets-kit": "^2.5.0",
+    "@albedo-link/intent": "^0.12.0",
     "@stellar/freighter-api": "^3.0.0",
     "@stellar/stellar-sdk": "^12.3.0",
     "next": "^14.2.35",
@@ -58,6 +58,7 @@
     "typescript": "^5.5.2"
   },
   "overrides": {
-    "axios": "1.18.0"
+    "axios": "1.18.0",
+    "glob": "^10.5.0"
   }
 }

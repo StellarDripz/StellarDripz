@@ -11,7 +11,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
   setupFiles: [],
   transformIgnorePatterns: [
-    "node_modules/(?!@stellar/stellar-sdk|@creit.tech/stellar-wallets-kit)",
+    "node_modules/(?!@stellar/stellar-sdk)",
   ],
 };
 // Jest: transform TypeScript with ts-jest, ignore node_modules
