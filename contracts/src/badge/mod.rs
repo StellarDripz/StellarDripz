@@ -170,7 +170,7 @@ impl DripBadge {
         env.storage().persistent().get(&key)
     }
 
-    pub fn admin(env: Env) -> Address {
+    pub fn get_admin(env: Env) -> Address {
         s::get_persistent(
             &env, &s::KEY_ADMIN,
             Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
