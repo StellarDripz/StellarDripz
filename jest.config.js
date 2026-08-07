@@ -15,5 +15,4 @@ module.exports = {
     "node_modules/(?!@stellar/stellar-sdk)",
   ],
 };
-// Jest: transform TypeScript with ts-jest, ignore node_modules
 
