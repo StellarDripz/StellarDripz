@@ -12,8 +12,8 @@
  *
  * Requirements:
  *   - Funded Stellar Testnet account (~5 XLM recommended)
- *   - Compiled WASM: contracts/target/wasm32-unknown-unknown/release/stellardripz.wasm
- *   - Rust toolchain with wasm32-unknown-unknown target
+ *   - Compiled WASM: contracts/target/wasm32v1-none/release/stellardripz.wasm
+ *   - Rust toolchain with wasm32v1-none target (Rust 1.84+)
  */
 
 import * as StellarSdk from "@stellar/stellar-sdk";
@@ -25,7 +25,7 @@ const NETWORK_PASSPHRASE = process.env.NETWORK_PASSPHRASE || "Test SDF Network ;
 const HORIZON_URL = process.env.HORIZON_URL || "https://horizon-testnet.stellar.org";
 const SECRET_KEY = process.env.DEPLOYER_SECRET_KEY || "";
 
-const WASM_PATH = path.join(__dirname, "..", "contracts", "target", "wasm32-unknown-unknown", "release", "stellardripz.wasm");
+const WASM_PATH = path.join(__dirname, "..", "contracts", "target", "wasm32v1-none", "release", "stellardripz.wasm");
 
 async function waitForTx(server: StellarSdk.rpc.Server, hash: string, label: string): Promise<StellarSdk.SorobanRpc.Api.GetTransactionResponse> {
   for (let i = 0; i < 30; i++) {

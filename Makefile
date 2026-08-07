@@ -20,8 +20,8 @@ start: ## Start production server
 
 build-contracts: ## Compile smart contracts to WASM
 	@echo "🔨 Building smart contracts..."
-	cd contracts && cargo build --target wasm32-unknown-unknown --release
-	@echo "✅ Contracts built: contracts/target/wasm32-unknown-unknown/release/stellardripz.wasm"
+	cd contracts && cargo build --target wasm32v1-none --release
+	@echo "✅ Contracts built: contracts/target/wasm32v1-none/release/stellardripz.wasm"
 
 test-contracts: ## Run contract tests
 	@echo "🧪 Running contract tests..."
