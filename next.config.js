@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   webpack: (config, { isServer }) => {
     // @stellar/stellar-sdk depends on sodium-native which is a native module.
