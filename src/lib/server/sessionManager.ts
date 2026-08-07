@@ -43,4 +43,3 @@ export function validateSession(address: string): SessionEntry | null {
 
   return session;
 }
-// Session expiry: 24h inactivity timeout with automatic cleanup

@@ -1,5 +1,9 @@
 /**
- * Soroban service layer — wraps Soroban RPC for contract interaction.
+ * Soroban service layer — wraps Soroban RPC for contract interaction
+ * with server-side analytics logging.
+ *
+ * Core transaction logic is shared with src/lib/stellar/soroban.ts;
+ * this module adds database logging and session tracking.
  */
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { STELLAR_NETWORK } from "@/lib/stellar/network";
@@ -78,7 +82,6 @@ export async function submitContractInvocation(
     STELLAR_NETWORK.networkPassphrase,
   );
 
-  // Simulate again with signature data
   const simResponse = await sorobanServer.simulateTransaction(signedTx);
   if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Simulation failed: ${simResponse.error}`);
@@ -98,7 +101,6 @@ export async function submitContractInvocation(
     throw new Error(`Contract submission failed: ${JSON.stringify(response)}`);
   }
 
-  // Wait for confirmation
   let getTx = await sorobanServer.getTransaction(response.hash);
   let attempts = 0;
   while (
@@ -118,7 +120,7 @@ export async function submitContractInvocation(
     resultValue = StellarSdk.scValToNative(getTx.returnValue)?.toString();
   }
 
-  // Log
+  // Server-side logging
   const txRecord: TxRecord = {
     id: `tx-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     type: "contract",
@@ -181,4 +183,3 @@ export async function getContractEventsServer(
     return { events: [], latestLedger: startLedger };
   }
 }
-// Validates and normalizes Soroban RPC event responses
