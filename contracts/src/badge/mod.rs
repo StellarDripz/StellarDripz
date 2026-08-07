@@ -224,13 +224,13 @@ mod badge_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let user = Address::random(&env);
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
 
         let contract_id = env.register(DripBadge, ());
         let client = DripBadgeClient::new(&env, &contract_id);
 
-        client.initialize(&admin);
+        client.initialize_badge(&admin);
 
         client.create_badge(
             &admin,
@@ -242,9 +242,9 @@ mod badge_test {
 
         client.grant_badge(&admin, &user, &1);
 
-        assert!(client.has_badge(user.clone(), 1));
+        assert!(client.has_badge(&user, &1));
 
-        let user_badges = client.get_user_badges(user);
+        let user_badges = client.get_user_badges(&user);
         assert_eq!(user_badges.len(), 1);
     }
 
