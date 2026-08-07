@@ -238,7 +238,7 @@ impl DripGovernance {
         Self::get_voting_power_internal(&env, &voter, &token_id)
     }
 
-    pub fn get_config(env: Env) -> (Address, Address, u32, i128) {
+    pub fn get_gov_config(env: Env) -> (Address, Address, u32, i128) {
         let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
         let pool_id: Address = s::get_persistent(&env, &KEY_POOL_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
         let voting_period: u32 = s::get_persistent(&env, &KEY_VOTING_PERIOD, 100u32);
