@@ -35,7 +35,7 @@ pub struct DripBadge;
 #[contractimpl]
 impl DripBadge {
     /// Initialize. Only admin.
-    pub fn initialize(env: Env, admin: Address) {
+    pub fn initialize_badge(env: Env, admin: Address) {
         if env.storage().persistent().has(&s::KEY_ADMIN) {
             panic!("Already initialized");
         }
