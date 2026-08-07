@@ -11,7 +11,9 @@ jest.mock("next/server", () => {
       this.url = input;
       this.method = init?.method || "GET";
     }
-    async json() { return {}; }
+    async json() {
+      return {};
+    }
   }
   class MockNextResponse {
     status: number;
@@ -24,7 +26,13 @@ jest.mock("next/server", () => {
       return new MockNextResponse(body, init);
     }
     async json() {
-      if (typeof this.body === "string") { try { return JSON.parse(this.body); } catch { return this.body; } }
+      if (typeof this.body === "string") {
+        try {
+          return JSON.parse(this.body);
+        } catch {
+          return this.body;
+        }
+      }
       return this.body;
     }
   }
@@ -64,7 +72,9 @@ beforeEach(() => {
 
 describe("GET /api/history", () => {
   it("returns transactions from the database", async () => {
-    const req = new NextRequest("http://localhost:3000/api/history") as InstanceType<typeof NextRequest>;
+    const req = new NextRequest("http://localhost:3000/api/history") as InstanceType<
+      typeof NextRequest
+    >;
     const res = await GET(req);
 
     expect(res.status).toBe(200);
@@ -75,23 +85,25 @@ describe("GET /api/history", () => {
 
   it("passes query parameters to the database", async () => {
     const req = new NextRequest(
-      "http://localhost:3000/api/history?address=GADDR123&type=faucet&limit=10"
+      "http://localhost:3000/api/history?address=GADDR123&type=faucet&limit=10",
     ) as InstanceType<typeof NextRequest>;
     await GET(req);
     expect(mockGetTransactions).toHaveBeenCalledWith("GADDR123", "faucet", 10);
   });
 
   it("clamps limit to 100", async () => {
-    const req = new NextRequest(
-      "http://localhost:3000/api/history?limit=500"
-    ) as InstanceType<typeof NextRequest>;
+    const req = new NextRequest("http://localhost:3000/api/history?limit=500") as InstanceType<
+      typeof NextRequest
+    >;
     await GET(req);
     expect(mockGetTransactions).toHaveBeenCalledWith(undefined, undefined, 100);
   });
 
   it("returns empty array when no transactions", async () => {
     mockGetTransactions.mockReturnValueOnce([]);
-    const req = new NextRequest("http://localhost:3000/api/history") as InstanceType<typeof NextRequest>;
+    const req = new NextRequest("http://localhost:3000/api/history") as InstanceType<
+      typeof NextRequest
+    >;
     const res = await GET(req);
 
     const json = await res.json();

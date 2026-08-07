@@ -1,7 +1,13 @@
 /**
  * Tests for database service (transaction history and analytics)
  */
-import { saveTransaction, getTransactions, logAnalytics, getAnalyticsSummary, clearDb } from "@/lib/server/dbService";
+import {
+  saveTransaction,
+  getTransactions,
+  logAnalytics,
+  getAnalyticsSummary,
+  clearDb,
+} from "@/lib/server/dbService";
 
 beforeEach(() => {
   // Clear the database between tests
@@ -31,16 +37,34 @@ describe("dbService", () => {
 
     it("filters transactions by type", () => {
       saveTransaction({
-        id: "tx-1", type: "faucet", status: "success", hash: "h1",
-        amount: "10000", senderAddress: "f", destinationAddress: "d1", timestamp: Date.now(),
+        id: "tx-1",
+        type: "faucet",
+        status: "success",
+        hash: "h1",
+        amount: "10000",
+        senderAddress: "f",
+        destinationAddress: "d1",
+        timestamp: Date.now(),
       });
       saveTransaction({
-        id: "tx-2", type: "send", status: "success", hash: "h2",
-        amount: "50", senderAddress: "d1", destinationAddress: "d2", timestamp: Date.now(),
+        id: "tx-2",
+        type: "send",
+        status: "success",
+        hash: "h2",
+        amount: "50",
+        senderAddress: "d1",
+        destinationAddress: "d2",
+        timestamp: Date.now(),
       });
       saveTransaction({
-        id: "tx-3", type: "contract", status: "success", hash: "h3",
-        amount: "0", senderAddress: "d1", destinationAddress: "c1", timestamp: Date.now(),
+        id: "tx-3",
+        type: "contract",
+        status: "success",
+        hash: "h3",
+        amount: "0",
+        senderAddress: "d1",
+        destinationAddress: "c1",
+        timestamp: Date.now(),
       });
 
       const faucetTxs = getTransactions(undefined, "faucet");
@@ -51,8 +75,14 @@ describe("dbService", () => {
     it("limits return count", () => {
       for (let i = 0; i < 30; i++) {
         saveTransaction({
-          id: `tx-${i}`, type: "faucet", status: "success", hash: `h${i}`,
-          amount: "10000", senderAddress: "f", destinationAddress: `d${i}`, timestamp: Date.now() + i,
+          id: `tx-${i}`,
+          type: "faucet",
+          status: "success",
+          hash: `h${i}`,
+          amount: "10000",
+          senderAddress: "f",
+          destinationAddress: `d${i}`,
+          timestamp: Date.now() + i,
         });
       }
 

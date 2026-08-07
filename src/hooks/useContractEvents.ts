@@ -90,7 +90,7 @@ export function useContractEvents({
     // Try SSE via API proxy first
     try {
       const es = new EventSource(
-        `/api/events?contractId=${encodeURIComponent(contractId)}&pollInterval=${pollInterval}`
+        `/api/events?contractId=${encodeURIComponent(contractId)}&pollInterval=${pollInterval}`,
       );
       eventSourceRef.current = es;
 
@@ -138,4 +138,3 @@ export function useContractEvents({
   return { events, connected, error, clearEvents };
 }
 // The polling fallback queries Soroban RPC directly, bypassing the API proxy
-

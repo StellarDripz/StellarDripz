@@ -47,9 +47,7 @@ beforeEach(() => {
 describe("useTransactionHistory", () => {
   describe("initial state", () => {
     it("returns empty transactions when disabled", () => {
-      const { result } = renderHook(() =>
-        useTransactionHistory({ enabled: false })
-      );
+      const { result } = renderHook(() => useTransactionHistory({ enabled: false }));
 
       expect(result.current.transactions).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -81,7 +79,7 @@ describe("useTransactionHistory", () => {
           address: "GADDR_FILTER",
           type: "contract",
           limit: 10,
-        })
+        }),
       );
 
       await waitFor(() => {
@@ -169,9 +167,7 @@ describe("useTransactionHistory", () => {
     it("polls at the specified interval", async () => {
       jest.useFakeTimers();
 
-      const { result } = renderHook(() =>
-        useTransactionHistory({ refreshInterval: 5000 })
-      );
+      const { result } = renderHook(() => useTransactionHistory({ refreshInterval: 5000 }));
 
       await waitFor(() => {
         expect(mockFetchHistory).toHaveBeenCalledTimes(1);
@@ -189,9 +185,7 @@ describe("useTransactionHistory", () => {
     it("does not poll when refreshInterval is 0", async () => {
       jest.useFakeTimers();
 
-      const { result } = renderHook(() =>
-        useTransactionHistory({ refreshInterval: 0 })
-      );
+      const { result } = renderHook(() => useTransactionHistory({ refreshInterval: 0 }));
 
       await waitFor(() => {
         expect(mockFetchHistory).toHaveBeenCalledTimes(1);

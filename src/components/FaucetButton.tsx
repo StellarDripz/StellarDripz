@@ -44,10 +44,10 @@ export default function FaucetButton() {
           isPending
             ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30 cursor-not-allowed"
             : isOnCooldown
-            ? "bg-yellow-500/10 text-yellow-400/60 border border-yellow-500/20 cursor-not-allowed"
-            : isOnMainnet
-            ? "bg-red-500/10 text-red-400 border border-red-500/20 cursor-not-allowed"
-            : "bg-gradient-to-r from-stellar-purple to-stellar-blue text-white hover:shadow-lg hover:shadow-stellar-purple/20"
+              ? "bg-yellow-500/10 text-yellow-400/60 border border-yellow-500/20 cursor-not-allowed"
+              : isOnMainnet
+                ? "bg-red-500/10 text-red-400 border border-red-500/20 cursor-not-allowed"
+                : "bg-gradient-to-r from-stellar-purple to-stellar-blue text-white hover:shadow-lg hover:shadow-stellar-purple/20"
         }`}
       >
         {isPending ? (
@@ -71,4 +71,3 @@ export default function FaucetButton() {
     </div>
   );
 }
-

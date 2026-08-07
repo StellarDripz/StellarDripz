@@ -53,10 +53,7 @@ describe("addressBookService", () => {
 
   describe("addAddressBookEntry", () => {
     it("adds a new entry", () => {
-      const entry = addAddressBookEntry(
-        "My Wallet",
-        "GDEST123456789012345678901234567890123456"
-      );
+      const entry = addAddressBookEntry("My Wallet", "GDEST123456789012345678901234567890123456");
 
       expect(entry.name).toBe("My Wallet");
       expect(entry.address).toBe("GDEST123456789012345678901234567890123456");
@@ -68,7 +65,7 @@ describe("addressBookService", () => {
     it("trims whitespace from name and address", () => {
       const entry = addAddressBookEntry(
         "  My Wallet  ",
-        "  GDEST123456789012345678901234567890123456  "
+        "  GDEST123456789012345678901234567890123456  ",
       );
 
       expect(entry.name).toBe("My Wallet");
@@ -78,11 +75,11 @@ describe("addressBookService", () => {
     it("updates name for duplicate addresses instead of creating new entry", () => {
       const entry1 = addAddressBookEntry(
         "Original Name",
-        "GDUP123456789012345678901234567890123456789"
+        "GDUP123456789012345678901234567890123456789",
       );
       const entry2 = addAddressBookEntry(
         "Updated Name",
-        "GDUP123456789012345678901234567890123456789"
+        "GDUP123456789012345678901234567890123456789",
       );
 
       expect(entry2.id).toBe(entry1.id);
@@ -93,11 +90,11 @@ describe("addressBookService", () => {
     it("does not modify name if duplicate with same name", () => {
       const entry1 = addAddressBookEntry(
         "Same Name",
-        "GSAME12345678901234567890123456789012345678"
+        "GSAME12345678901234567890123456789012345678",
       );
       const entry2 = addAddressBookEntry(
         "Same Name",
-        "GSAME12345678901234567890123456789012345678"
+        "GSAME12345678901234567890123456789012345678",
       );
 
       expect(entry2.id).toBe(entry1.id);
@@ -108,10 +105,7 @@ describe("addressBookService", () => {
 
   describe("updateAddressBookEntry", () => {
     it("updates an existing entry name", () => {
-      const entry = addAddressBookEntry(
-        "Old Name",
-        "GUPD123456789012345678901234567890123456789"
-      );
+      const entry = addAddressBookEntry("Old Name", "GUPD123456789012345678901234567890123456789");
 
       const updated = updateAddressBookEntry(entry.id, { name: "New Name" });
       expect(updated).toBe(true);
@@ -122,10 +116,7 @@ describe("addressBookService", () => {
     });
 
     it("updates an existing entry address", () => {
-      const entry = addAddressBookEntry(
-        "My Wallet",
-        "GOLD123456789012345678901234567890123456789"
-      );
+      const entry = addAddressBookEntry("My Wallet", "GOLD123456789012345678901234567890123456789");
 
       updateAddressBookEntry(entry.id, {
         address: "GNEW123456789012345678901234567890123456789",
@@ -145,10 +136,7 @@ describe("addressBookService", () => {
 
   describe("removeAddressBookEntry", () => {
     it("removes an existing entry", () => {
-      const entry = addAddressBookEntry(
-        "To Delete",
-        "GDEL123456789012345678901234567890123456789"
-      );
+      const entry = addAddressBookEntry("To Delete", "GDEL123456789012345678901234567890123456789");
       expect(getAddressBookEntries()).toHaveLength(1);
 
       const removed = removeAddressBookEntry(entry.id);
@@ -162,13 +150,10 @@ describe("addressBookService", () => {
     });
 
     it("only removes the targeted entry", () => {
-      const entry1 = addAddressBookEntry(
-        "Keep Me",
-        "GKEEP12345678901234567890123456789012345678"
-      );
+      const entry1 = addAddressBookEntry("Keep Me", "GKEEP12345678901234567890123456789012345678");
       const entry2 = addAddressBookEntry(
         "Delete Me",
-        "GDELM12345678901234567890123456789012345678"
+        "GDELM12345678901234567890123456789012345678",
       );
 
       removeAddressBookEntry(entry2.id);

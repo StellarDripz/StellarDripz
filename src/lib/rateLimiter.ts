@@ -23,7 +23,9 @@ function saveAll(entries: CooldownEntry[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  } catch { /* blocked */ }
+  } catch {
+    /* blocked */
+  }
 }
 
 /** Check if an address is within the cooldown period. Returns remaining ms or 0. */
@@ -52,6 +54,9 @@ export function canRequestFaucet(address: string, cooldownMs?: number): boolean 
 /** Clear all cooldowns (for dev/testing). */
 export function clearAllCooldowns(): void {
   if (typeof window === "undefined") return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
-

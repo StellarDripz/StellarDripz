@@ -12,7 +12,7 @@ export function isFreighterInstalled(): boolean {
 
 export async function connectFreighter(
   walletId: string,
-  walletName: string
+  walletName: string,
 ): Promise<{
   publicKey: string;
   network: NetworkType;

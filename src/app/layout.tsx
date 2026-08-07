@@ -13,32 +13,24 @@ export const metadata: Metadata = {
   authors: [{ name: "StellarDripz" }],
   openGraph: {
     title: "StellarDripz — Testnet XLM Faucet",
-    description:
-      "Request testnet XLM with a single click. Built for Stellar developers.",
+    description: "Request testnet XLM with a single click. Built for Stellar developers.",
     type: "website",
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-surface-950 bg-grid">
         <AppProvider>
           <Header />
           <ErrorBoundary>
-            <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-              {children}
-            </main>
+            <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
           </ErrorBoundary>
           <ToastContainer />
           <footer className="border-t border-white/5 py-6 text-center">
             <p className="text-xs text-white/20">
-              StellarDripz — Powered by Stellar Testnet &amp; Friendbot. Not for
-              production use.
+              StellarDripz — Powered by Stellar Testnet &amp; Friendbot. Not for production use.
             </p>
           </footer>
         </AppProvider>
@@ -46,4 +38,3 @@ export default function RootLayout({
     </html>
   );
 }
-

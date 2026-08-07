@@ -13,5 +13,10 @@ export {
   signTx,
 } from "@/lib/wallets/walletKit";
 
-export { connectFreighter, signFreighter, detectFreighterNetwork, isFreighterInstalled } from "@/lib/wallets/freighter";
+export {
+  connectFreighter,
+  signFreighter,
+  detectFreighterNetwork,
+  isFreighterInstalled,
+} from "@/lib/wallets/freighter";
 export { detectFreighterNetwork as detectNetwork } from "@/lib/wallets/freighter";

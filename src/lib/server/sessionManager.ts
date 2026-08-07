@@ -9,7 +9,7 @@ export function createSession(
   address: string,
   walletId: string,
   walletName: string,
-  requestInfo: { ip?: string; userAgent?: string }
+  requestInfo: { ip?: string; userAgent?: string },
 ): SessionEntry {
   const now = Date.now();
   const existing = getSession(address);

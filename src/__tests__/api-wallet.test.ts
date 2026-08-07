@@ -4,7 +4,8 @@
 
 jest.mock("next/server", () => {
   class MockNextRequest {
-    url: string; method: string;
+    url: string;
+    method: string;
     headers: { get: (name: string) => string | null };
     private bodyStr: string;
     constructor(input: string, init?: RequestInit) {
@@ -16,7 +17,13 @@ jest.mock("next/server", () => {
       };
       this.bodyStr = (init as { body?: string } | undefined)?.body || "";
     }
-    async json() { try { return JSON.parse(this.bodyStr); } catch { return {}; } }
+    async json() {
+      try {
+        return JSON.parse(this.bodyStr);
+      } catch {
+        return {};
+      }
+    }
   }
   class MockNextResponse {
     status: number;
@@ -29,7 +36,13 @@ jest.mock("next/server", () => {
       return new MockNextResponse(body, init);
     }
     async json() {
-      if (typeof this.body === "string") { try { return JSON.parse(this.body); } catch { return this.body; } }
+      if (typeof this.body === "string") {
+        try {
+          return JSON.parse(this.body);
+        } catch {
+          return this.body;
+        }
+      }
       return this.body;
     }
   }

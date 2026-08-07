@@ -28,14 +28,16 @@ function saveAll(events: AnalyticsEvent[]): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(events.slice(0, 1000)));
-  } catch { /* blocked */ }
+  } catch {
+    /* blocked */
+  }
 }
 
 /** Track an analytics event. */
 export function trackEvent(
   type: AnalyticsEvent["type"],
   address: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
 ): void {
   const events = getAll();
   events.push({
@@ -68,7 +70,11 @@ export function getAnalyticsSummary(): Record<string, number> {
 /** Clear all analytics data. */
 export function clearAnalytics(): void {
   if (typeof window === "undefined") return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 export type { AnalyticsEvent };

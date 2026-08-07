@@ -117,7 +117,7 @@ describe("useWallet", () => {
       expect(mockConnectAndRegister).toHaveBeenCalledWith(
         "GPUBKEY123456789012345678901234567890123456",
         "freighter",
-        "Freighter"
+        "Freighter",
       );
     });
 
@@ -129,7 +129,9 @@ describe("useWallet", () => {
       await act(async () => {
         try {
           await result.current.connect("freighter");
-        } catch { /* expected */ }
+        } catch {
+          /* expected */
+        }
       });
 
       expect(result.current.wallet.connected).toBe(false);

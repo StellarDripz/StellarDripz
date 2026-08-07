@@ -6,7 +6,8 @@ import { NextResponse } from "next/server";
 import * as StellarSdk from "@stellar/stellar-sdk";
 
 const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org";
-const SOROBAN_RPC = process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
+const SOROBAN_RPC =
+  process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
 
 export async function GET() {
   const results: Record<string, { status: "ok" | "error"; latency?: number; error?: string }> = {};
@@ -18,7 +19,10 @@ export async function GET() {
     await horizon.ledgers().limit(1).call();
     results.horizon = { status: "ok", latency: Date.now() - start };
   } catch (err) {
-    results.horizon = { status: "error", error: err instanceof Error ? err.message : "Unknown error" };
+    results.horizon = {
+      status: "error",
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
   }
 
   // Check Soroban RPC
@@ -28,7 +32,10 @@ export async function GET() {
     await rpc.getLatestLedger();
     results.sorobanRpc = { status: "ok", latency: Date.now() - start };
   } catch (err) {
-    results.sorobanRpc = { status: "error", error: err instanceof Error ? err.message : "Unknown error" };
+    results.sorobanRpc = {
+      status: "error",
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
   }
 
   // Check Friendbot
@@ -38,7 +45,10 @@ export async function GET() {
     const res = await fetch(url);
     results.friendbot = { status: res.ok ? "ok" : "error", latency: Date.now() - start };
   } catch (err) {
-    results.friendbot = { status: "error", error: err instanceof Error ? err.message : "Unknown error" };
+    results.friendbot = {
+      status: "error",
+      error: err instanceof Error ? err.message : "Unknown error",
+    };
   }
 
   return NextResponse.json({

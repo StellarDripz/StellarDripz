@@ -28,9 +28,7 @@ beforeEach(() => {
 describe("useFaucet", () => {
   describe("initial state", () => {
     it("returns idle state", () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123" }));
 
       expect(result.current.requesting).toBe(false);
       expect(result.current.success).toBe(false);
@@ -41,9 +39,7 @@ describe("useFaucet", () => {
     });
 
     it("cannot request without address", () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: null })
-      );
+      const { result } = renderHook(() => useFaucet({ address: null }));
 
       expect(result.current.canRequest).toBe(false);
     });
@@ -51,9 +47,7 @@ describe("useFaucet", () => {
 
   describe("request", () => {
     it("requests faucet funds successfully", async () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123" }));
 
       await act(async () => {
         await result.current.request();
@@ -67,9 +61,7 @@ describe("useFaucet", () => {
     });
 
     it("sets cooldown after successful request", async () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123", cooldownMs: 60000 })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123", cooldownMs: 60000 }));
 
       await act(async () => {
         await result.current.request();
@@ -82,9 +74,7 @@ describe("useFaucet", () => {
     it("handles faucet error", async () => {
       mockRequestFaucet.mockRejectedValueOnce(new Error("Rate limited"));
 
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123" }));
 
       await act(async () => {
         await result.current.request();
@@ -96,9 +86,7 @@ describe("useFaucet", () => {
     });
 
     it("blocks request during cooldown", async () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123" }));
 
       await act(async () => {
         await result.current.request();
@@ -116,9 +104,7 @@ describe("useFaucet", () => {
     });
 
     it("does not request when address is null", async () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: null })
-      );
+      const { result } = renderHook(() => useFaucet({ address: null }));
 
       await act(async () => {
         await result.current.request();
@@ -132,9 +118,7 @@ describe("useFaucet", () => {
     it("counts down cooldown", async () => {
       jest.useFakeTimers();
 
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123", cooldownMs: 10000 })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123", cooldownMs: 10000 }));
 
       await act(async () => {
         await result.current.request();
@@ -161,9 +145,7 @@ describe("useFaucet", () => {
     });
 
     it("resets success state on new request attempt", async () => {
-      const { result } = renderHook(() =>
-        useFaucet({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useFaucet({ address: "GADDR123" }));
 
       await act(async () => {
         await result.current.request();

@@ -51,9 +51,7 @@ export default function CooldownTimer({ address, onReady }: CooldownTimerProps) 
     <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-center animate-pulse">
       <div className="flex items-center justify-center gap-2">
         <span className="text-lg">⏳</span>
-        <p className="text-sm font-semibold text-yellow-400">
-          Cooldown: {remaining}s remaining
-        </p>
+        <p className="text-sm font-semibold text-yellow-400">Cooldown: {remaining}s remaining</p>
       </div>
       <p className="mt-1 text-xs text-yellow-400/60">
         You can request faucet funds again in {remaining} second{remaining !== 1 ? "s" : ""}.
@@ -61,4 +59,3 @@ export default function CooldownTimer({ address, onReady }: CooldownTimerProps) 
     </div>
   );
 }
-

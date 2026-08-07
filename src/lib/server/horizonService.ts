@@ -35,14 +35,25 @@ export async function fetchBalanceServer(publicKey: string): Promise<BalanceResp
         const raw = b.balance;
         if (b.asset_type === "native") {
           return {
-            code: "XLM", issuer: "", type: "native", balance: raw,
-            formatted: parseFloat(raw).toLocaleString("en-US", { minimumFractionDigits: 7, maximumFractionDigits: 7 }),
+            code: "XLM",
+            issuer: "",
+            type: "native",
+            balance: raw,
+            formatted: parseFloat(raw).toLocaleString("en-US", {
+              minimumFractionDigits: 7,
+              maximumFractionDigits: 7,
+            }),
           };
         }
         return {
-          code: b.asset_code || "???", issuer: b.asset_issuer || "",
-          type: b.asset_type, balance: raw,
-          formatted: parseFloat(raw).toLocaleString("en-US", { minimumFractionDigits: 7, maximumFractionDigits: 7 }),
+          code: b.asset_code || "???",
+          issuer: b.asset_issuer || "",
+          type: b.asset_type,
+          balance: raw,
+          formatted: parseFloat(raw).toLocaleString("en-US", {
+            minimumFractionDigits: 7,
+            maximumFractionDigits: 7,
+          }),
         };
       });
 
@@ -65,7 +76,7 @@ export async function fetchBalanceServer(publicKey: string): Promise<BalanceResp
 
 export async function requestFaucetFundsServer(
   publicKey: string,
-  requestInfo: { ip?: string; userAgent?: string }
+  requestInfo: { ip?: string; userAgent?: string },
 ): Promise<{ hash: string; newBalance: string }> {
   const url = `${STELLAR_NETWORK.friendbotUrl}?addr=${encodeURIComponent(publicKey)}`;
   const res = await fetch(url);
@@ -83,13 +94,23 @@ export async function requestFaucetFundsServer(
   // Log to database
   const txRecord: TxRecord = {
     id: `tx-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    type: "faucet", status: "success", hash,
-    amount: "10000", assetCode: "XLM",
-    senderAddress: "friendbot", destinationAddress: publicKey,
-    timestamp: Date.now(), ip: requestInfo.ip, userAgent: requestInfo.userAgent,
+    type: "faucet",
+    status: "success",
+    hash,
+    amount: "10000",
+    assetCode: "XLM",
+    senderAddress: "friendbot",
+    destinationAddress: publicKey,
+    timestamp: Date.now(),
+    ip: requestInfo.ip,
+    userAgent: requestInfo.userAgent,
   };
   saveTransaction(txRecord);
-  logAnalytics({ eventType: "faucet_request", address: publicKey, data: { hash, amount: "10000" } });
+  logAnalytics({
+    eventType: "faucet_request",
+    address: publicKey,
+    data: { hash, amount: "10000" },
+  });
 
   return { hash, newBalance: balance.xlm };
 }
@@ -102,30 +123,46 @@ export async function sendPaymentServer(
   destination: string,
   amount: string,
   assetCode: string,
-  requestInfo: { ip?: string; userAgent?: string }
+  requestInfo: { ip?: string; userAgent?: string },
 ): Promise<{ hash: string }> {
   if (STELLAR_NETWORK.networkPassphrase !== StellarSdk.Networks.TESTNET) {
     throw new Error("Network mismatch — expected Testnet.");
   }
 
   // Validate destination
-  try { StellarSdk.StrKey.decodeEd25519PublicKey(destination); } catch {
+  try {
+    StellarSdk.StrKey.decodeEd25519PublicKey(destination);
+  } catch {
     throw new Error("Invalid destination address.");
   }
 
   // Submit the signed transaction
-  const signedTx = StellarSdk.TransactionBuilder.fromXDR(signedXdr, STELLAR_NETWORK.networkPassphrase);
+  const signedTx = StellarSdk.TransactionBuilder.fromXDR(
+    signedXdr,
+    STELLAR_NETWORK.networkPassphrase,
+  );
   const response = await horizonServer.submitTransaction(signedTx);
 
   // Log
   const txRecord: TxRecord = {
     id: `tx-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    type: "send", status: "success", hash: response.hash,
-    amount, assetCode, senderAddress: senderPublicKey, destinationAddress: destination,
-    timestamp: Date.now(), ip: requestInfo.ip, userAgent: requestInfo.userAgent,
+    type: "send",
+    status: "success",
+    hash: response.hash,
+    amount,
+    assetCode,
+    senderAddress: senderPublicKey,
+    destinationAddress: destination,
+    timestamp: Date.now(),
+    ip: requestInfo.ip,
+    userAgent: requestInfo.userAgent,
   };
   saveTransaction(txRecord);
-  logAnalytics({ eventType: "payment_send", address: senderPublicKey, data: { hash: response.hash, amount, destination } });
+  logAnalytics({
+    eventType: "payment_send",
+    address: senderPublicKey,
+    data: { hash: response.hash, amount, destination },
+  });
 
   return { hash: response.hash };
 }
@@ -136,9 +173,11 @@ export async function buildPaymentTransaction(
   senderPublicKey: string,
   destination: string,
   amount: string,
-  assetCode?: string
+  assetCode?: string,
 ): Promise<{ xdr: string }> {
-  try { StellarSdk.StrKey.decodeEd25519PublicKey(destination); } catch {
+  try {
+    StellarSdk.StrKey.decodeEd25519PublicKey(destination);
+  } catch {
     throw new Error("Invalid destination address.");
   }
 
@@ -146,12 +185,14 @@ export async function buildPaymentTransaction(
   const feeStats = await horizonServer.fetchBaseFee();
   const fee = String(Math.floor(Number(feeStats) * 2));
 
-  const asset = (!assetCode || assetCode === "XLM")
-    ? StellarSdk.Asset.native()
-    : new StellarSdk.Asset(assetCode, senderPublicKey);
+  const asset =
+    !assetCode || assetCode === "XLM"
+      ? StellarSdk.Asset.native()
+      : new StellarSdk.Asset(assetCode, senderPublicKey);
 
   const tx = new StellarSdk.TransactionBuilder(sourceAccount, {
-    fee, networkPassphrase: STELLAR_NETWORK.networkPassphrase,
+    fee,
+    networkPassphrase: STELLAR_NETWORK.networkPassphrase,
   })
     .addOperation(StellarSdk.Operation.payment({ destination, asset, amount }))
     .setTimeout(30)

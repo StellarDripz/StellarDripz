@@ -31,10 +31,7 @@ export function getAddressBookEntries(): AddressBookEntry[] {
   return getAll().sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export function addAddressBookEntry(
-  name: string,
-  address: string
-): AddressBookEntry {
+export function addAddressBookEntry(name: string, address: string): AddressBookEntry {
   const entries = getAll();
 
   // Don't add duplicate addresses
@@ -62,7 +59,7 @@ export function addAddressBookEntry(
 
 export function updateAddressBookEntry(
   id: string,
-  updates: Partial<Pick<AddressBookEntry, "name" | "address">>
+  updates: Partial<Pick<AddressBookEntry, "name" | "address">>,
 ): boolean {
   const entries = getAll();
   const entry = entries.find((e) => e.id === id);

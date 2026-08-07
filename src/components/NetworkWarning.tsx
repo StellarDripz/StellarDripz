@@ -18,8 +18,8 @@ export default function NetworkWarning() {
       <div className="flex items-center justify-center gap-2">
         <span className="text-lg">⚠️</span>
         <p className="text-sm font-medium text-red-400">
-          Your wallet is on <strong>Mainnet</strong>. Please switch to{" "}
-          <strong>Testnet</strong> in your wallet extension settings.
+          Your wallet is on <strong>Mainnet</strong>. Please switch to <strong>Testnet</strong> in
+          your wallet extension settings.
         </p>
       </div>
     </div>

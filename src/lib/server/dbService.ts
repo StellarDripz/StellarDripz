@@ -52,7 +52,8 @@ export interface TxRecord {
 
 export interface AnalyticsEntry {
   id: string;
-  eventType: "faucet_request" | "payment_send" | "contract_invoke" | "wallet_connect" | "balance_fetch";
+  eventType:
+    "faucet_request" | "payment_send" | "contract_invoke" | "wallet_connect" | "balance_fetch";
   address: string;
   timestamp: number;
   data?: Record<string, unknown>;
@@ -96,7 +97,9 @@ function writeDb(db: Database): void {
   ensureDir();
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-  } catch { /* disk full or permission error */ }
+  } catch {
+    /* disk full or permission error */
+  }
 }
 
 function getEmptyDb(): Database {
@@ -121,11 +124,7 @@ export function updateTransaction(id: string, updates: Partial<TxRecord>): void 
   }
 }
 
-export function getTransactions(
-  address?: string,
-  type?: TxRecord["type"],
-  limit = 50
-): TxRecord[] {
+export function getTransactions(address?: string, type?: TxRecord["type"], limit = 50): TxRecord[] {
   const db = readDb();
   let txs = db.transactions;
   if (address) txs = txs.filter((t) => t.senderAddress === address);
@@ -148,7 +147,7 @@ export function logAnalytics(entry: Omit<AnalyticsEntry, "id" | "timestamp">): v
 
 export function getAnalytics(
   eventType?: AnalyticsEntry["eventType"],
-  limit = 100
+  limit = 100,
 ): AnalyticsEntry[] {
   const db = readDb();
   let entries = db.analytics;
@@ -217,4 +216,3 @@ export function runPeriodicCleanup(): void {
   db.lastCleanup = now;
   writeDb(db);
 }
-

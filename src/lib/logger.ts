@@ -6,7 +6,10 @@
 type LogLevel = "debug" | "info" | "warn" | "error";
 
 const LOG_LEVELS: Record<LogLevel, number> = {
-  debug: 0, info: 1, warn: 2, error: 3,
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3,
 };
 
 interface LogEntry {
@@ -37,7 +40,12 @@ function formatEntry(entry: LogEntry): string {
   return JSON.stringify(entry);
 }
 
-function log(level: LogLevel, message: string, context?: Record<string, unknown>, err?: Error): void {
+function log(
+  level: LogLevel,
+  message: string,
+  context?: Record<string, unknown>,
+  err?: Error,
+): void {
   if (!shouldLog(level)) return;
 
   const entry: LogEntry = {
@@ -52,10 +60,18 @@ function log(level: LogLevel, message: string, context?: Record<string, unknown>
   const formatted = formatEntry(entry);
 
   switch (level) {
-    case "debug": console.debug(formatted); break;
-    case "info": console.info(formatted); break;
-    case "warn": console.warn(formatted); break;
-    case "error": console.error(formatted); break;
+    case "debug":
+      console.debug(formatted);
+      break;
+    case "info":
+      console.info(formatted);
+      break;
+    case "warn":
+      console.warn(formatted);
+      break;
+    case "error":
+      console.error(formatted);
+      break;
   }
 }
 

@@ -11,13 +11,9 @@ function AssetRow({ asset }: { asset: AssetBalance }) {
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-stellar-blue/10 text-[10px] font-bold text-stellar-blue">
           {asset.asset.code.slice(0, 4)}
         </span>
-        <span className="text-xs font-medium text-white/70">
-          {asset.asset.code}
-        </span>
+        <span className="text-xs font-medium text-white/70">{asset.asset.code}</span>
       </div>
-      <span className="font-mono text-xs text-white/50">
-        {asset.formatted}
-      </span>
+      <span className="font-mono text-xs text-white/50">{asset.formatted}</span>
     </div>
   );
 }
@@ -36,16 +32,12 @@ export default function BalanceCard() {
     setRefreshing(false);
   };
 
-  const nonNativeAssets = balance.assets.filter(
-    (a) => a.asset.type !== "native"
-  );
+  const nonNativeAssets = balance.assets.filter((a) => a.asset.type !== "native");
 
   return (
     <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md animate-slide-up">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">
-          Balances
-        </h3>
+        <h3 className="text-sm font-medium text-white/60 uppercase tracking-wider">Balances</h3>
         <button
           onClick={handleRefresh}
           disabled={refreshing || balance.loading}
@@ -73,8 +65,7 @@ export default function BalanceCard() {
       {balance.error ? (
         <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
           <p className="text-sm text-red-400">
-            Failed to load balances. The account may not exist yet — try the
-            faucet!
+            Failed to load balances. The account may not exist yet — try the faucet!
           </p>
           <button
             onClick={handleRefresh}
@@ -92,9 +83,7 @@ export default function BalanceCard() {
         <>
           {/* XLM — primary */}
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-4xl font-bold text-white tracking-tight">
-              {balance.xlm}
-            </span>
+            <span className="text-4xl font-bold text-white tracking-tight">{balance.xlm}</span>
             <span className="text-lg font-semibold text-stellar-blue">XLM</span>
           </div>
 
@@ -106,19 +95,13 @@ export default function BalanceCard() {
                 className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/60 transition-colors"
               >
                 <svg
-                  className={`h-3 w-3 transition-transform ${
-                    showAllAssets ? "rotate-90" : ""
-                  }`}
+                  className={`h-3 w-3 transition-transform ${showAllAssets ? "rotate-90" : ""}`}
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth={2}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5l7 7-7 7"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
                 {nonNativeAssets.length} other asset
                 {nonNativeAssets.length !== 1 ? "s" : ""}
@@ -127,10 +110,7 @@ export default function BalanceCard() {
               {showAllAssets && (
                 <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto pr-1">
                   {nonNativeAssets.map((a) => (
-                    <AssetRow
-                      key={`${a.asset.code}-${a.asset.issuer}`}
-                      asset={a}
-                    />
+                    <AssetRow key={`${a.asset.code}-${a.asset.issuer}`} asset={a} />
                   ))}
                 </div>
               )}

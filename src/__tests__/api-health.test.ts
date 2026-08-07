@@ -14,12 +14,25 @@ jest.mock("next/server", () => {
       return new MockNextResponse(body, init);
     }
     async json() {
-      if (typeof this.body === "string") { try { return JSON.parse(this.body); } catch { return this.body; } }
+      if (typeof this.body === "string") {
+        try {
+          return JSON.parse(this.body);
+        } catch {
+          return this.body;
+        }
+      }
       return this.body;
     }
   }
   return {
-    NextRequest: class { url = ""; method = "GET"; headers = { get: () => null }; async json() { return {}; } },
+    NextRequest: class {
+      url = "";
+      method = "GET";
+      headers = { get: () => null };
+      async json() {
+        return {};
+      }
+    },
     NextResponse: MockNextResponse,
   };
 });
@@ -37,7 +50,9 @@ const mockGetConfig = jest.fn().mockReturnValue({
 });
 
 const mockValidateEnv = jest.fn().mockReturnValue({
-  valid: true, errors: [], warnings: [],
+  valid: true,
+  errors: [],
+  warnings: [],
 });
 
 jest.mock("@/lib/env", () => ({
@@ -109,9 +124,7 @@ describe("GET /api/health", () => {
   });
 
   it("returns degraded when services are down", async () => {
-    mockFetch.mockImplementation(() =>
-      Promise.reject(new Error("Connection refused"))
-    );
+    mockFetch.mockImplementation(() => Promise.reject(new Error("Connection refused")));
 
     jest.resetModules();
     const mod = await import("@/app/api/health/route");
@@ -135,6 +148,6 @@ describe("GET /api/health", () => {
     const res = await mod.GET();
 
     const json = (await res.json()) as Record<string, unknown>;
-    expect((json.warnings as string[])).toContain("No contract IDs configured");
+    expect(json.warnings as string[]).toContain("No contract IDs configured");
   });
 });

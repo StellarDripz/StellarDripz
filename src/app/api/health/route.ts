@@ -91,7 +91,7 @@ export async function GET() {
         "Cache-Control": "no-store",
         "X-Health-Check": "stellar-dripz",
       },
-    }
+    },
   );
 }
 // Health check with timeout-based service monitoring

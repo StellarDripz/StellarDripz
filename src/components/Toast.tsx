@@ -30,13 +30,10 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
   }, [leaving, toast.id, onDismiss]);
 
   const colors = {
-    success:
-      "border-green-500/30 bg-green-500/10 text-green-400",
-    error:
-      "border-red-500/30 bg-red-500/10 text-red-400",
+    success: "border-green-500/30 bg-green-500/10 text-green-400",
+    error: "border-red-500/30 bg-red-500/10 text-red-400",
     info: "border-blue-500/30 bg-blue-500/10 text-blue-400",
-    pending:
-      "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
+    pending: "border-yellow-500/30 bg-yellow-500/10 text-yellow-400",
   };
 
   const icons = {
@@ -56,11 +53,7 @@ function ToastItem({ toast, onDismiss }: ToastProps) {
         <span className="mt-0.5 text-lg">{icons[toast.type]}</span>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold">{toast.title}</p>
-          {toast.message && (
-            <p className="mt-0.5 text-xs opacity-80 break-all">
-              {toast.message}
-            </p>
-          )}
+          {toast.message && <p className="mt-0.5 text-xs opacity-80 break-all">{toast.message}</p>}
         </div>
         <button
           onClick={() => setLeaving(true)}
@@ -88,13 +81,11 @@ export default function ToastContainer() {
         // Replace pending toasts with the same title, otherwise append
         if (toast.type === "pending") {
           const withoutSamePending = prev.filter(
-            (t) => !(t.type === "pending" && t.title === toast.title)
+            (t) => !(t.type === "pending" && t.title === toast.title),
           );
           return [...withoutSamePending, toast];
         }
-        const filtered = prev.filter(
-          (t) => !(t.type === "pending" && t.title === toast.title)
-        );
+        const filtered = prev.filter((t) => !(t.type === "pending" && t.title === toast.title));
         return [...filtered, toast];
       });
     };
@@ -102,8 +93,7 @@ export default function ToastContainer() {
     (window as unknown as Record<string, unknown>).__stellardripz_toast = fn;
 
     return () => {
-      delete (window as unknown as Record<string, unknown>)
-        .__stellardripz_toast;
+      delete (window as unknown as Record<string, unknown>).__stellardripz_toast;
     };
   }, []);
 
@@ -119,8 +109,8 @@ export default function ToastContainer() {
 }
 
 export function showToast(toast: Omit<ToastMessage, "id">) {
-  const fn = (window as unknown as Record<string, unknown>)
-    .__stellardripz_toast as ((t: ToastMessage) => void) | undefined;
+  const fn = (window as unknown as Record<string, unknown>).__stellardripz_toast as
+    ((t: ToastMessage) => void) | undefined;
   if (fn) {
     fn({ ...toast, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` });
   }

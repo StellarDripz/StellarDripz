@@ -62,7 +62,7 @@ describe("useContractEvents", () => {
   describe("initial state", () => {
     it("returns empty events when disabled", () => {
       const { result } = renderHook(() =>
-        useContractEvents({ contractId: "CC123", enabled: false })
+        useContractEvents({ contractId: "CC123", enabled: false }),
       );
 
       expect(result.current.events).toEqual([]);
@@ -71,9 +71,7 @@ describe("useContractEvents", () => {
     });
 
     it("returns empty events when no contractId", () => {
-      const { result } = renderHook(() =>
-        useContractEvents({ contractId: "", enabled: true })
-      );
+      const { result } = renderHook(() => useContractEvents({ contractId: "", enabled: true }));
 
       expect(result.current.events).toEqual([]);
     });
@@ -95,13 +93,15 @@ describe("useContractEvents", () => {
             if (this.onmessage) this.onmessage(event);
           };
         }
-        close() { this.readyState = 2; }
+        close() {
+          this.readyState = 2;
+        }
       }
       // @ts-expect-error: override mock
       global.EventSource = CaptureEventSource;
 
       const { result } = renderHook(() =>
-        useContractEvents({ contractId: "CCONTRACT123", enabled: true })
+        useContractEvents({ contractId: "CCONTRACT123", enabled: true }),
       );
 
       act(() => {
@@ -133,7 +133,9 @@ describe("useContractEvents", () => {
       // Make EventSource constructor throw
       // @ts-expect-error: make EventSource throw
       global.EventSource = class {
-        constructor() { throw new Error("SSE not available"); }
+        constructor() {
+          throw new Error("SSE not available");
+        }
         close() {}
       };
 
@@ -144,9 +146,7 @@ describe("useContractEvents", () => {
       });
       mockDirectEvents.directGetLatestLedger.mockResolvedValue(5000);
 
-      renderHook(() =>
-        useContractEvents({ contractId: "CCONTRACT123", pollInterval: 5000 })
-      );
+      renderHook(() => useContractEvents({ contractId: "CCONTRACT123", pollInterval: 5000 }));
 
       // Advance past poll interval
       await act(async () => {
@@ -166,15 +166,17 @@ describe("useContractEvents", () => {
         onmessage: ((event: { data: string }) => void) | null = null;
         onerror: (() => void) | null = null;
         readyState: number = 0;
-        constructor(url: string) { this.url = url; }
-        close() { this.readyState = 2; }
+        constructor(url: string) {
+          this.url = url;
+        }
+        close() {
+          this.readyState = 2;
+        }
       }
       // @ts-expect-error: override mock
       global.EventSource = SilentEventSource;
 
-      const { result } = renderHook(() =>
-        useContractEvents({ contractId: "CCONTRACT123" })
-      );
+      const { result } = renderHook(() => useContractEvents({ contractId: "CCONTRACT123" }));
 
       act(() => {
         result.current.clearEvents();
@@ -200,14 +202,14 @@ describe("useContractEvents", () => {
             if (this.onmessage) this.onmessage(event);
           };
         }
-        close() { this.readyState = 2; }
+        close() {
+          this.readyState = 2;
+        }
       }
       // @ts-expect-error: override mock
       global.EventSource = CaptureEventSource;
 
-      const { result } = renderHook(() =>
-        useContractEvents({ contractId: "CCONTRACT123" })
-      );
+      const { result } = renderHook(() => useContractEvents({ contractId: "CCONTRACT123" }));
 
       for (let i = 0; i < 150; i++) {
         act(() => {

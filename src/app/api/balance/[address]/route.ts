@@ -7,7 +7,7 @@ import { fetchBalanceServer } from "@/lib/server/horizonService";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ address: string }> }
+  { params }: { params: Promise<{ address: string }> },
 ) {
   const { address } = await params;
   const rateLimitResponse = checkRateLimit(request, "general");
@@ -23,7 +23,7 @@ export async function GET(
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Balance fetch failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

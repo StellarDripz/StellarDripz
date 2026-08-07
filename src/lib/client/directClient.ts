@@ -110,7 +110,7 @@ export async function directSimulateContract(
   contractId: string,
   functionName: string,
   args: StellarSdk.xdr.ScVal[],
-  signerPublicKey: string
+  signerPublicKey: string,
 ): Promise<DirectSimulateResult> {
   const sourceAccount = await horizon().loadAccount(signerPublicKey);
   const contract = new StellarSdk.Contract(contractId);
@@ -143,14 +143,12 @@ export async function directSimulateContract(
 export async function directFetchContractEvents(
   contractId: string,
   startLedger: number,
-  limit = 10
+  limit = 10,
 ): Promise<{ events: DirectContractEvent[]; latestLedger: number }> {
   try {
     const response = await soroban().getEvents({
       startLedger,
-      filters: [
-        { type: "contract", contractIds: [contractId], topics: [["*"]] },
-      ],
+      filters: [{ type: "contract", contractIds: [contractId], topics: [["*"]] }],
       limit,
     });
 
@@ -160,12 +158,11 @@ export async function directFetchContractEvents(
     if (response.events) {
       for (const event of response.events) {
         try {
-          const topic =
-            event.topic.map((t: unknown) => String(t)).join(":") || "unknown";
+          const topic = event.topic.map((t: unknown) => String(t)).join(":") || "unknown";
           const rawValue = (event as unknown as { value: string }).value;
           const value = rawValue
             ? StellarSdk.scValToNative(
-                StellarSdk.xdr.ScVal.fromXDR(rawValue, "base64")
+                StellarSdk.xdr.ScVal.fromXDR(rawValue, "base64"),
               )?.toString() || ""
             : "";
           events.push({ topic, value, contractId });
@@ -198,4 +195,3 @@ export async function directGetLatestLedger(): Promise<number> {
 
 export { STELLAR_NETWORK };
 // CORS: Horizon and Soroban RPC allow browser-origin requests
-

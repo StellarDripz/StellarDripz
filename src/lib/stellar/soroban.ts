@@ -20,7 +20,7 @@ export async function simulateContractCall(
   contractId: string,
   functionName: string,
   args: StellarSdk.xdr.ScVal[],
-  signerPublicKey: string
+  signerPublicKey: string,
 ): Promise<{ resultValue?: string }> {
   const contract = new StellarSdk.Contract(contractId);
   const sourceAccount = await horizonServer.loadAccount(signerPublicKey);
@@ -52,7 +52,7 @@ export async function callContractFunction(
   contractId: string,
   functionName: string,
   args: StellarSdk.xdr.ScVal[],
-  signerPublicKey: string
+  signerPublicKey: string,
 ): Promise<{ hash: string; resultValue?: string; events?: ContractEventData[] }> {
   const contract = new StellarSdk.Contract(contractId);
   const sourceAccount = await horizonServer.loadAccount(signerPublicKey);
@@ -79,7 +79,7 @@ export async function callContractFunction(
   const signedXdr = await signTx(xdr, signerPublicKey);
   const signedTx = StellarSdk.TransactionBuilder.fromXDR(
     signedXdr,
-    STELLAR_NETWORK.networkPassphrase
+    STELLAR_NETWORK.networkPassphrase,
   );
 
   const response = await rpcServer.sendTransaction(signedTx);
@@ -116,7 +116,7 @@ export async function callContractFunction(
 
 export async function fetchContractEvents(
   contractId: string,
-  startLedger: number
+  startLedger: number,
 ): Promise<{ events: ContractEventData[]; latestLedger: number }> {
   try {
     const response = await rpcServer.getEvents({
@@ -132,10 +132,14 @@ export async function fetchContractEvents(
           const topic = event.topic.map((t: unknown) => String(t)).join(":") || "unknown";
           const rawValue = (event as unknown as { value: string }).value;
           const value = rawValue
-            ? StellarSdk.scValToNative(StellarSdk.xdr.ScVal.fromXDR(rawValue, "base64"))?.toString() || ""
+            ? StellarSdk.scValToNative(
+                StellarSdk.xdr.ScVal.fromXDR(rawValue, "base64"),
+              )?.toString() || ""
             : "";
           events.push({ topic, value, contractId });
-        } catch { /* skip */ }
+        } catch {
+          /* skip */
+        }
         if (event.ledger > latestLedger) latestLedger = event.ledger;
       }
     }
@@ -158,7 +162,7 @@ export async function getLatestLedger(): Promise<number> {
 
 function extractEvents(
   meta: StellarSdk.xdr.TransactionMeta,
-  contractId: string
+  contractId: string,
 ): ContractEventData[] {
   try {
     const events: ContractEventData[] = [];
@@ -174,18 +178,28 @@ function extractEvents(
         const evtContractId = StellarSdk.StrKey.encodeContract(rawContractId);
         if (evtContractId !== contractId) continue;
 
-        const topic = event.body().v0().topics()
-          .map((t: StellarSdk.xdr.ScVal) => {
-            try { return StellarSdk.scValToNative(t)?.toString() || "?"; } catch { return "?"; }
-          })
-          .join(":") || "unknown";
+        const topic =
+          event
+            .body()
+            .v0()
+            .topics()
+            .map((t: StellarSdk.xdr.ScVal) => {
+              try {
+                return StellarSdk.scValToNative(t)?.toString() || "?";
+              } catch {
+                return "?";
+              }
+            })
+            .join(":") || "unknown";
 
         const value = event.body().v0().data()
           ? StellarSdk.scValToNative(event.body().v0().data())?.toString() || ""
           : "";
 
         events.push({ topic, value, contractId: evtContractId });
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
     return events;
   } catch {

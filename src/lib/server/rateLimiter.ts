@@ -13,15 +13,18 @@ const ipMap = new Map<string, RateLimitEntry>();
 const addressMap = new Map<string, RateLimitEntry>();
 
 // Periodic cleanup every 5 minutes
-setInterval(() => {
-  const now = Date.now();
-  for (const [key, entry] of ipMap) {
-    if (now > entry.resetAt) ipMap.delete(key);
-  }
-  for (const [key, entry] of addressMap) {
-    if (now > entry.resetAt) addressMap.delete(key);
-  }
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    const now = Date.now();
+    for (const [key, entry] of ipMap) {
+      if (now > entry.resetAt) ipMap.delete(key);
+    }
+    for (const [key, entry] of addressMap) {
+      if (now > entry.resetAt) addressMap.delete(key);
+    }
+  },
+  5 * 60 * 1000,
+);
 
 interface RateLimitConfig {
   windowMs: number;
@@ -29,11 +32,11 @@ interface RateLimitConfig {
 }
 
 const DEFAULTS: Record<string, RateLimitConfig> = {
-  faucet: { windowMs: 60_000, maxRequests: 1 },      // 1 per minute per address
-  payment: { windowMs: 60_000, maxRequests: 10 },     // 10 per minute per address
-  contract: { windowMs: 60_000, maxRequests: 5 },     // 5 per minute per address
-  wallet: { windowMs: 60_000, maxRequests: 20 },      // 20 per minute per IP
-  general: { windowMs: 60_000, maxRequests: 30 },     // 30 per minute per IP
+  faucet: { windowMs: 60_000, maxRequests: 1 }, // 1 per minute per address
+  payment: { windowMs: 60_000, maxRequests: 10 }, // 10 per minute per address
+  contract: { windowMs: 60_000, maxRequests: 5 }, // 5 per minute per address
+  wallet: { windowMs: 60_000, maxRequests: 20 }, // 20 per minute per IP
+  general: { windowMs: 60_000, maxRequests: 30 }, // 30 per minute per IP
 };
 
 /**
@@ -48,7 +51,7 @@ export function clearRateLimits(): void {
 export function checkRateLimit(
   request: NextRequest,
   category: keyof typeof DEFAULTS,
-  address?: string
+  address?: string,
 ): NextResponse | null {
   const config = DEFAULTS[category] || DEFAULTS.general;
 
@@ -63,7 +66,7 @@ export function checkRateLimit(
         const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
         return NextResponse.json(
           { error: `Rate limited. Try again in ${retryAfter}s.`, retryAfter },
-          { status: 429, headers: { "Retry-After": String(retryAfter) } }
+          { status: 429, headers: { "Retry-After": String(retryAfter) } },
         );
       }
       entry.count++;
@@ -82,7 +85,7 @@ export function checkRateLimit(
         const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
         return NextResponse.json(
           { error: "Too many requests.", retryAfter },
-          { status: 429, headers: { "Retry-After": String(retryAfter) } }
+          { status: 429, headers: { "Retry-After": String(retryAfter) } },
         );
       }
       entry.count++;
@@ -94,4 +97,3 @@ export function checkRateLimit(
   return null; // Allowed
 }
 // Enforces rate limits per-address with sliding window algorithm
-

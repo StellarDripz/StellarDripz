@@ -28,9 +28,7 @@ beforeEach(() => {
 describe("useBalance", () => {
   describe("initial state", () => {
     it("returns empty balance when no address", () => {
-      const { result } = renderHook(() =>
-        useBalance({ address: null })
-      );
+      const { result } = renderHook(() => useBalance({ address: null }));
 
       expect(result.current.balance.xlm).toBe("0.0000000");
       expect(result.current.balance.raw).toBe("0");
@@ -39,9 +37,7 @@ describe("useBalance", () => {
     });
 
     it("does not fetch when disabled", () => {
-      const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123", enabled: false })
-      );
+      const { result } = renderHook(() => useBalance({ address: "GADDR123", enabled: false }));
 
       expect(mockDirectFetchBalance).not.toHaveBeenCalled();
     });
@@ -49,9 +45,7 @@ describe("useBalance", () => {
 
   describe("direct balance fetching", () => {
     it("fetches balance via direct Horizon on mount", async () => {
-      const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useBalance({ address: "GADDR123" }));
 
       expect(result.current.loading).toBe(true);
 
@@ -76,9 +70,7 @@ describe("useBalance", () => {
         ],
       });
 
-      const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useBalance({ address: "GADDR123" }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -91,9 +83,7 @@ describe("useBalance", () => {
     it("handles direct fetch error", async () => {
       mockDirectFetchBalance.mockRejectedValueOnce(new Error("Horizon timeout"));
 
-      const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useBalance({ address: "GADDR123" }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -105,7 +95,7 @@ describe("useBalance", () => {
     it("refetches when address changes", async () => {
       const { result, rerender } = renderHook(
         ({ addr }: { addr: string | null }) => useBalance({ address: addr }),
-        { initialProps: { addr: "GADDR_A" } }
+        { initialProps: { addr: "GADDR_A" } },
       );
 
       await waitFor(() => {
@@ -129,9 +119,7 @@ describe("useBalance", () => {
 
   describe("manual refresh", () => {
     it("refreshes balance on demand", async () => {
-      const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123" })
-      );
+      const { result } = renderHook(() => useBalance({ address: "GADDR123" }));
 
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -158,7 +146,7 @@ describe("useBalance", () => {
       jest.useFakeTimers();
 
       const { result } = renderHook(() =>
-        useBalance({ address: "GADDR123", refreshInterval: 10000 })
+        useBalance({ address: "GADDR123", refreshInterval: 10000 }),
       );
 
       await waitFor(() => {
@@ -183,9 +171,7 @@ describe("useBalance", () => {
       });
       mockDirectFetchBalance.mockReturnValueOnce(pendingBalance);
 
-      const { result, unmount } = renderHook(() =>
-        useBalance({ address: "GADDR123" })
-      );
+      const { result, unmount } = renderHook(() => useBalance({ address: "GADDR123" }));
 
       unmount();
 

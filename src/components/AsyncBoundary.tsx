@@ -15,17 +15,10 @@ interface AsyncBoundaryProps {
  * Combines ErrorBoundary + Suspense for a complete async-safe component wrapper.
  * Shows skeleton loading state during Suspense and error fallback on error.
  */
-export function AsyncBoundary({
-  children,
-  fallback,
-  errorFallback,
-  onError,
-}: AsyncBoundaryProps) {
+export function AsyncBoundary({ children, fallback, errorFallback, onError }: AsyncBoundaryProps) {
   return (
     <ErrorBoundary fallback={errorFallback} onError={onError}>
-      <Suspense fallback={fallback || <SkeletonCard />}>
-        {children}
-      </Suspense>
+      <Suspense fallback={fallback || <SkeletonCard />}>{children}</Suspense>
     </ErrorBoundary>
   );
 }
@@ -44,4 +37,3 @@ export function AsyncCard({
     </AsyncBoundary>
   );
 }
-

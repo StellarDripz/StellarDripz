@@ -56,9 +56,7 @@ export default function QRFundModal({ address }: QRFundModalProps) {
 
             <div className="rounded-lg bg-surface-950 p-3">
               <p className="text-[10px] text-white/30 mb-1">Faucet URL</p>
-              <p className="font-mono text-[10px] text-stellar-blue/70 break-all">
-                {faucetUrl}
-              </p>
+              <p className="font-mono text-[10px] text-stellar-blue/70 break-all">{faucetUrl}</p>
             </div>
 
             <button
@@ -75,4 +73,3 @@ export default function QRFundModal({ address }: QRFundModalProps) {
     </>
   );
 }
-

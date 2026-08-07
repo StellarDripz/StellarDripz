@@ -4,14 +4,17 @@
 
 jest.mock("next/server", () => {
   class MockNextRequest {
-    url: string; method: string;
+    url: string;
+    method: string;
     headers: { get: (name: string) => string | null };
     constructor(input: string, init?: RequestInit) {
       this.url = input;
       this.method = init?.method || "GET";
       this.headers = { get: () => null };
     }
-    async json() { return {}; }
+    async json() {
+      return {};
+    }
   }
   class MockNextResponse {
     status: number;
@@ -24,7 +27,13 @@ jest.mock("next/server", () => {
       return new MockNextResponse(body, init);
     }
     async json() {
-      if (typeof this.body === "string") { try { return JSON.parse(this.body); } catch { return this.body; } }
+      if (typeof this.body === "string") {
+        try {
+          return JSON.parse(this.body);
+        } catch {
+          return this.body;
+        }
+      }
       return this.body;
     }
   }
@@ -45,7 +54,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 let GET: (
   req: InstanceType<typeof NextRequest>,
-  ctx: { params: Promise<{ address: string }> }
+  ctx: { params: Promise<{ address: string }> },
 ) => Promise<InstanceType<typeof NextResponse>>;
 
 const VALID_ADDR = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
@@ -66,13 +75,17 @@ beforeEach(() => {
 
 describe("GET /api/balance/[address]", () => {
   it("returns 400 for invalid address", async () => {
-    const req = new NextRequest("http://localhost:3000/api/balance/bad-address") as unknown as InstanceType<typeof NextRequest>;
+    const req = new NextRequest(
+      "http://localhost:3000/api/balance/bad-address",
+    ) as unknown as InstanceType<typeof NextRequest>;
     const res = await GET(req, { params: Promise.resolve({ address: "bad-address" }) });
     expect(res.status).toBe(400);
   });
 
   it("fetches balance for valid address", async () => {
-    const req = new NextRequest(`http://localhost:3000/api/balance/${VALID_ADDR}`) as unknown as InstanceType<typeof NextRequest>;
+    const req = new NextRequest(
+      `http://localhost:3000/api/balance/${VALID_ADDR}`,
+    ) as unknown as InstanceType<typeof NextRequest>;
     const res = await GET(req, { params: Promise.resolve({ address: VALID_ADDR }) });
     expect(res.status).toBe(200);
 
@@ -83,7 +96,9 @@ describe("GET /api/balance/[address]", () => {
 
   it("returns 500 on fetch error", async () => {
     mockFetchBalanceServer.mockRejectedValueOnce(new Error("Horizon timeout"));
-    const req = new NextRequest(`http://localhost:3000/api/balance/${VALID_ADDR}`) as unknown as InstanceType<typeof NextRequest>;
+    const req = new NextRequest(
+      `http://localhost:3000/api/balance/${VALID_ADDR}`,
+    ) as unknown as InstanceType<typeof NextRequest>;
     const res = await GET(req, { params: Promise.resolve({ address: VALID_ADDR }) });
     expect(res.status).toBe(500);
   });

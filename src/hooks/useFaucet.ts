@@ -31,10 +31,7 @@ interface UseFaucetReturn {
  * Hook for requesting testnet XLM from the faucet.
  * Includes client-side cooldown tracking to prevent spamming.
  */
-export function useFaucet({
-  address,
-  cooldownMs = 60000,
-}: UseFaucetOptions): UseFaucetReturn {
+export function useFaucet({ address, cooldownMs = 60000 }: UseFaucetOptions): UseFaucetReturn {
   const [requesting, setRequesting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +71,7 @@ export function useFaucet({
 
   const canRequest = useMemo(
     () => !requesting && cooldownRemaining === 0 && !!address,
-    [requesting, cooldownRemaining, address]
+    [requesting, cooldownRemaining, address],
   );
 
   const request = useCallback(async () => {
@@ -116,4 +113,3 @@ export function useFaucet({
     request,
   };
 }
-

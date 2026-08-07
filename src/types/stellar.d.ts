@@ -114,4 +114,3 @@ export interface AppState {
   contractEvents: ContractEvent[];
   cooldown: CooldownState | null;
 }
-

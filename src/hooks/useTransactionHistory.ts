@@ -30,9 +30,7 @@ interface UseTransactionHistoryReturn {
   refresh: () => Promise<void>;
 }
 
-function mapApiTransaction(
-  tx: Record<string, unknown>
-): TransactionRecord {
+function mapApiTransaction(tx: Record<string, unknown>): TransactionRecord {
   return {
     id: String(tx.id || ""),
     type: (tx.type as TxType) || "send",
@@ -108,4 +106,3 @@ export function useTransactionHistory({
 }
 
 export type { TransactionRecord, TxType };
-

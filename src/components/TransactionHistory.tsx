@@ -5,10 +5,8 @@ import type { TransactionRecord } from "@/types/stellar";
 
 function TxStatusBadge({ status }: { status: TransactionRecord["status"] }) {
   const styles = {
-    pending:
-      "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    success:
-      "bg-green-500/10 text-green-400 border-green-500/20",
+    pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    success: "bg-green-500/10 text-green-400 border-green-500/20",
     error: "bg-red-500/10 text-red-400 border-red-500/20",
     idle: "bg-white/5 text-white/40 border-white/10",
   };
@@ -40,7 +38,11 @@ function TxRow({ tx }: { tx: TransactionRecord }) {
             {tx.type === "faucet" ? "💧" : tx.type === "contract" ? "📜" : "📤"}
           </span>
           <span className="text-xs font-semibold text-white/80">
-            {tx.type === "faucet" ? "Faucet Request" : tx.type === "contract" ? "Contract Call" : "Send Payment"}
+            {tx.type === "faucet"
+              ? "Faucet Request"
+              : tx.type === "contract"
+                ? "Contract Call"
+                : "Send Payment"}
           </span>
         </div>
         <TxStatusBadge status={tx.status} />
@@ -50,8 +52,7 @@ function TxRow({ tx }: { tx: TransactionRecord }) {
         <div>
           <span className="text-white/30">Amount: </span>
           <span className="font-mono text-white/60">
-            {tx.type === "faucet" ? "10,000" : tx.amount}{" "}
-            {tx.assetCode || "XLM"}
+            {tx.type === "faucet" ? "10,000" : tx.amount} {tx.assetCode || "XLM"}
           </span>
         </div>
         <div>
@@ -87,9 +88,7 @@ function TxRow({ tx }: { tx: TransactionRecord }) {
         </div>
       )}
 
-      <p className="mt-2 text-[10px] text-white/20">
-        {tx.timestamp.toLocaleString()}
-      </p>
+      <p className="mt-2 text-[10px] text-white/20">{tx.timestamp.toLocaleString()}</p>
     </div>
   );
 }
@@ -107,17 +106,13 @@ export default function TransactionHistory() {
           Transaction History
         </h3>
         {transactions.length > 0 && (
-          <span className="text-xs text-white/30">
-            {transactions.length} recent
-          </span>
+          <span className="text-xs text-white/30">{transactions.length} recent</span>
         )}
       </div>
 
       {transactions.length === 0 ? (
         <div className="rounded-xl border border-dashed border-white/10 p-6 text-center">
-          <p className="text-sm text-white/40">
-            No transactions yet. Try the faucet or send XLM!
-          </p>
+          <p className="text-sm text-white/40">No transactions yet. Try the faucet or send XLM!</p>
         </div>
       ) : (
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">

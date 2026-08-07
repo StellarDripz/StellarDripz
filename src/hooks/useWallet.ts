@@ -89,8 +89,7 @@ export function useWallet(): UseWalletReturn {
       }));
       await connectAndRegister(result.publicKey, result.walletId, result.walletName);
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Wallet connection failed";
+      const message = err instanceof Error ? err.message : "Wallet connection failed";
       setError(message);
       throw err;
     } finally {
@@ -125,4 +124,3 @@ export function useWallet(): UseWalletReturn {
 
 /** Re-export wallet types for convenience */
 export type { WalletState, SupportedWallet };
-

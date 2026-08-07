@@ -8,10 +8,9 @@ import { signTx as signTxLib } from "@/lib/wallets/walletKit";
 export async function connectAndRegister(
   publicKey: string,
   walletId: string,
-  walletName: string
+  walletName: string,
 ): Promise<void> {
   await connectWallet(publicKey, walletId, walletName);
 }
 
 export { signTxLib as signTx };
-

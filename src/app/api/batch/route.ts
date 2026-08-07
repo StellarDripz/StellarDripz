@@ -17,21 +17,26 @@ export async function POST(request: NextRequest) {
     }
 
     if (addresses.length > 10) {
-      return NextResponse.json({ error: "Maximum 10 addresses per batch request" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Maximum 10 addresses per batch request" },
+        { status: 400 },
+      );
     }
 
     // Validate all addresses
     for (const addr of addresses) {
       if (typeof addr !== "string" || !/^G[A-Z2-7]{55}$/.test(addr.trim())) {
-        return NextResponse.json(
-          { error: `Invalid address: ${addr}` },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: `Invalid address: ${addr}` }, { status: 400 });
       }
     }
 
     // Fund each address sequentially (Friendbot doesn't support batch)
-    const results: { address: string; status: "success" | "error"; hash?: string; error?: string }[] = [];
+    const results: {
+      address: string;
+      status: "success" | "error";
+      hash?: string;
+      error?: string;
+    }[] = [];
 
     for (const address of addresses) {
       try {
@@ -77,7 +82,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -9,24 +9,55 @@ import type { NetworkType, SupportedWallet } from "@/types/stellar";
 // ---- Wallet Registry ----
 
 const WALLET_REGISTRY: {
-  id: string; name: string; icon: string; installUrl: string;
+  id: string;
+  name: string;
+  icon: string;
+  installUrl: string;
   checkInstalled: () => boolean;
 }[] = [
-  { id: "freighter", name: "Freighter", icon: "🦊", installUrl: "https://www.freighter.app/",
-    checkInstalled: () => typeof window !== "undefined" && "freighterApi" in window },
-  { id: "xbull", name: "xBull", icon: "🐂", installUrl: "https://xbull.app/",
-    checkInstalled: () => typeof window !== "undefined" && "xBullSDK" in window },
-  { id: "albedo", name: "Albedo", icon: "☀️", installUrl: "https://albedo.link/",
-    checkInstalled: () => true },
-  { id: "lobstr", name: "LOBSTR", icon: "🐙", installUrl: "https://lobstr.co/",
-    checkInstalled: () => typeof window !== "undefined" && "lobstr" in window },
-  { id: "rabet", name: "Rabet", icon: "🚀", installUrl: "https://rabet.io/",
-    checkInstalled: () => typeof window !== "undefined" && "rabet" in window },
+  {
+    id: "freighter",
+    name: "Freighter",
+    icon: "🦊",
+    installUrl: "https://www.freighter.app/",
+    checkInstalled: () => typeof window !== "undefined" && "freighterApi" in window,
+  },
+  {
+    id: "xbull",
+    name: "xBull",
+    icon: "🐂",
+    installUrl: "https://xbull.app/",
+    checkInstalled: () => typeof window !== "undefined" && "xBullSDK" in window,
+  },
+  {
+    id: "albedo",
+    name: "Albedo",
+    icon: "☀️",
+    installUrl: "https://albedo.link/",
+    checkInstalled: () => true,
+  },
+  {
+    id: "lobstr",
+    name: "LOBSTR",
+    icon: "🐙",
+    installUrl: "https://lobstr.co/",
+    checkInstalled: () => typeof window !== "undefined" && "lobstr" in window,
+  },
+  {
+    id: "rabet",
+    name: "Rabet",
+    icon: "🚀",
+    installUrl: "https://rabet.io/",
+    checkInstalled: () => typeof window !== "undefined" && "rabet" in window,
+  },
 ];
 
 export function getSupportedWallets(): SupportedWallet[] {
   return WALLET_REGISTRY.map((w) => ({
-    id: w.id, name: w.name, iconUrl: w.icon, installed: w.checkInstalled(),
+    id: w.id,
+    name: w.name,
+    iconUrl: w.icon,
+    installed: w.checkInstalled(),
   }));
 }
 
@@ -39,12 +70,19 @@ export function checkAnyWalletInstalled(): boolean {
 const STORAGE_KEY = "stellardripz_wallet";
 
 interface StoredWallet {
-  publicKey: string; walletId: string; walletName: string; connectedAt: number;
+  publicKey: string;
+  walletId: string;
+  walletName: string;
+  connectedAt: number;
 }
 
 export function persistWallet(wallet: StoredWallet): void {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(wallet)); } catch { /* blocked */ }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(wallet));
+  } catch {
+    /* blocked */
+  }
 }
 
 export function loadPersistedWallet(): StoredWallet | null {
@@ -54,37 +92,61 @@ export function loadPersistedWallet(): StoredWallet | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as StoredWallet;
     if (!parsed.publicKey || !parsed.walletId) return null;
-    if (Date.now() - parsed.connectedAt > 24 * 60 * 60 * 1000) { clearPersistedWallet(); return null; }
+    if (Date.now() - parsed.connectedAt > 24 * 60 * 60 * 1000) {
+      clearPersistedWallet();
+      return null;
+    }
     return parsed;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 export function clearPersistedWallet(): void {
   if (typeof window === "undefined") return;
-  try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
-export function resetKit(): void { /* no-op */ }
+export function resetKit(): void {
+  /* no-op */
+}
 
 // ---- Connection ----
 
 export async function connectWithWallet(walletId: string): Promise<{
-  publicKey: string; network: NetworkType; walletId: string; walletName: string;
+  publicKey: string;
+  network: NetworkType;
+  walletId: string;
+  walletName: string;
 }> {
   const wallet = WALLET_REGISTRY.find((w) => w.id === walletId);
   if (!wallet) throw new Error("UNSUPPORTED_WALLET");
   if (!wallet.checkInstalled()) throw new Error("WALLET_NOT_INSTALLED");
 
   switch (walletId) {
-    case "freighter": return connectFreighter(walletId, wallet.name);
-    case "xbull": return connectXBull(walletId, wallet.name);
-    case "albedo": return connectAlbedo(walletId, wallet.name);
-    default: throw new Error(`Wallet "${wallet.name}" is not yet fully integrated. Please use Freighter.`);
+    case "freighter":
+      return connectFreighter(walletId, wallet.name);
+    case "xbull":
+      return connectXBull(walletId, wallet.name);
+    case "albedo":
+      return connectAlbedo(walletId, wallet.name);
+    default:
+      throw new Error(`Wallet "${wallet.name}" is not yet fully integrated. Please use Freighter.`);
   }
 }
 
-async function connectXBull(walletId: string, walletName: string): Promise<{
-  publicKey: string; network: NetworkType; walletId: string; walletName: string;
+async function connectXBull(
+  walletId: string,
+  walletName: string,
+): Promise<{
+  publicKey: string;
+  network: NetworkType;
+  walletId: string;
+  walletName: string;
 }> {
   const xbull = (window as unknown as Record<string, Record<string, unknown>>).xBullSDK;
   if (!xbull?.connect) throw new Error("XBULL_NOT_DETECTED");
@@ -100,8 +162,14 @@ async function connectXBull(walletId: string, walletName: string): Promise<{
   }
 }
 
-async function connectAlbedo(walletId: string, walletName: string): Promise<{
-  publicKey: string; network: NetworkType; walletId: string; walletName: string;
+async function connectAlbedo(
+  walletId: string,
+  walletName: string,
+): Promise<{
+  publicKey: string;
+  network: NetworkType;
+  walletId: string;
+  walletName: string;
 }> {
   try {
     const albedo = await import("@albedo-link/intent");
@@ -124,11 +192,14 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
   const walletId = persisted?.walletId || "freighter";
 
   switch (walletId) {
-    case "freighter": return signFreighter(xdr);
+    case "freighter":
+      return signFreighter(xdr);
     case "xbull": {
       const xbull = (window as unknown as Record<string, Record<string, unknown>>).xBullSDK;
       if (!xbull?.sign) throw new Error("xBull signing not available");
-      const signed = await (xbull.sign as (xdr: string, opts: Record<string, unknown>) => Promise<{ signedXdr: string }>)(xdr, {
+      const signed = await (
+        xbull.sign as (xdr: string, opts: Record<string, unknown>) => Promise<{ signedXdr: string }>
+      )(xdr, {
         networkPassphrase: STELLAR_NETWORK.networkPassphrase,
       });
       return signed.signedXdr;
@@ -138,7 +209,8 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
       const result = await albedo.default.tx({ xdr, network: "testnet" });
       return result.signed_envelope_xdr;
     }
-    default: throw new Error(`Signing not supported for wallet: ${walletId}`);
+    default:
+      throw new Error(`Signing not supported for wallet: ${walletId}`);
   }
 }
 // Wallet registry maps supported wallet IDs to detection functions

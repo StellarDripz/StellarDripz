@@ -37,9 +37,7 @@ let _config: AppConfig | null = null;
 export function getAppConfig(): AppConfig {
   if (_config) return _config;
 
-  const nodeEnv = (
-    process.env.NODE_ENV || "development"
-  ) as AppConfig["nodeEnv"];
+  const nodeEnv = (process.env.NODE_ENV || "development") as AppConfig["nodeEnv"];
 
   const isTestnet = process.env.NEXT_PUBLIC_STELLAR_NETWORK !== "mainnet";
 
@@ -50,40 +48,53 @@ export function getAppConfig(): AppConfig {
     sorobanRpcUrl: required(
       "NEXT_PUBLIC_SOROBAN_RPC_URL",
       process.env.NEXT_PUBLIC_SOROBAN_RPC_URL,
-      "https://soroban-testnet.stellar.org"
+      "https://soroban-testnet.stellar.org",
     ),
     horizonUrl: required(
       "NEXT_PUBLIC_HORIZON_URL",
       process.env.NEXT_PUBLIC_HORIZON_URL,
-      "https://horizon-testnet.stellar.org"
+      "https://horizon-testnet.stellar.org",
     ),
     networkPassphrase: required(
       "NEXT_PUBLIC_NETWORK_PASSPHRASE",
       process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE,
-      "Test SDF Network ; September 2015"
+      "Test SDF Network ; September 2015",
     ),
     friendbotUrl: required(
       "NEXT_PUBLIC_FRIENDBOT_URL",
       process.env.NEXT_PUBLIC_FRIENDBOT_URL,
-      "https://friendbot.stellar.org"
+      "https://friendbot.stellar.org",
     ),
     stellarExpertUrl: required(
       "NEXT_PUBLIC_STELLAR_EXPERT_URL",
       process.env.NEXT_PUBLIC_STELLAR_EXPERT_URL,
-      "https://stellar.expert/explorer/testnet"
+      "https://stellar.expert/explorer/testnet",
     ),
 
-    contractIdCounter: optional("NEXT_PUBLIC_CONTRACT_COUNTER", process.env.NEXT_PUBLIC_CONTRACT_COUNTER),
-    contractIdDripToken: optional("NEXT_PUBLIC_CONTRACT_DRIP_TOKEN", process.env.NEXT_PUBLIC_CONTRACT_DRIP_TOKEN),
-    contractIdDripPool: optional("NEXT_PUBLIC_CONTRACT_DRIP_POOL", process.env.NEXT_PUBLIC_CONTRACT_DRIP_POOL),
-    contractIdGovernance: optional("NEXT_PUBLIC_CONTRACT_GOVERNANCE", process.env.NEXT_PUBLIC_CONTRACT_GOVERNANCE),
+    contractIdCounter: optional(
+      "NEXT_PUBLIC_CONTRACT_COUNTER",
+      process.env.NEXT_PUBLIC_CONTRACT_COUNTER,
+    ),
+    contractIdDripToken: optional(
+      "NEXT_PUBLIC_CONTRACT_DRIP_TOKEN",
+      process.env.NEXT_PUBLIC_CONTRACT_DRIP_TOKEN,
+    ),
+    contractIdDripPool: optional(
+      "NEXT_PUBLIC_CONTRACT_DRIP_POOL",
+      process.env.NEXT_PUBLIC_CONTRACT_DRIP_POOL,
+    ),
+    contractIdGovernance: optional(
+      "NEXT_PUBLIC_CONTRACT_GOVERNANCE",
+      process.env.NEXT_PUBLIC_CONTRACT_GOVERNANCE,
+    ),
     contractIdBadge: optional("NEXT_PUBLIC_CONTRACT_BADGE", process.env.NEXT_PUBLIC_CONTRACT_BADGE),
 
     rateLimitFaucet: parseInt(process.env.RATE_LIMIT_FAUCET_MS || "60000", 10),
     rateLimitContract: parseInt(process.env.RATE_LIMIT_CONTRACT_MS || "30000", 10),
     rateLimitGeneral: parseInt(process.env.RATE_LIMIT_GENERAL_MS || "10000", 10),
 
-    logLevel: (process.env.LOG_LEVEL || (nodeEnv === "production" ? "info" : "debug")) as AppConfig["logLevel"],
+    logLevel: (process.env.LOG_LEVEL ||
+      (nodeEnv === "production" ? "info" : "debug")) as AppConfig["logLevel"],
   };
 
   // Log config on startup (server-side only)

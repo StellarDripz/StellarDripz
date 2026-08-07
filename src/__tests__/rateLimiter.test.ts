@@ -2,7 +2,12 @@
  * Tests for client-side rate limiter.
  * (Server-side rate limiter requires Next.js server runtime, tested via integration.)
  */
-import { getCooldownRemaining, recordFaucetRequest, canRequestFaucet, clearAllCooldowns } from "@/lib/rateLimiter";
+import {
+  getCooldownRemaining,
+  recordFaucetRequest,
+  canRequestFaucet,
+  clearAllCooldowns,
+} from "@/lib/rateLimiter";
 
 beforeEach(() => {
   clearAllCooldowns();

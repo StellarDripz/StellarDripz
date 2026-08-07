@@ -11,13 +11,7 @@ interface QrModalProps {
   amount?: string;
 }
 
-export default function QrModal({
-  open,
-  onClose,
-  address,
-  label,
-  amount,
-}: QrModalProps) {
+export default function QrModal({ open, onClose, address, label, amount }: QrModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const [copied, setCopied] = useState(false);
 
@@ -75,14 +69,8 @@ export default function QrModal({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h3 className="text-sm font-semibold text-white">
-              {label || "Wallet Address"}
-            </h3>
-            {amount && (
-              <p className="text-xs text-stellar-blue font-mono mt-0.5">
-                {amount} XLM
-              </p>
-            )}
+            <h3 className="text-sm font-semibold text-white">{label || "Wallet Address"}</h3>
+            {amount && <p className="text-xs text-stellar-blue font-mono mt-0.5">{amount} XLM</p>}
           </div>
           <button
             onClick={onClose}
@@ -96,11 +84,7 @@ export default function QrModal({
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18 18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -126,9 +110,7 @@ export default function QrModal({
           title="Click to copy"
         >
           <div className="flex items-center justify-between">
-            <p className="font-mono text-xs text-white/70 break-all select-all mr-2">
-              {address}
-            </p>
+            <p className="font-mono text-xs text-white/70 break-all select-all mr-2">{address}</p>
             <span className="shrink-0 text-xs text-white/30 group-hover:text-stellar-blue transition-colors">
               {copied ? "✅ Copied!" : "📋"}
             </span>
@@ -142,4 +124,3 @@ export default function QrModal({
     </div>
   );
 }
-

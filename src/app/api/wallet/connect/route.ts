@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as {
-      address?: string; walletId?: string; walletName?: string;
+      address?: string;
+      walletId?: string;
+      walletName?: string;
     };
 
     const { address, walletId, walletName } = body;
@@ -33,12 +35,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      session: { address: session.address, walletId: session.walletId, connectedAt: session.connectedAt },
+      session: {
+        address: session.address,
+        walletId: session.walletId,
+        connectedAt: session.connectedAt,
+      },
     });
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Failed to create session" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -132,9 +132,7 @@ describe("directClient", () => {
         result: { retval: "test" },
       });
 
-      const result = await directSimulateContract(
-        "CCONTRACT", "get_counter", [], "GSIGNER123"
-      );
+      const result = await directSimulateContract("CCONTRACT", "get_counter", [], "GSIGNER123");
       expect(result).toHaveProperty("resultValue");
     });
   });

@@ -6,7 +6,9 @@
 
 export function SkeletonCard({ className = "" }: { className?: string }) {
   return (
-    <div className={`rounded-2xl border border-white/10 bg-surface-800/60 p-6 animate-pulse ${className}`}>
+    <div
+      className={`rounded-2xl border border-white/10 bg-surface-800/60 p-6 animate-pulse ${className}`}
+    >
       <div className="flex items-center gap-3 mb-4">
         <div className="h-10 w-10 rounded-xl bg-white/5" />
         <div className="flex-1 space-y-2">
@@ -36,7 +38,10 @@ export function SkeletonBalanceCard() {
       </div>
       <div className="space-y-2">
         {[1, 2].map((i) => (
-          <div key={i} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2">
+          <div
+            key={i}
+            className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2"
+          >
             <div className="h-3 w-16 rounded bg-white/5" />
             <div className="h-3 w-12 rounded bg-white/5" />
           </div>

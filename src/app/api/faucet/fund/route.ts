@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Faucet request failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -38,16 +38,10 @@ export default function TransactionFeedback() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span>{statusIcons[latestTx.status]}</span>
-          <span className="text-xs font-semibold">
-            {typeLabels[latestTx.type]}
-          </span>
-          <span className="text-[10px] opacity-60 uppercase">
-            {latestTx.status}
-          </span>
+          <span className="text-xs font-semibold">{typeLabels[latestTx.type]}</span>
+          <span className="text-[10px] opacity-60 uppercase">{latestTx.status}</span>
         </div>
-        <span className="text-[10px] opacity-60">
-          {latestTx.timestamp.toLocaleTimeString()}
-        </span>
+        <span className="text-[10px] opacity-60">{latestTx.timestamp.toLocaleTimeString()}</span>
       </div>
 
       {latestTx.hash && latestTx.status === "success" && (

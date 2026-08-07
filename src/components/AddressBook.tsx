@@ -16,11 +16,7 @@ interface AddressBookProps {
   onSelect?: (address: string) => void;
 }
 
-export default function AddressBook({
-  open,
-  onClose,
-  onSelect,
-}: AddressBookProps) {
+export default function AddressBook({ open, onClose, onSelect }: AddressBookProps) {
   const [entries, setEntries] = useState<AddressBookEntry[]>([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -128,11 +124,7 @@ export default function AddressBook({
               stroke="currentColor"
               strokeWidth={2}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M6 18 18 6M6 6l12 12"
-              />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
@@ -159,9 +151,7 @@ export default function AddressBook({
                   : "border-white/10 focus:ring-stellar-blue/30"
               }`}
             />
-            {addrError && (
-              <p className="text-xs text-red-400">{addrError}</p>
-            )}
+            {addrError && <p className="text-xs text-red-400">{addrError}</p>}
             <div className="flex gap-2">
               <button
                 onClick={handleAdd}
@@ -191,9 +181,7 @@ export default function AddressBook({
           {entries.length === 0 && !showAdd && (
             <div className="rounded-xl border border-dashed border-white/10 p-6 text-center">
               <p className="text-sm text-white/40">No saved addresses yet.</p>
-              <p className="text-xs text-white/25 mt-1">
-                Add addresses you send to frequently.
-              </p>
+              <p className="text-xs text-white/25 mt-1">Add addresses you send to frequently.</p>
             </div>
           )}
 
@@ -211,9 +199,7 @@ export default function AddressBook({
                 }}
                 className="flex-1 text-left min-w-0"
               >
-                <p className="text-sm font-medium text-white/80 truncate">
-                  {entry.name}
-                </p>
+                <p className="text-sm font-medium text-white/80 truncate">{entry.name}</p>
                 <p className="font-mono text-[11px] text-white/30 truncate mt-0.5">
                   {entry.address.slice(0, 10)}...{entry.address.slice(-6)}
                 </p>
@@ -281,4 +267,3 @@ export default function AddressBook({
     </div>
   );
 }
-

@@ -2,11 +2,7 @@
  * Unit tests for walletService (persistence layer)
  * Uses jsdom's real localStorage.
  */
-import {
-  persistWallet,
-  loadPersistedWallet,
-  clearPersistedWallet,
-} from "@/lib/wallets/walletKit";
+import { persistWallet, loadPersistedWallet, clearPersistedWallet } from "@/lib/wallets/walletKit";
 
 const STORAGE_KEY = "stellardripz_wallet";
 
@@ -72,7 +68,7 @@ describe("walletService (persistence)", () => {
     it("returns null when stored wallet has no publicKey", () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ walletId: "freighter", connectedAt: Date.now() })
+        JSON.stringify({ walletId: "freighter", connectedAt: Date.now() }),
       );
 
       const loaded = loadPersistedWallet();
@@ -82,7 +78,7 @@ describe("walletService (persistence)", () => {
     it("returns null when stored wallet has no walletId", () => {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ publicKey: "G...", connectedAt: Date.now() })
+        JSON.stringify({ publicKey: "G...", connectedAt: Date.now() }),
       );
 
       const loaded = loadPersistedWallet();

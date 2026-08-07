@@ -71,7 +71,7 @@ export async function fetchBalance(publicKey: string): Promise<BalanceInfo> {
 // ---- Faucet ----
 
 export async function requestFaucetFunds(
-  publicKey: string
+  publicKey: string,
 ): Promise<{ hash: string; newBalance: string }> {
   const url = `${STELLAR_NETWORK.friendbotUrl}?addr=${encodeURIComponent(publicKey)}`;
   const res = await fetch(url);
@@ -105,7 +105,7 @@ export async function sendPayment(
   senderPublicKey: string,
   destination: string,
   amount: string,
-  asset?: StellarAsset
+  asset?: StellarAsset,
 ): Promise<{ hash: string }> {
   if (STELLAR_NETWORK.networkPassphrase !== StellarSdk.Networks.TESTNET) {
     throw new Error("Network mismatch — expected Testnet.");
@@ -134,7 +134,7 @@ export async function sendPayment(
   const signedXdr = await signTx(xdr, senderPublicKey);
   const signedTransaction = StellarSdk.TransactionBuilder.fromXDR(
     signedXdr,
-    STELLAR_NETWORK.networkPassphrase
+    STELLAR_NETWORK.networkPassphrase,
   );
   const response = await server.submitTransaction(signedTransaction);
   return { hash: response.hash };
