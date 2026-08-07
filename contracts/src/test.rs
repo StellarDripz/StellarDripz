@@ -65,7 +65,8 @@ mod counter_test {
 
 #[cfg(test)]
 mod token_test {
-    use super::token::{DripToken, DripTokenClient};
+    use soroban_sdk::testutils::Address as _;
+    use crate::token::{DripToken, DripTokenClient};
     use soroban_sdk::{Env, Address, String};
 
     #[test]
@@ -73,12 +74,12 @@ mod token_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let recipient = Address::random(&env);
+        let admin = Address::generate(&env);
+        let recipient = Address::generate(&env);
         let contract_id = env.register(DripToken, ());
         let client = DripTokenClient::new(&env, &contract_id);
 
-        client.initialize(
+        client.initialize_token(
             &admin, &String::from_str(&env, "DripToken"), &String::from_str(&env, "DRIP"), &7u32,
         );
 
@@ -88,7 +89,7 @@ mod token_test {
         assert_eq!(client.total_supply(), 0);
 
         client.mint(&admin, &recipient, &1000i128);
-        assert_eq!(client.balance(recipient.clone()), 1000);
+        assert_eq!(client.balance(&recipient), 1000);
         assert_eq!(client.total_supply(), 1000);
     }
 
