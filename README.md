@@ -11,7 +11,7 @@ A full-featured Stellar testnet faucet and smart contract platform built with Ne
 [![Code Coverage](https://github.com/StellarDripz/StellarDripz/actions/workflows/code-coverage.yml/badge.svg)](https://github.com/StellarDripz/StellarDripz/actions/workflows/code-coverage.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
-[![Soroban](https://img.shields.io/badge/Soroban-22-blue)](https://soroban.stellar.org)
+[![Soroban](https://img.shields.io/badge/Soroban-27-blue)](https://soroban.stellar.org)
 
 ---
 
@@ -482,7 +482,7 @@ All components use relative units, flexbox/grid, and Tailwind responsive classes
 
 6. **CI/CD & Testing (2:30-3:00)**
    - Show GitHub Actions pipeline running
-   - Show test output (15 contract + 30 frontend tests passing)
+   - Show test output (19 contract + 119 frontend tests passing)
    - Show Vercel deployment
    - Admin dashboard analytics
 
@@ -591,9 +591,9 @@ Subscribes to real-time Soroban contract events via SSE with automatic polling f
 | Services | 5 | 25+ |
 | Hooks | 5 | 30+ |
 | API Routes | 7 | 30+ |
-| **Total** | **18** | **110** |
+| **Total** | **19** | **119** |
 
-All 110 tests pass with zero failures. TypeScript strict mode compiles cleanly.
+All 119 tests pass with zero failures. TypeScript strict mode compiles cleanly.
 
 ### Running Tests
 
