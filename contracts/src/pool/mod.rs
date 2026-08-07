@@ -215,15 +215,15 @@ mod pool_test {
     fn test_admin_controls() {
         let env = Env::default();
         env.mock_all_auths();
-        let admin = Address::random(&env);
-        let token_id = Address::random(&env);
+        let admin = Address::generate(&env);
+        let token_id = Address::generate(&env);
         let contract_id = env.register(DripPool, ());
         let client = DripPoolClient::new(&env, &contract_id);
-        client.initialize(&admin, &token_id, &100i128, &1i128, &0u32);
-        let config = client.get_config();
+        client.initialize_pool(&admin, &token_id, &100i128, &1i128, &0u32);
+        let config = client.get_pool_config();
         assert!(config.active);
         client.set_active(&admin, &false);
-        let config2 = client.get_config();
+        let config2 = client.get_pool_config();
         assert!(!config2.active);
     }
 }
