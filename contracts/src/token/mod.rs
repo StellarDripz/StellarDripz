@@ -210,6 +210,7 @@ impl DripToken {
 #[cfg(test)]
 #[allow(unused_imports)]
 mod token_test {
+    use soroban_sdk::testutils::Address as _;
     use super::*;
     use soroban_sdk::Env;
 
@@ -218,14 +219,14 @@ mod token_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let recipient = Address::random(&env);
+        let admin = Address::generate(&env);
+        let recipient = Address::generate(&env);
         let contract_id = env.register(DripToken, ());
 
         let client = DripTokenClient::new(&env, &contract_id);
 
         // Initialize
-        client.initialize(
+        client.initialize_token(
             &admin,
             &String::from_str(&env, "DripToken"),
             &String::from_str(&env, "DRIP"),
@@ -239,7 +240,7 @@ mod token_test {
 
         // Mint
         client.mint(&admin, &recipient, &1000i128);
-        assert_eq!(client.balance(recipient.clone()), 1000i128);
+        assert_eq!(client.balance(&recipient), 1000i128);
         assert_eq!(client.total_supply(), 1000i128);
     }
 
