@@ -1,0 +1,31 @@
+# Lefthook — Git hooks manager for StellarDripz
+# Install: npx lefthook install (or brew install lefthook && lefthook install)
+
+pre-commit:
+  parallel: true
+  commands:
+    typecheck:
+      glob: "*.{ts,tsx}"
+      run: npx tsc --noEmit
+      skip:
+        - merge
+        - rebase
+
+    lint:
+      glob: "*.{ts,tsx,js,jsx}"
+      run: npm run lint
+      skip:
+        - merge
+        - rebase
+
+    format-check:
+      glob: "*.{ts,tsx,js,jsx,json,md,yml,yaml}"
+      run: npx prettier --check {staged_files}
+      skip:
+        - merge
+        - rebase
+
+commit-msg:
+  commands:
+    conventional-commits:
+      run: npx commitlint --edit {1}
