@@ -162,6 +162,8 @@ impl DripPool {
 
 #[cfg(test)]
 mod pool_test {
+    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::testutils::Ledger as _;
     use super::*;
     use soroban_sdk::Env;
     use crate::token::DripToken;
@@ -170,22 +172,22 @@ mod pool_test {
     fn test_stake_and_unstake() {
         let env = Env::default();
         env.mock_all_auths();
-        let admin = Address::random(&env);
-        let user = Address::random(&env);
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
         let token_id = env.register(DripToken, ());
         let token_client = token::DripTokenClient::new(&env, &token_id);
-        token_client.initialize(&admin, &String::from_str(&env, "DripToken"), &String::from_str(&env, "DRIP"), &7u32);
+        token_client.initialize_token(&admin, &String::from_str(&env, "DripToken"), &String::from_str(&env, "DRIP"), &7u32);
         token_client.mint(&admin, &user, &5000i128);
         let contract_id = env.register(DripPool, ());
         let client = DripPoolClient::new(&env, &contract_id);
-        client.initialize(&admin, &token_id, &100i128, &10i128, &100u32);
+        client.initialize_pool(&admin, &token_id, &100i128, &10i128, &100u32);
         token_client.approve(&user, &contract_id, &5000i128, &999999u32);
         client.stake(&user, &500i128);
-        let stake = client.get_stake(user.clone());
+        let stake = client.get_stake(&user);
         assert_eq!(stake.amount, 500i128);
         env.ledger().set_sequence_number(200);
         client.unstake(&user, &300i128);
-        let stake2 = client.get_stake(user.clone());
+        let stake2 = client.get_stake(&user);
         assert_eq!(stake2.amount, 200i128);
     }
 
