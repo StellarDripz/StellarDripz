@@ -31,8 +31,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        mono: ["JetBrains Mono", "Fira Code", "monospace"],
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "Fira Code", "monospace"],
       },
       animation: {
         "gradient-x": "gradient-x 3s ease infinite",
@@ -68,5 +68,4 @@ const config: Config = {
 };
 
 export default config;
-// Custom Stellar brand colors: blue, purple, green for the dark theme
 
