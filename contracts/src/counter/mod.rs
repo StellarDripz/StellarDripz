@@ -1,15 +1,28 @@
-use soroban_sdk::{contract, contractimpl, symbol_short, Env, Symbol, String};
+use soroban_sdk::{contract, contractimpl, contractevent, symbol_short, Env, Symbol, String, Address};
 
 const GLOBAL_COUNTER: Symbol = symbol_short!("GLOBAL");
 const USER_COUNTER: Symbol = symbol_short!("USER_CTR");
 const GREETING_KEY: Symbol = symbol_short!("GREETING");
+
+#[contractevent]
+pub struct IncrementEvent {
+    pub user: Address,
+    pub global_count: u32,
+    pub user_count: u32,
+}
+
+#[contractevent]
+pub struct GreetingEvent {
+    pub user: Address,
+    pub message: String,
+}
 
 #[contract]
 pub struct StellarDripzCounter;
 
 #[contractimpl]
 impl StellarDripzCounter {
-    pub fn increment(env: Env, user: soroban_sdk::Address) -> u32 {
+    pub fn increment(env: Env, user: Address) -> u32 {
         user.require_auth();
 
         let mut global: u32 = env
@@ -20,16 +33,22 @@ impl StellarDripzCounter {
         global += 1;
         env.storage().persistent().set(&GLOBAL_COUNTER, &global);
 
+        // Per-user counter — keyed by user address
+        let user_key = (USER_COUNTER, &user);
         let mut user_count: u32 = env
             .storage()
             .persistent()
-            .get(&USER_COUNTER)
+            .get(&user_key)
             .unwrap_or(0);
         user_count += 1;
-        env.storage().persistent().set(&USER_COUNTER, &user_count);
+        env.storage().persistent().set(&user_key, &user_count);
 
-        env.events()
-            .publish((symbol_short!("increment"), &user), (global, user_count));
+        IncrementEvent {
+            user: user.clone(),
+            global_count: global,
+            user_count,
+        }
+        .publish(&env);
 
         global
     }
@@ -38,18 +57,23 @@ impl StellarDripzCounter {
         env.storage().persistent().get(&GLOBAL_COUNTER).unwrap_or(0)
     }
 
-    pub fn get_user(env: Env, _user: soroban_sdk::Address) -> u32 {
+    pub fn get_user(env: Env, user: Address) -> u32 {
+        let user_key = (USER_COUNTER, &user);
         env.storage()
             .persistent()
-            .get(&USER_COUNTER)
+            .get(&user_key)
             .unwrap_or(0)
     }
 
-    pub fn set_greeting(env: Env, user: soroban_sdk::Address, message: String) {
+    pub fn set_greeting(env: Env, user: Address, message: String) {
         user.require_auth();
         env.storage().persistent().set(&GREETING_KEY, &message);
-        env.events()
-            .publish((symbol_short!("greeting"), &user), message);
+
+        GreetingEvent {
+            user: user.clone(),
+            message: message.clone(),
+        }
+        .publish(&env);
     }
 
     pub fn get_greeting(env: Env) -> String {
@@ -59,5 +83,4 @@ impl StellarDripzCounter {
             .unwrap_or(String::from_str(&env, "Hello from StellarDripz!"))
     }
 }
-// Increment counter: increases per-user value by 1 and emits event
 

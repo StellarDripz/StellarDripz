@@ -1,4 +1,4 @@
-use soroban_sdk::{Env, Symbol, symbol_short, Address, String, IntoVal};
+use soroban_sdk::{Env, Symbol, symbol_short, contractevent, Address, String};
 
 /// Core event symbols shared across contracts
 pub const EVENT_MINT: Symbol = symbol_short!("mint");
@@ -12,13 +12,16 @@ pub const EVENT_PROPOSE: Symbol = symbol_short!("propose");
 pub const EVENT_BADGE_CLAIM: Symbol = symbol_short!("claim");
 pub const EVENT_APPROVE: Symbol = symbol_short!("approve");
 
-/// Publish a contract event with topics and data.
-/// Topics must be a tuple of IntoVal<Env, Val> items (max 4).
-pub fn publish(env: &Env, topics: impl soroban_sdk::Topics, data: impl IntoVal<Env, soroban_sdk::Val>) {
-    env.events().publish(topics, data);
+/// Contract event for token transfers (mint, burn, transfer).
+#[contractevent]
+pub struct TokenTransferEvent {
+    pub event_type: Symbol,
+    pub from: Address,
+    pub to: Address,
+    pub amount: i128,
 }
 
-/// Emit a token transfer event
+/// Emit a token transfer event using the SDK 27 #[contractevent] pattern.
 pub fn emit_transfer(env: &Env, from: &Address, to: &Address, amount: i128) {
     let zero = &Address::from_string(&String::from_str(env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
     let is_mint = *from == *zero;
@@ -32,11 +35,19 @@ pub fn emit_transfer(env: &Env, from: &Address, to: &Address, amount: i128) {
         EVENT_TRANSFER
     };
 
-    publish(
-        env,
-        (event_type, from, to),
+    TokenTransferEvent {
+        event_type,
+        from: from.clone(),
+        to: to.clone(),
         amount,
-    );
+    }
+    .publish(env);
 }
-// Event emitter helpers for contract lifecycle notifications
+
+/// Publish a generic contract event (legacy compatibility wrapper).
+/// New code should use #[contractevent] structs with .publish().
+#[allow(deprecated)]
+pub fn publish(env: &Env, topics: impl soroban_sdk::Topics, data: impl soroban_sdk::IntoVal<Env, soroban_sdk::Val>) {
+    env.events().publish(topics, data);
+}
 
