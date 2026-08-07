@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { fetchAnalytics } from "@/lib/client/apiClient";
 
 export default function AdminDashboard() {
@@ -13,7 +13,7 @@ export default function AdminDashboard() {
   const [filter, setFilter] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const loadData = async (type?: string) => {
+  const loadData = useCallback(async (type?: string) => {
     setLoading(true);
     try {
       const [eventsRes, summaryRes] = await Promise.all([
@@ -26,15 +26,15 @@ export default function AdminDashboard() {
       /* ignore */
     }
     setLoading(false);
-  };
-
-  useEffect(() => {
-    loadData();
   }, []);
 
   useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
     loadData(filter || undefined);
-  }, [filter]);
+  }, [filter, loadData]);
 
   const totalEvents = Object.values(summary).reduce((a, b) => a + (b.total || 0), 0);
 
