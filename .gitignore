@@ -49,4 +49,7 @@ data/
 test-results/
 playwright-report/
 
+# Jest coverage
+coverage/
+
 # Rust WASM build artifacts (contract compilation)

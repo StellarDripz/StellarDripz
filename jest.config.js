@@ -2,6 +2,7 @@
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "jsdom",
+  coverageProvider: "v8",
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
   },

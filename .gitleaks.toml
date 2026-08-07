@@ -1,0 +1,50 @@
+# Gitleaks configuration for StellarDripz
+# Prevents false positives from test fixtures and placeholder values.
+
+title = "StellarDripz Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+  description = "False positives from test fixtures, docs, and example keys"
+
+  # Placeholder Stellar public key (G-address)
+  [[allowlist.rules]]
+    id = "stellar-key"
+    description = "Allow GAAA... placeholder Stellar public keys in test fixtures"
+
+  # UUIDs and example IDs in test files
+  [[allowlist.rules]]
+    id = "generic-api-key"
+    description = "Allow example API keys in test files"
+    regexTarget = "line"
+
+  # Allow testnet/futurenet network passphrases
+  [[allowlist.rules]]
+    id = "stellar-network-passphrase"
+    description = "Stellar testnet/futurenet network passphrases are public"
+
+  # Generic credentials in test fixtures
+  [[allowlist.rules]]
+    id = "generic-credential"
+    description = "Allow generic credential strings in test mocks"
+
+# Path-level allowlist for files that contain known safe content
+[[allowlist.paths]]
+  description = "Test files, config samples, and documentation"
+  paths = [
+    '''src/__tests__/''',
+    '''contracts/''',
+    '''screenshots/''',
+    '''demo/''',
+    '''CHANGELOG.md''',
+    '''CONTRIBUTING.md''',
+    '''README.md''',
+    '''SECURITY.md''',
+  ]
+
+# Specific known-safe hex/address values in source code
+[[allowlist.regexes]]
+  description = "GAAA... Stellar placeholder address"
+  regex = '''GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'''
