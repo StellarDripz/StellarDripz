@@ -2,13 +2,14 @@
 
 // Re-export all contract tests — they're embedded in each module
 mod counter_test {
-    use super::counter::{StellarDripzCounter, StellarDripzCounterClient};
+    use soroban_sdk::testutils::Address as _;
+    use crate::counter::{StellarDripzCounter, StellarDripzCounterClient};
     use soroban_sdk::{Env, Address, String};
 
     #[test]
     fn test_counter_increment() {
         let env = Env::default();
-        let user = Address::random(&env);
+        let user = Address::generate(&env);
         env.mock_all_auths();
 
         let contract_id = env.register(StellarDripzCounter, ());
