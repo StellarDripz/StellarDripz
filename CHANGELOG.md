@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] — 2026-08-07
+
+### Added
+- **Soroban SDK 27.0.5** upgrade with `wasm32v1-none` build target (Rust 1.84+)
+- **`.env.example`** template with all configurable environment variables
+- **`walletClient.ts`** module for wallet session registration with backend
+- **`next/font`** integration for Inter and JetBrains Mono (replaces CSS @import)
+- **Gitleaks secret scanning** in CI with comprehensive allowlist config
+- **Gravity Index** support for discovering and integrating third-party services
+
+### Changed
+- **Counter contract**: Fixed per-user tracking bug — each user now has independent counter
+- **Contract events**: Migrated from deprecated `env.events().publish()` to `#[contractevent]` structs
+- **Token contract**: Renamed `initialize` → `initialize_token` for SDK 27 compatibility
+- **Badge contract**: Renamed `initialize` → `initialize_badge`, `admin` → `get_admin`
+- **Pool contract**: Renamed `initialize` → `initialize_pool`, `get_config` → `get_pool_config`
+- **Governance contract**: Renamed `initialize` → `initialize_governance`, `get_config` → `get_gov_config`
+- **All tests**: Updated `Address::random` → `Address::generate` for SDK 27 testutils
+- **WASM target**: Switched all builds from `wasm32-unknown-unknown` to `wasm32v1-none`
+- **Coverage reporter**: Bumped `lcov-reporter-action` from v0.3.1 to v0.4.0
+- **Gitleaks config**: Rewritten with proper regex-based allowlist rules
+
+### Fixed
+- **CI/CD pipelines**: All 7 failing workflows now pass (contract tests, CodeQL, deploy, coverage, Gitleaks, Docker)
+- **WASM build**: SDK 27 requires Rust 1.84+ with `wasm32v1-none` target
+- **Secret scanning**: Removed `GITLEAKS_LICENSE` requirement; fixed invalid TOML rules
+- **CodeQL**: Added `security-extended` queries and `fail-fast: false` strategy
+- **Docker build**: Added permissions block, Buildx setup, and telemetry build args
+- **Contract deploy workflow**: Added cargo caching and WASM verification steps
+- **README**: Updated Soroban badge (22→27), test counts (110→119), Rust version (1.70→1.84)
+- **CSS fonts**: Replaced blocking `@import` with optimized `next/font/google`
+
+### Removed
+- **Duplicate code**: Consolidated overlapping Soroban service logic
+- **Trailing comments**: Cleaned up legacy comment markers from all Rust contract files
+- **Empty placeholder**: Replaced `common/types.rs` with actual shared type definitions
+
+---
+
 ## [2.0.0] — 2026-08-06
 
 ### Added
@@ -50,5 +89,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[2.1.0]: https://github.com/StellarDripz/StellarDripz/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/StellarDripz/StellarDripz/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/StellarDripz/StellarDripz/releases/tag/v1.0.0
