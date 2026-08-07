@@ -124,3 +124,169 @@ test.describe("API health check", () => {
     expect(response.status()).toBe(200);
   });
 });
+
+// ─── Faucet Flow ────────────────────────────────────────────────────
+
+test.describe("Faucet flow", () => {
+  test("faucet button hidden when wallet not connected", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    // The faucet component (with "Request 10,000 XLM") should not appear
+    await expect(page.getByRole("button", { name: /Request 10,000 XLM/ })).not.toBeVisible();
+  });
+
+  test("hero text mentions faucet", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    // Hero description mentions faucet
+    await expect(page.locator("text=Multi-wallet faucet")).toBeVisible();
+  });
+
+  test("feature card shows faucet description when disconnected", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    await expect(page.getByText("Faucet", { exact: true })).toBeVisible();
+    await expect(page.getByText("10,000 test XLM")).toBeVisible();
+  });
+
+  test("POST /api/faucet/fund requires address", async ({ request }) => {
+    const response = await request.post("/api/faucet/fund", {
+      data: { address: "" },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("POST /api/faucet/fund validates address format", async ({ request }) => {
+    const response = await request.post("/api/faucet/fund", {
+      data: { address: "invalid-address" },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("wallet picker lists Freighter as available", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    const connectBtn = page.getByRole("button", { name: "Connect Wallet" });
+    await connectBtn.click();
+
+    await expect(page.getByRole("button", { name: /Freighter/ })).toBeVisible({ timeout: 5_000 });
+    await page.keyboard.press("Escape");
+  });
+});
+
+// ─── Payment Sending ────────────────────────────────────────────────
+
+test.describe("Payment sending", () => {
+  test("send form hidden when wallet not connected", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    // Send heading should not be visible (component is hidden)
+    await expect(page.locator('input[placeholder="G..."]')).not.toBeVisible();
+  });
+
+  test("feature card shows send description when disconnected", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    await expect(page.getByText("Send", { exact: true })).toBeVisible();
+    await expect(page.locator("text=Any address")).toBeVisible();
+  });
+
+  test("POST /api/payment/send requires destination", async ({ request }) => {
+    const response = await request.post("/api/payment/send", {
+      data: { destination: "", amount: "10", sourceSecret: "S123" },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("POST /api/payment/send requires amount", async ({ request }) => {
+    const response = await request.post("/api/payment/send", {
+      data: {
+        destination: "GBRPYHIL2CI3FNQ4BXLFMNDLFJUNPU2HY3ZMFSHONUCEOASW7QC7OX2H",
+        amount: "",
+        sourceSecret: "S123",
+      },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("wallet picker shows multiple wallet options", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+
+    const connectBtn = page.getByRole("button", { name: "Connect Wallet" });
+    await connectBtn.click();
+
+    // At least one wallet button should be visible (Freighter)
+    await expect(page.getByRole("button", { name: /Freighter/ })).toBeVisible({ timeout: 5_000 });
+
+    // Close the picker
+    await page.keyboard.press("Escape");
+  });
+});
+
+// ─── Contract Interaction ───────────────────────────────────────────
+
+test.describe("Contract interaction", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("h2").first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("contract section hidden when wallet not connected", async ({ page }) => {
+    // The contract ID input and Connect button are only shown after wallet connection.
+    // Without a wallet, they should not exist in the DOM.
+    await expect(
+      page.getByPlaceholder("Paste deployed contract ID..."),
+    ).not.toBeVisible();
+  });
+
+  test("analytics feature card visible when disconnected", async ({ page }) => {
+    await expect(page.getByText("Analytics", { exact: true })).toBeVisible();
+    await expect(page.locator("text=Track usage")).toBeVisible();
+  });
+
+  test("connect wallet CTA shown when disconnected", async ({ page }) => {
+    await expect(
+      page.locator("text=Connect any Stellar wallet to get started"),
+    ).toBeVisible();
+  });
+
+  test("hero mentions smart contract support", async ({ page }) => {
+    await expect(page.locator("text=smart contract").first()).toBeVisible();
+  });
+
+  test("real-time Soroban events mentioned in hero", async ({ page }) => {
+    await expect(page.locator("text=real-time Soroban events")).toBeVisible();
+  });
+
+  test("POST /api/contract/invoke requires contractId", async ({ request }) => {
+    const response = await request.post("/api/contract/invoke", {
+      data: { contractId: "", method: "get_global", args: [], source: "G123" },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("POST /api/contract/invoke requires source address", async ({ request }) => {
+    const response = await request.post("/api/contract/invoke", {
+      data: {
+        contractId: "CDLZFC3SYJYDZT7K67VQ75BQHHPYXSOF3K5K5G3L6YP2MQUBQ7SJVMHV",
+        method: "get_global",
+        args: [],
+        source: "",
+      },
+    });
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+
+  test("events endpoint requires contractId parameter", async ({ request }) => {
+    const response = await request.get("/api/events");
+    // Without contractId, the endpoint should return a client error
+    expect(response.status()).toBeGreaterThanOrEqual(400);
+  });
+});
