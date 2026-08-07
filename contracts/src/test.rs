@@ -117,21 +117,21 @@ mod token_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let owner = Address::random(&env);
-        let spender = Address::random(&env);
-        let recipient = Address::random(&env);
+        let admin = Address::generate(&env);
+        let owner = Address::generate(&env);
+        let spender = Address::generate(&env);
+        let recipient = Address::generate(&env);
         let contract_id = env.register(DripToken, ());
         let client = DripTokenClient::new(&env, &contract_id);
 
-        client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
+        client.initialize_token(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         client.mint(&admin, &owner, &1000i128);
         client.approve(&owner, &spender, &500i128, &999999u32);
 
         client.transfer_from(&spender, &owner, &recipient, &200i128);
-        assert_eq!(client.balance(owner), 800);
-        assert_eq!(client.balance(recipient), 200);
-        assert_eq!(client.allowance(owner, spender), 300);
+        assert_eq!(client.balance(&owner), 800);
+        assert_eq!(client.balance(&recipient), 200);
+        assert_eq!(client.allowance(&owner, &spender), 300);
     }
 
     #[test]
