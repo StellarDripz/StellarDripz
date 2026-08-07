@@ -251,6 +251,8 @@ impl DripGovernance {
 
 #[cfg(test)]
 mod governance_test {
+    use soroban_sdk::testutils::Address as _;
+    use soroban_sdk::testutils::Ledger as _;
     use super::*;
     use soroban_sdk::Env;
     use crate::token::DripToken;
@@ -260,19 +262,19 @@ mod governance_test {
         let env = Env::default();
         env.mock_all_auths();
 
-        let admin = Address::random(&env);
-        let proposer = Address::random(&env);
+        let admin = Address::generate(&env);
+        let proposer = Address::generate(&env);
 
         // Deploy token and mint to proposer for voting power
         let token_id = env.register(DripToken, ());
         let token_client = token::DripTokenClient::new(&env, &token_id);
-        token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
+        token_client.initialize_token(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &proposer, &1000i128);
 
-        let pool_id = Address::random(&env);
+        let pool_id = Address::generate(&env);
         let contract_id = env.register(DripGovernance, ());
         let client = DripGovernanceClient::new(&env, &contract_id);
-        client.initialize(&admin, &token_id, &pool_id, &100u32, &1i128);
+        client.initialize_governance(&admin, &token_id, &pool_id, &100u32, &1i128);
 
         let id = client.propose(
             &proposer,
