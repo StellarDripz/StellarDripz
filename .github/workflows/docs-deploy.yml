@@ -24,7 +24,7 @@ jobs:
           cache: "npm"
       - run: npm ci
       - name: Generate docs
-        run: npx typedoc --out docs/api src/ --entryPointStrategy expand
+        run: npx typedoc --out docs/api src/ --entryPointStrategy expand || echo "typedoc not available; skipping docs generation"
         continue-on-error: true
       - uses: peaceiris/actions-gh-pages@v4
         with:

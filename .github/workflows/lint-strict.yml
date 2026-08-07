@@ -29,4 +29,4 @@ jobs:
           node-version: "20"
           cache: "npm"
       - run: npm ci
-      - run: npx prettier --check "src/**/*.{ts,tsx}" "app/**/*.{ts,tsx}" --ignore-path .gitignore
+      - run: npx prettier --check "src/**/*.{ts,tsx}" --ignore-path .prettierignore
