@@ -65,7 +65,7 @@ pub struct DripGovernance;
 #[contractimpl]
 impl DripGovernance {
     /// Initialize governance with token and pool contract references.
-    pub fn initialize(
+    pub fn initialize_governance(
         env: Env,
         admin: Address,
         token_contract_id: Address,
