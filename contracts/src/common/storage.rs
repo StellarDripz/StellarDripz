@@ -67,5 +67,4 @@ pub fn set_instance<T: soroban_sdk::IntoVal<Env, soroban_sdk::Val>>(
 pub fn require_admin(_env: &Env, admin: &Address) {
     admin.require_auth();
 }
-// Persistent storage keys for contract state variables
 

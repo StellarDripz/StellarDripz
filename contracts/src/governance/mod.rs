@@ -333,5 +333,4 @@ mod governance_test {
         assert!(prop.passed);
     }
 }
-// Vote tally: weighted by token balance for proportional representation
 

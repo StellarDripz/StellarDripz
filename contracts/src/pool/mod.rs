@@ -227,5 +227,4 @@ mod pool_test {
         assert!(!config2.active);
     }
 }
-// Calculates staking rewards based on amount × time × reward_rate
 
