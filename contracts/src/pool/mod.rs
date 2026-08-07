@@ -195,15 +195,15 @@ mod pool_test {
     fn test_reward_calculation() {
         let env = Env::default();
         env.mock_all_auths();
-        let admin = Address::random(&env);
-        let user = Address::random(&env);
+        let admin = Address::generate(&env);
+        let user = Address::generate(&env);
         let token_id = env.register(DripToken, ());
         let token_client = token::DripTokenClient::new(&env, &token_id);
-        token_client.initialize(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
+        token_client.initialize_token(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         token_client.mint(&admin, &user, &5000i128);
         let contract_id = env.register(DripPool, ());
         let client = DripPoolClient::new(&env, &contract_id);
-        client.initialize(&admin, &token_id, &1000i128, &10i128, &0u32);
+        client.initialize_pool(&admin, &token_id, &1000i128, &10i128, &0u32);
         token_client.approve(&user, &contract_id, &5000i128, &999999u32);
         client.stake(&user, &1000i128);
         env.ledger().set_sequence_number(200);
