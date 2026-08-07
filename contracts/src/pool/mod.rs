@@ -151,7 +151,7 @@ impl DripPool {
         s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")))
     }
 
-    pub fn get_config(env: Env) -> PoolConfig {
+    pub fn get_pool_config(env: Env) -> PoolConfig {
         s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false })
     }
 
