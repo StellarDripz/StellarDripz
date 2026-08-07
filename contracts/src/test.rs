@@ -25,7 +25,7 @@ mod counter_test {
     #[test]
     fn test_greeting() {
         let env = Env::default();
-        let user = Address::random(&env);
+        let user = Address::generate(&env);
         env.mock_all_auths();
 
         let contract_id = env.register(StellarDripzCounter, ());
