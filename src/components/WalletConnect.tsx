@@ -223,5 +223,3 @@ export default function WalletConnect() {
     </div>
   );
 }
-
-// Wallet icons mapped by ID for consistent UI rendering
