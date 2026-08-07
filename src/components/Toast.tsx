@@ -90,10 +90,10 @@ export default function ToastContainer() {
       });
     };
 
-    (window as unknown as Record<string, unknown>).__stellardripz_toast = fn;
+    setToastDispatcher(fn);
 
     return () => {
-      delete (window as unknown as Record<string, unknown>).__stellardripz_toast;
+      setToastDispatcher(null);
     };
   }, []);
 
@@ -108,11 +108,15 @@ export default function ToastContainer() {
   );
 }
 
-export function showToast(toast: Omit<ToastMessage, "id">) {
-  const fn = (window as unknown as Record<string, unknown>).__stellardripz_toast as
-    ((t: ToastMessage) => void) | undefined;
-  if (fn) {
-    fn({ ...toast, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` });
+/** Singleton toast dispatcher for cross-component use. */
+let _toastDispatcher: ((t: ToastMessage) => void) | null = null;
+
+export function setToastDispatcher(fn: ((t: ToastMessage) => void) | null): void {
+  _toastDispatcher = fn;
+}
+
+export function showToast(toast: Omit<ToastMessage, "id">): void {
+  if (_toastDispatcher) {
+    _toastDispatcher({ ...toast, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` });
   }
 }
-// Toast system uses window-level event bus for cross-component communication
