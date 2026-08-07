@@ -39,7 +39,7 @@ pub enum StakeKey {
 
 #[contractimpl]
 impl DripPool {
-    pub fn initialize(env: Env, admin: Address, token_contract_id: Address, reward_rate: i128, min_stake: i128, lock_period: u32) {
+    pub fn initialize_pool(env: Env, admin: Address, token_contract_id: Address, reward_rate: i128, min_stake: i128, lock_period: u32) {
         if env.storage().persistent().has(&s::KEY_ADMIN) { panic!("Already initialized"); }
         admin.require_auth();
         s::set_persistent(&env, &s::KEY_ADMIN, &admin);
