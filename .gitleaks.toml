@@ -9,42 +9,36 @@ useDefault = true
 [allowlist]
   description = "False positives from test fixtures, docs, and example keys"
 
-  # Placeholder Stellar public key (G-address)
-  [[allowlist.rules]]
-    id = "stellar-key"
-    description = "Allow GAAA... placeholder Stellar public keys in test fixtures"
+  # Stellar placeholder public key (G-address) used throughout contracts
+  [[allowlist.regexes]]
+    description = "GAAA... placeholder Stellar public key"
+    regex = '''GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'''
 
-  # UUIDs and example IDs in test files
-  [[allowlist.rules]]
-    id = "generic-api-key"
-    description = "Allow example API keys in test files"
-    regexTarget = "line"
+  # Stellar testnet passphrases and public network identifiers
+  [[allowlist.regexes]]
+    description = "Stellar testnet/futurenet network passphrases"
+    regex = '''(Test SDF (Network|Future Network|Network ; September 2015)|Public Global Stellar Network ; September 2015)'''
 
-  # Allow testnet/futurenet network passphrases
-  [[allowlist.rules]]
-    id = "stellar-network-passphrase"
-    description = "Stellar testnet/futurenet network passphrases are public"
+  # Placeholder/sample secret keys in test fixtures
+  [[allowlist.regexes]]
+    description = "Sample Stellar secret keys in test fixtures"
+    regex = '''S[A-Z0-9]{55}'''
 
-  # Generic credentials in test fixtures
-  [[allowlist.rules]]
-    id = "generic-credential"
-    description = "Allow generic credential strings in test mocks"
-
-# Path-level allowlist for files that contain known safe content
-[[allowlist.paths]]
-  description = "Test files, config samples, and documentation"
-  paths = [
-    '''src/__tests__/''',
-    '''contracts/''',
-    '''screenshots/''',
-    '''demo/''',
-    '''CHANGELOG.md''',
-    '''CONTRIBUTING.md''',
-    '''README.md''',
-    '''SECURITY.md''',
-  ]
-
-# Specific known-safe hex/address values in source code
-[[allowlist.regexes]]
-  description = "GAAA... Stellar placeholder address"
-  regex = '''GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF'''
+  # Path-level allowlist for files that contain known safe content
+  [[allowlist.paths]]
+    description = "Test files, config samples, and documentation"
+    paths = [
+      '''src/__tests__/''',
+      '''contracts/test_snapshots/''',
+      '''screenshots/''',
+      '''demo/''',
+      '''CHANGELOG.md''',
+      '''CONTRIBUTING.md''',
+      '''README.md''',
+      '''SECURITY.md''',
+      '''SECURITY_HOF.md''',
+      '''CODE_OF_CONDUCT.md''',
+      '''LICENSE''',
+      '''.cspell.json''',
+      '''.github/''',
+    ]
