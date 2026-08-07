@@ -1,22 +1,21 @@
 # Code owners — automatically assign PR reviewers
+# Note: GitHub teams must exist in the org for auto-assignment to work.
+# Falls back to individual maintainers if teams are not configured.
 
 # Root-level owners (review all PRs)
-* @StellarDripz/maintainers
+* @StellarDripz
 
 # Smart contracts (Rust/Soroban)
-contracts/     @StellarDripz/contract-devs
-scripts/       @StellarDripz/contract-devs
+contracts/     @StellarDripz
+scripts/       @StellarDripz
 
 # Frontend (Next.js/React/TypeScript)
-src/           @StellarDripz/frontend-devs
-app/           @StellarDripz/frontend-devs
-components/    @StellarDripz/frontend-devs
+src/           @StellarDripz
 
 # CI/CD and infrastructure
-.github/       @StellarDripz/devops
-Makefile       @StellarDripz/devops
-Dockerfile     @StellarDripz/devops
+.github/       @StellarDripz
+Makefile       @StellarDripz
+Dockerfile     @StellarDripz
 
 # Documentation
-*.md           @StellarDripz/maintainers
-docs/          @StellarDripz/maintainers
+*.md           @StellarDripz
