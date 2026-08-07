@@ -10,7 +10,7 @@ interface ApiResponse<T> {
   error?: string;
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${BASE_URL}${endpoint}`;
   const res = await fetch(url, {
     ...options,

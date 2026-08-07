@@ -111,8 +111,10 @@ export function clearPersistedWallet(): void {
   }
 }
 
+/** Reset the wallet kit state — clears all tracked connections without localStorage. */
 export function resetKit(): void {
-  /* no-op */
+  // Wallet connections are ephemeral; persistent data is cleared via clearPersistedWallet().
+  // This hook exists for symmetry with disconnect() and future wallet state management.
 }
 
 // ---- Connection ----
@@ -213,4 +215,3 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
       throw new Error(`Signing not supported for wallet: ${walletId}`);
   }
 }
-// Wallet registry maps supported wallet IDs to detection functions

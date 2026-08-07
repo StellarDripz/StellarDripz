@@ -147,4 +147,3 @@ export function getExplorerUrl(hash: string): string {
 }
 
 export { server };
-// Horizon client — auto-configured from STELLAR_NETWORK env vars
