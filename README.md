@@ -177,7 +177,7 @@ contracts/src/
 
 ### Prerequisites
 - Node.js 18+
-- Rust 1.70+ with `wasm32-unknown-unknown` target
+- Rust 1.84+ with `wasm32v1-none` target
 - A Stellar wallet (Freighter recommended)
 - Testnet XLM (get from https://friendbot.stellar.org)
 
@@ -195,7 +195,7 @@ npm install
 cp .env.example .env.local
 
 # Install Rust + wasm target (for contracts)
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32v1-none
 
 # Build contracts
 npm run contracts:build

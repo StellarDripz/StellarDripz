@@ -70,7 +70,7 @@ cd stellardripz
 
 # Install
 npm install
-rustup target add wasm32-unknown-unknown
+rustup target add wasm32v1-none
 
 # Configure
 cp .env.example .env.local
