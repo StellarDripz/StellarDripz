@@ -5,3 +5,4 @@ contracts/target
 package-lock.json
 coverage
 playwright-report
+test-results

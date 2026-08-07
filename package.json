@@ -23,6 +23,9 @@
     "test": "jest --passWithNoTests --verbose",
     "verify": "npm run typecheck && npm test",
     "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report",
     "typecheck": "tsc --noEmit",
     "contracts:build": "cd contracts && cargo build --target wasm32-unknown-unknown --release",
     "contracts:test": "cd contracts && cargo test --verbose",
@@ -39,6 +42,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.4.0",
     "@testing-library/react": "^16.0.0",

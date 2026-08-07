@@ -44,4 +44,9 @@ data/
 
 # Turbo
 .turbo/
+
+# Playwright
+test-results/
+playwright-report/
+
 # Rust WASM build artifacts (contract compilation)
