@@ -1,15 +1,6 @@
 // Shared types used across multiple contracts.
 // Per-contract types remain in their respective modules for clarity.
-
-use soroban_sdk::{Address, String};
-
-/// Represents the admin role — used across all contracts for authorization.
-pub type AdminAddress = Address;
-
-/// Contract deployment metadata for on-chain discovery.
-#[derive(Clone)]
-pub struct ContractMetadata {
-    pub name: String,
-    pub version: String,
-    pub admin: Address,
-}
+//
+// NOTE: The AdminAddress alias and ContractMetadata struct were removed
+// as dead code. Each contract manages its own admin via storage::KEY_ADMIN.
+// Contract metadata can be added back when on-chain discovery is implemented.
