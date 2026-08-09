@@ -15,9 +15,7 @@ function buildNetworkConfig() {
     stellarExpertUrl: config.stellarExpertUrl,
     networkPassphrase: config.networkPassphrase,
     sorobanRpcUrl: config.sorobanRpcUrl,
-    contractExplorerUrl:
-      process.env.NEXT_PUBLIC_CONTRACT_EXPLORER_URL ||
-      "https://stellar.expert/explorer/testnet/contract",
+    contractExplorerUrl: config.contractExplorerUrl,
   } as const;
 }
 

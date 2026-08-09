@@ -11,6 +11,7 @@ export interface AppConfig {
   networkPassphrase: string;
   friendbotUrl: string;
   stellarExpertUrl: string;
+  contractExplorerUrl: string;
   contractIdCounter: string | null;
   contractIdDripToken: string | null;
   contractIdDripPool: string | null;
@@ -71,6 +72,11 @@ export function getAppConfig(): AppConfig {
       "https://stellar.expert/explorer/testnet",
     ),
 
+    contractExplorerUrl: required(
+      "NEXT_PUBLIC_CONTRACT_EXPLORER_URL",
+      process.env.NEXT_PUBLIC_CONTRACT_EXPLORER_URL,
+      "https://stellar.expert/explorer/testnet/contract",
+    ),
     contractIdCounter: optional(
       "NEXT_PUBLIC_CONTRACT_COUNTER",
       process.env.NEXT_PUBLIC_CONTRACT_COUNTER,
