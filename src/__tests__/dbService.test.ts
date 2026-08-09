@@ -9,14 +9,13 @@ import {
   clearDb,
 } from "@/lib/server/dbService";
 
-beforeEach(() => {
-  // Clear the database between tests
-  clearDb();
+beforeEach(async () => {
+  await clearDb();
 });
 
 describe("dbService", () => {
   describe("saveTransaction and getTransactions", () => {
-    it("saves and retrieves a transaction", () => {
+    it("saves and retrieves a transaction", async () => {
       const tx = {
         id: "tx-test-1",
         type: "faucet" as const,
@@ -28,15 +27,15 @@ describe("dbService", () => {
         timestamp: Date.now(),
       };
 
-      saveTransaction(tx);
-      const transactions = getTransactions();
+      await saveTransaction(tx);
+      const transactions = await getTransactions();
       expect(transactions).toHaveLength(1);
       expect(transactions[0].id).toBe("tx-test-1");
       expect(transactions[0].type).toBe("faucet");
     });
 
-    it("filters transactions by type", () => {
-      saveTransaction({
+    it("filters transactions by type", async () => {
+      await saveTransaction({
         id: "tx-1",
         type: "faucet",
         status: "success",
@@ -46,7 +45,7 @@ describe("dbService", () => {
         destinationAddress: "d1",
         timestamp: Date.now(),
       });
-      saveTransaction({
+      await saveTransaction({
         id: "tx-2",
         type: "send",
         status: "success",
@@ -56,7 +55,7 @@ describe("dbService", () => {
         destinationAddress: "d2",
         timestamp: Date.now(),
       });
-      saveTransaction({
+      await saveTransaction({
         id: "tx-3",
         type: "contract",
         status: "success",
@@ -67,14 +66,14 @@ describe("dbService", () => {
         timestamp: Date.now(),
       });
 
-      const faucetTxs = getTransactions(undefined, "faucet");
+      const faucetTxs = await getTransactions(undefined, "faucet");
       expect(faucetTxs).toHaveLength(1);
       expect(faucetTxs[0].id).toBe("tx-1");
     });
 
-    it("limits return count", () => {
+    it("limits return count", async () => {
       for (let i = 0; i < 30; i++) {
-        saveTransaction({
+        await saveTransaction({
           id: `tx-${i}`,
           type: "faucet",
           status: "success",
@@ -86,32 +85,32 @@ describe("dbService", () => {
         });
       }
 
-      const transactions = getTransactions(undefined, undefined, 10);
+      const transactions = await getTransactions(undefined, undefined, 10);
       expect(transactions).toHaveLength(10);
-      // Most recent first
-      expect(transactions[0].timestamp).toBeGreaterThan(transactions[9].timestamp);
+      if (transactions.length >= 2) {
+        expect(transactions[0].timestamp).toBeGreaterThan(transactions[9].timestamp);
+      }
     });
   });
 
   describe("logAnalytics and getAnalyticsSummary", () => {
-    it("logs and retrieves analytics events", () => {
-      logAnalytics({ eventType: "faucet_request", address: "0xaddr1" });
-      logAnalytics({ eventType: "faucet_request", address: "0xaddr1" });
-      logAnalytics({ eventType: "contract_invoke", address: "0xaddr2" });
+    it("logs and retrieves analytics events", async () => {
+      await logAnalytics({ eventType: "faucet_request", address: "0xaddr1" });
+      await logAnalytics({ eventType: "faucet_request", address: "0xaddr1" });
+      await logAnalytics({ eventType: "contract_invoke", address: "0xaddr2" });
 
-      const summary = getAnalyticsSummary();
+      const summary = await getAnalyticsSummary();
       expect(summary["faucet_request"].total).toBe(2);
       expect(summary["contract_invoke"].total).toBe(1);
     });
 
-    it("tracks unique addresses", () => {
-      logAnalytics({ eventType: "wallet_connect", address: "address1" });
-      logAnalytics({ eventType: "wallet_connect", address: "address1" });
-      logAnalytics({ eventType: "wallet_connect", address: "address2" });
+    it("tracks unique addresses", async () => {
+      await logAnalytics({ eventType: "wallet_connect", address: "address1" });
+      await logAnalytics({ eventType: "wallet_connect", address: "address1" });
+      await logAnalytics({ eventType: "wallet_connect", address: "address2" });
 
-      const summary = getAnalyticsSummary();
+      const summary = await getAnalyticsSummary();
       expect(summary["wallet_connect"].uniqueAddresses).toBe(2);
     });
   });
 });
-// Edge case: handles malformed JSON in localStorage
