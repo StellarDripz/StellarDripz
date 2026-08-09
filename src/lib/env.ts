@@ -97,19 +97,19 @@ export function getAppConfig(): AppConfig {
       (nodeEnv === "production" ? "info" : "debug")) as AppConfig["logLevel"],
   };
 
-  // Log config on startup (server-side only)
-  if (typeof window === "undefined") {
-    console.log("[StellarDripz] Config loaded:", {
+  // Log config on startup (server-side only, only in dev)
+  if (typeof window === "undefined" && _config.nodeEnv === "development") {
+    console.log("[StellarDripz] Config loaded (dev only):", {
       nodeEnv: _config.nodeEnv,
       isTestnet: _config.isTestnet,
       logLevel: _config.logLevel,
-      contracts: {
-        counter: _config.contractIdCounter ? "✓" : "not set",
-        dripToken: _config.contractIdDripToken ? "✓" : "not set",
-        dripPool: _config.contractIdDripPool ? "✓" : "not set",
-        governance: _config.contractIdGovernance ? "✓" : "not set",
-        badge: _config.contractIdBadge ? "✓" : "not set",
-      },
+      contractsConfigured: [
+        _config.contractIdCounter,
+        _config.contractIdDripToken,
+        _config.contractIdDripPool,
+        _config.contractIdGovernance,
+        _config.contractIdBadge,
+      ].filter(Boolean).length,
     });
   }
 

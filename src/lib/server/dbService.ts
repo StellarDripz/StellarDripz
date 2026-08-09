@@ -1,12 +1,16 @@
 /**
  * Database service — transaction history, analytics, and session storage.
  *
- * CURRENT: JSON file persistence (data/stellardripz-db.json)
+ * Uses an in-memory store as the primary backend, making it compatible
+ * with Vercel/serverless deployments where the filesystem is ephemeral.
+ *
+ * For local development, data is also persisted to a JSON file
+ * (data/stellardripz-db.json) as a convenience backup.
  *
  * PRODUCTION MIGRATION (Supabase/PostgreSQL):
  *   1. Create tables: transactions, analytics, sessions (see schema below)
  *   2. Set up @supabase/supabase-js client
- *   3. Replace readDb/writeDb with Supabase queries
+ *   3. Replace in-memory store with Supabase queries
  *   4. Add Row Level Security (RLS) policies for multi-tenancy
  *   5. Run migration: npx supabase migration new init
  *
@@ -53,7 +57,11 @@ export interface TxRecord {
 export interface AnalyticsEntry {
   id: string;
   eventType:
-    "faucet_request" | "payment_send" | "contract_invoke" | "wallet_connect" | "balance_fetch";
+    | "faucet_request"
+    | "payment_send"
+    | "contract_invoke"
+    | "wallet_connect"
+    | "balance_fetch";
   address: string;
   timestamp: number;
   data?: Record<string, unknown>;
@@ -75,57 +83,72 @@ interface Database {
   lastCleanup: number;
 }
 
-// ---- Read/Write ----
+// ---- In-Memory Store (Primary — works on serverless) ----
 
-function ensureDir(): void {
-  const dir = path.dirname(DB_PATH);
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-}
-
-function readDb(): Database {
-  ensureDir();
-  try {
-    if (!fs.existsSync(DB_PATH)) return getEmptyDb();
-    const raw = fs.readFileSync(DB_PATH, "utf-8");
-    return JSON.parse(raw) as Database;
-  } catch {
-    return getEmptyDb();
-  }
-}
-
-function writeDb(db: Database): void {
-  ensureDir();
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
-  } catch {
-    /* disk full or permission error */
-  }
-}
+let _db: Database | null = null;
 
 function getEmptyDb(): Database {
   return { transactions: [], analytics: [], sessions: [], lastCleanup: Date.now() };
 }
 
-// ---- Transactions ----
+function getDb(): Database {
+  if (_db) return _db;
 
-export function saveTransaction(tx: TxRecord): void {
-  const db = readDb();
-  db.transactions.unshift(tx);
-  if (db.transactions.length > 1000) db.transactions = db.transactions.slice(0, 1000);
-  writeDb(db);
+  // Try loading from JSON file first (local dev convenience)
+  if (typeof fs !== "undefined") {
+    try {
+      const dir = path.dirname(DB_PATH);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      if (fs.existsSync(DB_PATH)) {
+        const raw = fs.readFileSync(DB_PATH, "utf-8");
+        _db = JSON.parse(raw) as Database;
+      }
+    } catch {
+      /* fall through to empty */
+    }
+  }
+
+  if (!_db) _db = getEmptyDb();
+  return _db;
 }
 
-export function updateTransaction(id: string, updates: Partial<TxRecord>): void {
-  const db = readDb();
-  const idx = db.transactions.findIndex((t) => t.id === id);
-  if (idx !== -1) {
-    db.transactions[idx] = { ...db.transactions[idx], ...updates };
-    writeDb(db);
+function persistDb(): void {
+  // Persist to JSON file when filesystem is available (local dev only)
+  if (typeof fs !== "undefined") {
+    try {
+      const dir = path.dirname(DB_PATH);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(DB_PATH, JSON.stringify(_db ?? getEmptyDb(), null, 2));
+    } catch {
+      /* disk full or permission error — in-memory store continues working */
+    }
   }
 }
 
-export function getTransactions(address?: string, type?: TxRecord["type"], limit = 50): TxRecord[] {
-  const db = readDb();
+// ---- Transactions ----
+
+export function saveTransaction(tx: TxRecord): void {
+  const db = getDb();
+  db.transactions.unshift(tx);
+  if (db.transactions.length > 1000) db.transactions = db.transactions.slice(0, 1000);
+  persistDb();
+}
+
+export function updateTransaction(id: string, updates: Partial<TxRecord>): void {
+  const db = getDb();
+  const idx = db.transactions.findIndex((t) => t.id === id);
+  if (idx !== -1) {
+    db.transactions[idx] = { ...db.transactions[idx], ...updates };
+    persistDb();
+  }
+}
+
+export function getTransactions(
+  address?: string,
+  type?: TxRecord["type"],
+  limit = 50,
+): TxRecord[] {
+  const db = getDb();
   let txs = db.transactions;
   if (address) txs = txs.filter((t) => t.senderAddress === address);
   if (type) txs = txs.filter((t) => t.type === type);
@@ -135,28 +158,31 @@ export function getTransactions(address?: string, type?: TxRecord["type"], limit
 // ---- Analytics ----
 
 export function logAnalytics(entry: Omit<AnalyticsEntry, "id" | "timestamp">): void {
-  const db = readDb();
+  const db = getDb();
   db.analytics.push({
     ...entry,
     id: `an-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     timestamp: Date.now(),
   });
   if (db.analytics.length > 5000) db.analytics = db.analytics.slice(-5000);
-  writeDb(db);
+  persistDb();
 }
 
 export function getAnalytics(
   eventType?: AnalyticsEntry["eventType"],
   limit = 100,
 ): AnalyticsEntry[] {
-  const db = readDb();
+  const db = getDb();
   let entries = db.analytics;
   if (eventType) entries = entries.filter((e) => e.eventType === eventType);
   return entries.slice(-limit).reverse();
 }
 
-export function getAnalyticsSummary(): Record<string, { total: number; uniqueAddresses: number }> {
-  const db = readDb();
+export function getAnalyticsSummary(): Record<
+  string,
+  { total: number; uniqueAddresses: number }
+> {
+  const db = getDb();
   const summary: Record<string, { total: number; addresses: Set<string> }> = {};
 
   for (const entry of db.analytics) {
@@ -177,20 +203,19 @@ export function getAnalyticsSummary(): Record<string, { total: number; uniqueAdd
 // ---- Sessions ----
 
 export function saveSession(session: SessionEntry): void {
-  const db = readDb();
+  const db = getDb();
   const idx = db.sessions.findIndex((s) => s.address === session.address);
   if (idx !== -1) db.sessions[idx] = session;
   else db.sessions.push(session);
-  writeDb(db);
+  persistDb();
 }
 
 export function getSession(address: string): SessionEntry | null {
-  const db = readDb();
-  return db.sessions.find((s) => s.address === address) || null;
+  return getDb().sessions.find((s) => s.address === address) || null;
 }
 
 export function getActiveSessions(): SessionEntry[] {
-  const db = readDb();
+  const db = getDb();
   const now = Date.now();
   return db.sessions.filter((s) => now - s.lastActive < 24 * 60 * 60 * 1000);
 }
@@ -199,11 +224,12 @@ export function getActiveSessions(): SessionEntry[] {
 
 /** Clear all database data (for testing). */
 export function clearDb(): void {
-  writeDb(getEmptyDb());
+  _db = getEmptyDb();
+  persistDb();
 }
 
 export function runPeriodicCleanup(): void {
-  const db = readDb();
+  const db = getDb();
   const now = Date.now();
 
   // Clean up old sessions (7 days)
@@ -214,5 +240,5 @@ export function runPeriodicCleanup(): void {
   db.analytics = db.analytics.filter((e) => now - e.timestamp < thirtyDays);
 
   db.lastCleanup = now;
-  writeDb(db);
+  persistDb();
 }
