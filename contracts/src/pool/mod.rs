@@ -1,6 +1,7 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
+use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
 use crate::common::storage as s;
 use crate::common::events as e;
+use crate::common::constants::ZERO_ADDRESS_STR;
 use crate::token;
 
 // ---- Data Types ----
@@ -28,6 +29,11 @@ const KEY_TOTAL_STAKED: Symbol = symbol_short!("TOT_STKD");
 const KEY_REWARD_POOL: Symbol = symbol_short!("REW_POOL");
 const KEY_TOKEN_ID: Symbol = symbol_short!("TOK_ID");
 
+/// Default max stake (10 trillion with 7 decimals = 1,000,000 tokens)
+pub const DEFAULT_MAX_STAKE: i128 = 10_000_000_000_000i128;
+/// Reward calculation divisor (10 million = 10^7 for decimal precision)
+pub const REWARD_DIVISOR: i128 = 10_000_000i128;
+
 #[contract]
 pub struct DripPool;
 
@@ -44,7 +50,7 @@ impl DripPool {
         admin.require_auth();
         s::set_persistent(&env, &s::KEY_ADMIN, &admin);
         s::set_persistent(&env, &KEY_TOKEN_ID, &token_contract_id);
-        let config = PoolConfig { reward_rate, min_stake, max_stake: 10_000_000_000_000i128, lock_period, active: true };
+        let config = PoolConfig { reward_rate, min_stake, max_stake: DEFAULT_MAX_STAKE, lock_period, active: true };
         s::set_persistent(&env, &KEY_POOL_CONFIG, &config);
         s::set_persistent(&env, &KEY_TOTAL_STAKED, &0i128);
         s::set_persistent(&env, &KEY_REWARD_POOL, &0i128);
@@ -56,7 +62,7 @@ impl DripPool {
         let config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
         if !config.active { panic!("Pool is not active"); }
         if amount < config.min_stake { panic!("Below minimum stake"); }
-        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         let pool_address = env.current_contract_address();
         let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.transfer_from(&pool_address, &user, &pool_address, &amount);
@@ -91,7 +97,7 @@ impl DripPool {
         let mut total_staked: i128 = s::get_persistent(&env, &KEY_TOTAL_STAKED, 0i128);
         total_staked -= amount;
         s::set_persistent(&env, &KEY_TOTAL_STAKED, &total_staked);
-        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         let pool_address = env.current_contract_address();
         let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.transfer(&pool_address, &user, &amount);
@@ -105,6 +111,21 @@ impl DripPool {
         let pending = Self::calculate_reward(env.clone(), user.clone());
         let total_reward = existing_stake.reward_claimed + pending;
         if total_reward <= 0 { return 0; }
+
+        // Deduct from reward pool
+        let mut reward_pool: i128 = s::get_persistent(&env, &KEY_REWARD_POOL, 0i128);
+        if reward_pool < total_reward {
+            panic!("Insufficient reward pool balance");
+        }
+        reward_pool -= total_reward;
+        s::set_persistent(&env, &KEY_REWARD_POOL, &reward_pool);
+
+        // Transfer reward tokens to user via cross-contract call
+        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        let pool_address = env.current_contract_address();
+        let token_client = token::DripTokenClient::new(&env, &token_id);
+        token_client.transfer(&pool_address, &user, &total_reward);
+
         existing_stake.reward_claimed = 0;
         existing_stake.start_ledger = env.ledger().sequence();
         env.storage().persistent().set(&stake_key, &existing_stake);
@@ -120,20 +141,27 @@ impl DripPool {
         let current_ledger = env.ledger().sequence();
         let elapsed = (current_ledger as i128) - (stake.start_ledger as i128);
         if elapsed <= 0 { return 0; }
-        (stake.amount * config.reward_rate * elapsed) / 10_000_000i128
+        (stake.amount * config.reward_rate * elapsed) / REWARD_DIVISOR
     }
 
     pub fn fund_rewards(env: Env, admin: Address, amount: i128) {
-        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         if admin != stored_admin { panic!("Only admin"); }
         admin.require_auth();
+        // Transfer reward tokens from admin to pool's token balance
+        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        let pool_address = env.current_contract_address();
+        let token_client = token::DripTokenClient::new(&env, &token_id);
+        token_client.transfer_from(&pool_address, &admin, &pool_address, &amount);
+        // Update on-chain reward pool tracking
         let mut reward_pool: i128 = s::get_persistent(&env, &KEY_REWARD_POOL, 0i128);
         reward_pool += amount;
         s::set_persistent(&env, &KEY_REWARD_POOL, &reward_pool);
+        e::publish(&env, (symbol_short!("rew_fund"), &admin), amount);
     }
 
     pub fn set_active(env: Env, admin: Address, active: bool) {
-        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         if admin != stored_admin { panic!("Only admin"); }
         admin.require_auth();
         let mut config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
@@ -148,7 +176,7 @@ impl DripPool {
     }
 
     pub fn get_token_id(env: Env) -> Address {
-        s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")))
+        s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)))
     }
 
     pub fn get_pool_config(env: Env) -> PoolConfig {
@@ -181,7 +209,8 @@ mod pool_test {
         let contract_id = env.register(DripPool, ());
         let client = DripPoolClient::new(&env, &contract_id);
         client.initialize_pool(&admin, &token_id, &100i128, &10i128, &100u32);
-        token_client.approve(&user, &contract_id, &5000i128, &999999u32);
+        let exp_ledger = env.ledger().sequence() + 9999u32;
+        token_client.approve(&user, &contract_id, &5000i128, &exp_ledger);
         client.stake(&user, &500i128);
         let stake = client.get_stake(&user);
         assert_eq!(stake.amount, 500i128);
@@ -204,7 +233,9 @@ mod pool_test {
         let contract_id = env.register(DripPool, ());
         let client = DripPoolClient::new(&env, &contract_id);
         client.initialize_pool(&admin, &token_id, &1000i128, &10i128, &0u32);
-        token_client.approve(&user, &contract_id, &5000i128, &999999u32);
+        // Set future expiration ledger for approve
+        let exp_ledger = env.ledger().sequence() + 9999u32;
+        token_client.approve(&user, &contract_id, &5000i128, &exp_ledger);
         client.stake(&user, &1000i128);
         env.ledger().set_sequence_number(200);
         let reward = client.calculate_reward(&user);
