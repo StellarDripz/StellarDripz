@@ -233,15 +233,15 @@ impl DripGovernance {
 
         match action {
             GovernanceAction::SetRewardRate(rate) => {
-                // Note: DripPool doesn't have set_reward_rate directly, but set_active and re-init
-                // For now, we publish a detailed event; pool admin can read and apply
-                e::publish(env, (symbol_short!("gov_set_rr"), &admin_addr), *rate);
+                // Note: DripPool doesn't have set_reward_rate directly
+                // Pool admin can read this event and apply changes
+                e::publish(env, (symbol_short!("gov_setrr"), &admin_addr), *rate);
             }
             GovernanceAction::SetMinStake(min) => {
-                e::publish(env, (symbol_short!("gov_set_ms"), &admin_addr), *min);
+                e::publish(env, (symbol_short!("gov_setms"), &admin_addr), *min);
             }
             GovernanceAction::SetLockPeriod(period) => {
-                e::publish(env, (symbol_short!("gov_set_lp"), &admin_addr), *period);
+                e::publish(env, (symbol_short!("gov_setlp"), &admin_addr), *period);
             }
             GovernanceAction::SetActive(active) => {
                 let pool_client = pool::DripPoolClient::new(env, &pool_id);
@@ -363,7 +363,7 @@ mod governance_test {
             &proposer,
             &String::from_str(&env, "Test proposal"),
             &String::from_str(&env, "Test description"),
-            &GovernanceAction::SetActive(true),
+            &GovernanceAction::SetRewardRate(50i128),
         );
 
         // Vote with real token balance as voting power
