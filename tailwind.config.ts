@@ -38,6 +38,7 @@ const config: Config = {
         "gradient-x": "gradient-x 3s ease infinite",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-up": "slide-up 0.5s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
         pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "spin-slow": "spin 3s linear infinite",
         drip: "drip 1.5s ease-in-out infinite",
@@ -60,6 +61,10 @@ const config: Config = {
           "10%": { opacity: "1" },
           "90%": { opacity: "1" },
           "100%": { transform: "translateY(100%)", opacity: "0" },
+        },
+        "scale-in": {
+          "0%": { transform: "scale(0.95)", opacity: "0" },
+          "100%": { transform: "scale(1)", opacity: "1" },
         },
       },
     },
