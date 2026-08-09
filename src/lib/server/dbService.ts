@@ -15,6 +15,7 @@
 import fs from "fs";
 import path from "path";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
+import { logger } from "@/lib/logger";
 
 const DB_PATH = path.join(process.cwd(), "data", "stellardripz-db.json");
 
@@ -180,7 +181,7 @@ export async function saveTransaction(tx: TxRecord): Promise<void> {
       .upsert(txToDbRow(tx), { onConflict: "id" });
 
     if (error) {
-      console.error("[StellarDripz] Supabase saveTransaction error:", error.message);
+      logger.error("Supabase saveTransaction failed", new Error(error.message));
     }
     return;
   }
@@ -210,7 +211,7 @@ export async function updateTransaction(
       .eq("id", id);
 
     if (error) {
-      console.error("[StellarDripz] Supabase updateTransaction error:", error.message);
+      logger.error("Supabase updateTransaction failed", new Error(error.message));
     }
     return;
   }
@@ -243,7 +244,7 @@ export async function getTransactions(
 
     const { data, error } = await query;
     if (error) {
-      console.error("[StellarDripz] Supabase getTransactions error:", error.message);
+      logger.error("Supabase getTransactions failed", new Error(error.message));
       return [];
     }
 
@@ -276,7 +277,7 @@ export async function logAnalytics(
   if (supabase) {
     const { error } = await supabase.from("analytics").insert(record);
     if (error) {
-      console.error("[StellarDripz] Supabase logAnalytics error:", error.message);
+      logger.error("Supabase logAnalytics failed", new Error(error.message));
     }
     return;
   }
@@ -309,7 +310,7 @@ export async function getAnalytics(
 
     const { data, error } = await query;
     if (error) {
-      console.error("[StellarDripz] Supabase getAnalytics error:", error.message);
+      logger.error("Supabase getAnalytics failed", new Error(error.message));
       return [];
     }
 
@@ -390,7 +391,7 @@ export async function saveSession(session: SessionEntry): Promise<void> {
     );
 
     if (error) {
-      console.error("[StellarDripz] Supabase saveSession error:", error.message);
+      logger.error("Supabase saveSession failed", new Error(error.message));
     }
     return;
   }
@@ -414,7 +415,7 @@ export async function getSession(address: string): Promise<SessionEntry | null> 
       .maybeSingle();
 
     if (error) {
-      console.error("[StellarDripz] Supabase getSession error:", error.message);
+      logger.error("Supabase getSession failed", new Error(error.message));
       return null;
     }
 
@@ -437,7 +438,7 @@ export async function getActiveSessions(): Promise<SessionEntry[]> {
       .order("last_active", { ascending: false });
 
     if (error) {
-      console.error("[StellarDripz] Supabase getActiveSessions error:", error.message);
+      logger.error("Supabase getActiveSessions failed", new Error(error.message));
       return [];
     }
 
