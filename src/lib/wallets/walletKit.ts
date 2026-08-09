@@ -117,6 +117,29 @@ export function resetKit(): void {
   // This hook exists for symmetry with disconnect() and future wallet state management.
 }
 
+/**
+ * Check if the currently connected wallet is still accessible.
+ * Returns false if the user disconnected from the wallet extension.
+ */
+export async function checkWalletStillConnected(): Promise<boolean> {
+  const persisted = loadPersistedWallet();
+  if (!persisted) return false;
+
+  // For Freighter: try a lightweight call to verify connection
+  if (persisted.walletId === "freighter") {
+    try {
+      const { isConnected } = await import("@stellar/freighter-api");
+      const { isConnected: connected } = await isConnected();
+      return connected;
+    } catch {
+      return false;
+    }
+  }
+
+  // For other wallets, assume connected if recently used (< 5 min)
+  return Date.now() - persisted.connectedAt < 5 * 60 * 1000;
+}
+
 // ---- Connection ----
 
 export async function connectWithWallet(walletId: string): Promise<{
