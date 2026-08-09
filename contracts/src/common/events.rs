@@ -45,11 +45,15 @@ pub fn emit_transfer(env: &Env, from: &Address, to: &Address, amount: i128) {
     .publish(env);
 }
 
-/// Publish a generic contract event.
+/// Publish a generic contract event (deprecated API shim).
 ///
-/// Uses the deprecated `env.events().publish()` API as a transition shim.
-/// New code should define `#[contractevent]` structs and call `.publish(env)`.
-/// This function exists for backward compatibility with existing contract code.
+/// WARNING: Uses the deprecated `env.events().publish()` API.
+/// All new contract code MUST use the `#[contractevent]` struct pattern
+/// shown in `emit_transfer()`. This shim exists only for backward
+/// compatibility with existing contracts that haven't been migrated yet.
+///
+/// Migration plan: Replace each `publish()` call with a dedicated
+/// `#[contractevent]` struct and call `.publish(env)` on it.
 #[allow(deprecated)]
 pub fn publish(
     env: &Env,
