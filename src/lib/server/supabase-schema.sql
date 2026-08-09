@@ -1,14 +1,27 @@
 -- =============================================================================
--- StellarDripz Supabase Database Schema
+-- StellarDripz Supabase Database Schema v1
 -- =============================================================================
--- Run this in the Supabase SQL Editor (https://app.supabase.com)
--- or via: npx supabase db push
+-- Apply via:  npm run db:migrate   (programmatic, uses env vars)
+--         or:  npx supabase db push  (Supabase CLI)
+--         or:  paste into Supabase SQL Editor
 --
 -- Tables:
+--   _migrations   — migration version tracking
 --   transactions  — faucet requests, payments, contract invocations
 --   analytics     — event tracking (faucet, payment, contract, wallet, balance)
 --   sessions      — wallet session persistence
+--
+-- Functions:
+--   get_analytics_summary() — aggregated analytics counts per event type
 -- =============================================================================
+
+-- ─── Migration Tracking ───────────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS _migrations (
+  version       INTEGER PRIMARY KEY,
+  name          TEXT NOT NULL,
+  applied_at    TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- ─── Transactions ─────────────────────────────────────────────────────────
 
@@ -27,7 +40,8 @@ CREATE TABLE IF NOT EXISTS transactions (
   timestamp       BIGINT NOT NULL,
   ip              TEXT,
   user_agent      TEXT,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Index for fast lookups by sender address
@@ -50,7 +64,8 @@ CREATE TABLE IF NOT EXISTS analytics (
   address         TEXT NOT NULL,
   timestamp       BIGINT NOT NULL,
   data            JSONB DEFAULT '{}'::jsonb,
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics(event_type);
@@ -81,16 +96,79 @@ ALTER TABLE analytics ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 
 -- Transactions: users can only see their own transactions
-CREATE POLICY transactions_self_access ON transactions
+-- NOTE: These RLS policies assume Supabase Auth user IDs (JWT 'sub' claim)
+-- map directly to Stellar public keys. If using standard Supabase Auth
+-- (email/password with UUID user IDs), these policies must be updated to
+-- join against a user→address mapping table instead.
+CREATE POLICY IF NOT EXISTS transactions_self_access ON transactions
   FOR ALL
   USING (sender_address = current_setting('request.jwt.claims', true)::json->>'sub');
 
 -- Analytics: users can only see their own analytics
-CREATE POLICY analytics_self_access ON analytics
+CREATE POLICY IF NOT EXISTS analytics_self_access ON analytics
   FOR ALL
   USING (address = current_setting('request.jwt.claims', true)::json->>'sub');
 
 -- Sessions: users can only see/manage their own sessions
-CREATE POLICY sessions_self_access ON sessions
+CREATE POLICY IF NOT EXISTS sessions_self_access ON sessions
   FOR ALL
   USING (address = current_setting('request.jwt.claims', true)::json->>'sub');
+
+-- ─── Triggers ─────────────────────────────────────────────────────────────
+
+-- Auto-update updated_at on row modifications
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_transactions_updated_at ON transactions;
+CREATE TRIGGER trg_transactions_updated_at
+  BEFORE UPDATE ON transactions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS trg_analytics_updated_at ON analytics;
+CREATE TRIGGER trg_analytics_updated_at
+  BEFORE UPDATE ON analytics
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- Auto-update updated_at on session modifications
+-- (replaces the old update_sessions_updated_at function if it exists)
+DROP FUNCTION IF EXISTS update_sessions_updated_at();
+DROP TRIGGER IF EXISTS trg_sessions_updated_at ON sessions;
+CREATE TRIGGER trg_sessions_updated_at
+  BEFORE UPDATE ON sessions
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- ─── Stored Procedures ────────────────────────────────────────────────────
+
+-- Aggregated analytics summary for the dashboard
+-- Called by dbService.getAnalyticsSummary() via supabase.rpc('get_analytics_summary')
+CREATE OR REPLACE FUNCTION get_analytics_summary()
+RETURNS TABLE (
+  event_type       TEXT,
+  total            BIGINT,
+  unique_addresses BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT
+      a.event_type,
+      COUNT(*)::BIGINT AS total,
+      COUNT(DISTINCT a.address)::BIGINT AS unique_addresses
+    FROM analytics a
+    GROUP BY a.event_type
+    ORDER BY a.event_type;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Record this migration version (MUST be last — only after all DDL succeeds)
+INSERT INTO _migrations (version, name)
+VALUES (1, 'initial_schema')
+ON CONFLICT (version) DO NOTHING;
