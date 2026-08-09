@@ -135,8 +135,8 @@ export async function submitContractInvocation(
     ip: requestInfo.ip,
     userAgent: requestInfo.userAgent,
   };
-  saveTransaction(txRecord);
-  logAnalytics({
+  await saveTransaction(txRecord);
+  await logAnalytics({
     eventType: "contract_invoke",
     address: signerPublicKey,
     data: { contractId, functionName },

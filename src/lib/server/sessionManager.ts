@@ -5,14 +5,14 @@
 import type { SessionEntry } from "./dbService";
 import { saveSession, getSession, logAnalytics } from "./dbService";
 
-export function createSession(
+export async function createSession(
   address: string,
   walletId: string,
   walletName: string,
   requestInfo: { ip?: string; userAgent?: string },
-): SessionEntry {
+): Promise<SessionEntry> {
   const now = Date.now();
-  const existing = getSession(address);
+  const existing = await getSession(address);
 
   const session: SessionEntry = {
     address,
@@ -23,14 +23,14 @@ export function createSession(
     ip: requestInfo.ip,
   };
 
-  saveSession(session);
-  logAnalytics({ eventType: "wallet_connect", address, data: { walletId, walletName } });
+  await saveSession(session);
+  await logAnalytics({ eventType: "wallet_connect", address, data: { walletId, walletName } });
 
   return session;
 }
 
-export function validateSession(address: string): SessionEntry | null {
-  const session = getSession(address);
+export async function validateSession(address: string): Promise<SessionEntry | null> {
+  const session = await getSession(address);
   if (!session) return null;
 
   const now = Date.now();
@@ -39,7 +39,7 @@ export function validateSession(address: string): SessionEntry | null {
 
   // Update lastActive
   session.lastActive = now;
-  saveSession(session);
+  await saveSession(session);
 
   return session;
 }

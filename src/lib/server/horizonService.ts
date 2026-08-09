@@ -25,7 +25,7 @@ export interface BalanceResponse {
 }
 
 export async function fetchBalanceServer(publicKey: string): Promise<BalanceResponse> {
-  logAnalytics({ eventType: "balance_fetch", address: publicKey });
+  await logAnalytics({ eventType: "balance_fetch", address: publicKey });
 
   try {
     const account = await horizonServer.loadAccount(publicKey);
@@ -105,8 +105,8 @@ export async function requestFaucetFundsServer(
     ip: requestInfo.ip,
     userAgent: requestInfo.userAgent,
   };
-  saveTransaction(txRecord);
-  logAnalytics({
+  await saveTransaction(txRecord);
+  await logAnalytics({
     eventType: "faucet_request",
     address: publicKey,
     data: { hash, amount: "10000" },
@@ -157,8 +157,8 @@ export async function sendPaymentServer(
     ip: requestInfo.ip,
     userAgent: requestInfo.userAgent,
   };
-  saveTransaction(txRecord);
-  logAnalytics({
+  await saveTransaction(txRecord);
+  await logAnalytics({
     eventType: "payment_send",
     address: senderPublicKey,
     data: { hash: response.hash, amount, destination },
