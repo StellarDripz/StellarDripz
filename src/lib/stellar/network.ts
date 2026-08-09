@@ -1,17 +1,27 @@
 /**
- * Stellar Testnet configuration and network constants.
- * All values can be overridden via environment variables.
+ * Stellar network configuration — single source of truth.
+ * All values are derived from the shared AppConfig (env.ts).
+ * Import this module instead of reading process.env directly.
  */
-export const STELLAR_NETWORK = {
-  network: (process.env.NEXT_PUBLIC_STELLAR_NETWORK || "TESTNET") as "TESTNET" | "MAINNET",
-  horizonUrl: process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org",
-  friendbotUrl: process.env.NEXT_PUBLIC_FRIENDBOT_URL || "https://friendbot.stellar.org",
-  stellarExpertUrl:
-    process.env.NEXT_PUBLIC_STELLAR_EXPERT_URL || "https://stellar.expert/explorer/testnet",
-  networkPassphrase:
-    process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE || "Test SDF Network ; September 2015",
-  sorobanRpcUrl: process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org",
-  contractExplorerUrl:
-    process.env.NEXT_PUBLIC_CONTRACT_EXPLORER_URL ||
-    "https://stellar.expert/explorer/testnet/contract",
-} as const;
+import { getAppConfig } from "@/lib/env";
+
+function buildNetworkConfig() {
+  const config = getAppConfig();
+
+  return {
+    network: (config.isTestnet ? "TESTNET" : "MAINNET") as "TESTNET" | "MAINNET",
+    horizonUrl: config.horizonUrl,
+    friendbotUrl: config.friendbotUrl,
+    stellarExpertUrl: config.stellarExpertUrl,
+    networkPassphrase: config.networkPassphrase,
+    sorobanRpcUrl: config.sorobanRpcUrl,
+    contractExplorerUrl:
+      process.env.NEXT_PUBLIC_CONTRACT_EXPLORER_URL ||
+      "https://stellar.expert/explorer/testnet/contract",
+  } as const;
+}
+
+export const STELLAR_NETWORK = buildNetworkConfig();
+
+/** Re-export for convenience — prefer importing STELLAR_NETWORK directly. */
+export { getAppConfig } from "@/lib/env";
