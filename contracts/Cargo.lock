@@ -1668,7 +1668,7 @@ dependencies = [
 
 [[package]]
 name = "stellardripz"
-version = "0.2.0"
+version = "2.2.0"
 dependencies = [
  "soroban-sdk",
 ]
