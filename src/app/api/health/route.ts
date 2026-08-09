@@ -93,6 +93,8 @@ export async function GET() {
       status: allOk ? 200 : 503,
       headers: {
         "Cache-Control": "no-store",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, OPTIONS",
         "X-Health-Check": "stellar-dripz",
       },
     },
