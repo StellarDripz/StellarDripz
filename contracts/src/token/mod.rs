@@ -1,6 +1,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
+use crate::common::constants::ZERO_ADDRESS_STR;
 
 // ---- Data Types ----
 
@@ -32,6 +33,8 @@ pub struct DripToken;
 impl DripToken {
     /// Initialize the token with name, symbol, and decimals.
     /// Can only be called once.
+    /// Initialize the token with name, symbol, and decimals.
+    /// Can only be called once.
     pub fn initialize_token(env: Env, admin: Address, name: String, symbol: String, decimals: u32) {
         // Ensure not already initialized
         if env.storage().persistent().has(&s::KEY_ADMIN) {
@@ -51,7 +54,7 @@ impl DripToken {
 
     /// Mint tokens to a recipient. Only admin.
     pub fn mint(env: Env, admin: Address, to: Address, amount: i128) {
-        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         if admin != stored_admin {
             panic!("Only admin can mint");
         }
@@ -68,7 +71,7 @@ impl DripToken {
         total += amount;
         s::set_persistent(&env, &s::KEY_TOTAL_SUPPLY, &total);
 
-        let zero = Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+        let zero = Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR));
         e::emit_transfer(&env, &zero, &to, amount);
     }
 
@@ -105,15 +108,28 @@ impl DripToken {
             panic!("Amount must be positive");
         }
 
-        // Check and consume allowance
+        // Check and consume allowance (with expiration enforcement)
         let allowance_key = (KEY_ALLOWANCES, &from.clone(), &spender.clone());
-        let mut allowance: i128 = env.storage().persistent().get(&allowance_key).unwrap_or(0);
+        let allowance_val: AllowanceValue = env.storage().persistent().get(&allowance_key).unwrap_or(AllowanceValue { amount: 0, expiration_ledger: 0 });
 
-        if allowance < amount {
+        // Enforce expiration
+        let current_ledger = env.ledger().sequence();
+        if allowance_val.expiration_ledger > 0 && current_ledger > allowance_val.expiration_ledger {
+            env.storage().persistent().remove(&allowance_key);
+            panic!("Allowance has expired");
+        }
+
+        if allowance_val.amount < amount {
             panic!("Insufficient allowance");
         }
-        allowance -= amount;
-        env.storage().persistent().set(&allowance_key, &allowance);
+
+        let new_allowance = allowance_val.amount - amount;
+        if new_allowance == 0 {
+            env.storage().persistent().remove(&allowance_key);
+        } else {
+            let updated = AllowanceValue { amount: new_allowance, expiration_ledger: allowance_val.expiration_ledger };
+            env.storage().persistent().set(&allowance_key, &updated);
+        }
 
         // Transfer balances
         let from_key = (s::KEY_BALANCE, &from);
@@ -133,11 +149,18 @@ impl DripToken {
     }
 
     /// Approve a spender to use tokens on behalf of the owner.
-    pub fn approve(env: Env, owner: Address, spender: Address, amount: i128, _expiration_ledger: u32) {
+    /// The allowance expires after `expiration_ledger` (current ledger + desired duration).
+    pub fn approve(env: Env, owner: Address, spender: Address, amount: i128, expiration_ledger: u32) {
         owner.require_auth();
 
+        let current_ledger = env.ledger().sequence();
+        if expiration_ledger <= current_ledger {
+            panic!("Expiration ledger must be in the future");
+        }
+
         let key = (KEY_ALLOWANCES, &owner, &spender);
-        env.storage().persistent().set(&key, &amount);
+        let allowance = AllowanceValue { amount, expiration_ledger };
+        env.storage().persistent().set(&key, &allowance);
 
         e::publish(&env, (e::EVENT_APPROVE, &owner, &spender), amount);
     }
@@ -162,7 +185,7 @@ impl DripToken {
         total -= amount;
         s::set_persistent(&env, &s::KEY_TOTAL_SUPPLY, &total);
 
-        let zero = Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF"));
+        let zero = Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR));
         e::emit_transfer(&env, &from, &zero, amount);
     }
 
@@ -191,11 +214,18 @@ impl DripToken {
 
     pub fn allowance(env: Env, owner: Address, spender: Address) -> i128 {
         let key = (KEY_ALLOWANCES, &owner, &spender);
-        env.storage().persistent().get(&key).unwrap_or(0)
+        let val: AllowanceValue = env.storage().persistent().get(&key).unwrap_or(AllowanceValue { amount: 0, expiration_ledger: 0 });
+        // Return 0 if expired
+        let current_ledger = env.ledger().sequence();
+        if val.expiration_ledger > 0 && current_ledger > val.expiration_ledger {
+            env.storage().persistent().remove(&key);
+            return 0;
+        }
+        val.amount
     }
 
     pub fn admin(env: Env) -> Address {
-        s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")))
+        s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)))
     }
 
     pub fn metadata(env: Env) -> TokenMetadata {
@@ -279,7 +309,8 @@ mod token_test {
         let client = DripTokenClient::new(&env, &contract_id);
         client.initialize_token(&admin, &String::from_str(&env, "DT"), &String::from_str(&env, "D"), &7u32);
         client.mint(&admin, &owner, &1000i128);
-        client.approve(&owner, &spender, &500i128, &999999u32);
+        let exp_ledger = env.ledger().sequence() + 9999u32;
+        client.approve(&owner, &spender, &500i128, &exp_ledger);
 
         // Transfer from
         client.transfer_from(&spender, &owner, &recipient, &200i128);
