@@ -43,6 +43,26 @@ Security reports related to:
 - DDoS attacks (the app runs on testnet — rate limiting handles these)
 - Issues in third-party services beyond our control
 
+### Bug Bounty
+
+We offer recognition and rewards for valid security reports:
+
+| Severity | Reward | Examples |
+|----------|--------|----------|
+| Critical | $500–$2,000 + Hall of Fame | Smart contract fund drain, RCE, auth bypass |
+| High | $200–$500 | Data exposure, significant access control flaws |
+| Medium | $50–$200 | CSRF, XSS, input validation bypass |
+| Low | Recognition + Hall of Fame | Information disclosure, best practice issues |
+
+Rewards are paid in XLM on Stellar testnet. All valid reports receive Hall of Fame recognition regardless of reward tier.
+
+### Safe Harbor
+
+We will not pursue legal action against researchers who:
+- Act in good faith and follow this disclosure policy
+- Avoid privacy violations, data destruction, and service interruption
+- Provide a reasonable time for remediation before public disclosure
+
 ### Recognition
 
 We maintain a [Security Hall of Fame](./SECURITY_HOF.md) for researchers who responsibly disclose vulnerabilities. With permission, we'll credit you in the release notes.
