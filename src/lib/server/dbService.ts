@@ -19,6 +19,12 @@ import { logger } from "@/lib/logger";
 
 const DB_PATH = path.join(process.cwd(), "data", "stellardripz-db.json");
 
+// SECURITY NOTE: The JSON fallback file stores transaction data including
+// IP addresses and user agents unencrypted. For production deployments:
+// 1. Always use Supabase as the primary store (encrypted at rest)
+// 2. If the fallback is needed, consider encrypting the file or using
+//    a dedicated ephemeral volume that's cleaned on restart
+
 // ---- Types ----
 
 export interface TxRecord {
