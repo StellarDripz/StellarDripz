@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] — 2026-08-09
+
+### Added
+- **`constants.rs`**: Shared module with `ZERO_ADDRESS_STR` sentinel for all contracts
+- **Governance actions**: `propose()` now accepts `GovernanceAction` parameter for on-chain execution
+- **`checkWalletStillConnected()`**: Detects wallet extension disconnection (Freighter API)
+- **`animate-scale-in`**: Tailwind animation for modal entrance transitions
+- **Comprehensive ScVal conversion**: Contract invoke route supports `address`, `i128`, `symbol`, `vec`, `map`, and `bool` args
+
+### Changed
+- **DripPool.claim_reward()**: Now actually transfers reward tokens to users via cross-contract call; deducts from `KEY_REWARD_POOL`
+- **DripGovernance.execute()**: Now applies `GovernanceAction` on-chain: `SetActive` calls DripPool, `MintTokens` calls DripToken
+- **DripToken.approve()**: Now stores and enforces `expiration_ledger`; expired allowances removed on access
+- **DripPool.fund_rewards()**: Now transfers tokens from admin to pool via `transfer_from` cross-contract call
+- **ZERO_ADDRESS**: Replaced all 14 hardcoded `GAAA...WHF` strings with `ZERO_ADDRESS_STR` constant across 4 contract files
+- **Hardcoded values**: Extracted `DEFAULT_MAX_STAKE` and `REWARD_DIVISOR` as named constants
+- **dbService.ts**: Rewrote with in-memory primary store (serverless-compatible); JSON file fallback for local dev
+- **network.ts**: Consolidated with `env.ts` as single source of truth for all Stellar network config
+- **batch/route.ts + status/route.ts**: Now import `STELLAR_NETWORK` instead of reading `process.env` directly
+- **contract/invoke route**: Comprehensive `argToScVal()` supporting 8 ScVal types (was 2)
+- **env.ts**: Config logging limited to `development` mode only; reduced information disclosure
+- **Tailwind config**: Added `scale-in` keyframes and animation for modal entrance transitions
+
+### Fixed
+- **P0: Reward payout**: `claim_reward()` now performs cross-contract token transfer (was phantom rewards)
+- **P0: Governance execution**: `execute()` now applies actions via DripPool/DripToken cross-contract calls (was no-op)
+- **P0: Allowance expiration**: `approve()` stores and `transfer_from()`/`allowance()` enforce expiration ledger
+- **P1: Database persistence**: In-memory store works on Vercel/serverless; JSON file backup for local dev
+- **P1: Config consolidation**: Single source of truth via `network.ts` → `env.ts`; removed duplicate defaults
+- **P1: ScVal arg handling**: Contract invoke supports Address, i128, Symbol, Vec, Map, Bool (was only string/number)
+- **P1: Wallet disconnect**: `checkWalletStillConnected()` detects Freighter disconnection
+- **P2: Dead code removal**: Deleted `contractService.ts`, `transactionService.ts`, `balanceService.ts`, `walletService.ts` (unused re-exports)
+- **P2: Missing animation**: Added `animate-scale-in` to Tailwind config
+- **P2: Config logging**: Restricted to dev mode only
+
+### Removed
+- **Dead service layer**: `src/services/{contractService,transactionService,balanceService,walletService}.ts` — pure re-export barrels with zero consumers
+
+---
+
 ## [2.1.0] — 2026-08-07
 
 ### Added
@@ -89,6 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[2.2.0]: https://github.com/StellarDripz/StellarDripz/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/StellarDripz/StellarDripz/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/StellarDripz/StellarDripz/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/StellarDripz/StellarDripz/releases/tag/v1.0.0
