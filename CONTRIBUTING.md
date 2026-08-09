@@ -92,10 +92,21 @@ Key architectural decisions are documented in the [README](./README.md#-hybrid-a
 - **API Gateway pattern**: All writes go through rate-limited Next.js API routes
 - **Multi-wallet abstraction**: Unified interface for Freighter, xBull, Albedo, LOBSTR, Rabet
 
+## Reviewer Response Time
+
+We aim to respond to all contributions within these timeframes:
+
+| Activity | Target Response |
+|----------|----------------|
+| Issue triage | Within 48 hours |
+| PR first review | Within 72 hours |
+| PR follow-up review | Within 24 hours |
+| Security reports | Within 72 hours (see SECURITY.md) |
+
 ## Getting Help
 
 - **Questions?** Open a [GitHub Discussion](https://github.com/StellarDripz/StellarDripz/discussions)
-- **Stuck on a PR?** Mention `@maintainers` in a comment
+- **Stuck on a PR?** Mention `@StellarDripz` in a comment
 - **Security issues?** See [SECURITY.md](./SECURITY.md)
 
 ---
