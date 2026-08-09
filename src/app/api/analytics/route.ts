@@ -18,4 +18,3 @@ export async function GET(request: NextRequest) {
   const entries = await getAnalytics(eventType || undefined);
   return NextResponse.json({ events: entries, total: entries.length });
 }
-// Analytics endpoint: aggregated usage metrics

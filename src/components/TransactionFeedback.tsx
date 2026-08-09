@@ -74,4 +74,3 @@ export default function TransactionFeedback() {
     </div>
   );
 }
-// TransactionFeedback: renders most recent tx with status-specific styles

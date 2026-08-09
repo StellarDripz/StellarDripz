@@ -40,4 +40,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-// Validates Stellar public key format before processing

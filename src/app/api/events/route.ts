@@ -79,4 +79,3 @@ export async function GET(request: NextRequest) {
     },
   });
 }
-// SSE endpoint with heartbeat to keep connections alive

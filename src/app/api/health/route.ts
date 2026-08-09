@@ -98,4 +98,3 @@ export async function GET() {
     },
   );
 }
-// Health check with timeout-based service monitoring
