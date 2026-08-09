@@ -4,8 +4,7 @@
  * Body: { addresses: string[] }
  */
 import { NextRequest, NextResponse } from "next/server";
-
-const FRIENDBOT_URL = process.env.NEXT_PUBLIC_FRIENDBOT_URL || "https://friendbot.stellar.org";
+import { STELLAR_NETWORK } from "@/lib/stellar/network";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     for (const address of addresses) {
       try {
-        const url = `${FRIENDBOT_URL}?addr=${encodeURIComponent(address.trim())}`;
+        const url = `${STELLAR_NETWORK.friendbotUrl}?addr=${encodeURIComponent(address.trim())}`;
         const res = await fetch(url);
 
         if (!res.ok) {
@@ -86,4 +85,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-// Batch endpoint: processes up to 10 operations in single request

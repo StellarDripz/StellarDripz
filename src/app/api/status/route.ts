@@ -4,10 +4,7 @@
  */
 import { NextResponse } from "next/server";
 import * as StellarSdk from "@stellar/stellar-sdk";
-
-const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org";
-const SOROBAN_RPC =
-  process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
+import { STELLAR_NETWORK } from "@/lib/stellar/network";
 
 export async function GET() {
   const results: Record<string, { status: "ok" | "error"; latency?: number; error?: string }> = {};
@@ -15,7 +12,7 @@ export async function GET() {
   // Check Horizon
   try {
     const start = Date.now();
-    const horizon = new StellarSdk.Horizon.Server(HORIZON_URL);
+    const horizon = new StellarSdk.Horizon.Server(STELLAR_NETWORK.horizonUrl);
     await horizon.ledgers().limit(1).call();
     results.horizon = { status: "ok", latency: Date.now() - start };
   } catch (err) {
@@ -28,7 +25,7 @@ export async function GET() {
   // Check Soroban RPC
   try {
     const start = Date.now();
-    const rpc = new StellarSdk.rpc.Server(SOROBAN_RPC);
+    const rpc = new StellarSdk.rpc.Server(STELLAR_NETWORK.sorobanRpcUrl);
     await rpc.getLatestLedger();
     results.sorobanRpc = { status: "ok", latency: Date.now() - start };
   } catch (err) {
@@ -41,7 +38,7 @@ export async function GET() {
   // Check Friendbot
   try {
     const start = Date.now();
-    const url = `${process.env.NEXT_PUBLIC_FRIENDBOT_URL || "https://friendbot.stellar.org"}?addr=GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
+    const url = `${STELLAR_NETWORK.friendbotUrl}?addr=GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
     const res = await fetch(url);
     results.friendbot = { status: res.ok ? "ok" : "error", latency: Date.now() - start };
   } catch (err) {
@@ -53,7 +50,7 @@ export async function GET() {
 
   return NextResponse.json({
     timestamp: new Date().toISOString(),
-    network: "TESTNET",
+    network: STELLAR_NETWORK.network,
     services: results,
   });
 }
