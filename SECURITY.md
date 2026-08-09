@@ -66,7 +66,7 @@ We maintain a [Security Hall of Fame](./SECURITY_HOF.md) for researchers who res
 We use automated tools to monitor dependencies:
 - **Dependabot** — weekly dependency updates
 - **npm audit** — runs on every CI/CD build
-- **cargo audit** — Rust dependency scanning (planned)
+- **cargo audit** — Rust dependency scanning on every CI/CD build
 
 ---
 
