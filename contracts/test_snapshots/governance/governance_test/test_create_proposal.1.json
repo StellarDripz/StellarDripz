@@ -108,6 +108,16 @@
                 },
                 {
                   "string": "We should reduce the reward rate by 50%"
+                },
+                {
+                  "vec": [
+                    {
+                      "symbol": "SetRewardRate"
+                    },
+                    {
+                      "i128": "50"
+                    }
+                  ]
                 }
               ]
             }
@@ -586,6 +596,43 @@
                     "val": {
                       "u32": 100
                     }
+                  }
+                ]
+              }
+            }
+          },
+          "ext": "v0"
+        },
+        "live_until": 4095
+      },
+      {
+        "entry": {
+          "last_modified_ledger_seq": 0,
+          "data": {
+            "contract_data": {
+              "ext": "v0",
+              "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM",
+              "key": {
+                "vec": [
+                  {
+                    "symbol": "PROP"
+                  },
+                  {
+                    "symbol": "action"
+                  },
+                  {
+                    "u64": "1"
+                  }
+                ]
+              },
+              "durability": "persistent",
+              "val": {
+                "vec": [
+                  {
+                    "symbol": "SetRewardRate"
+                  },
+                  {
+                    "i128": "50"
                   }
                 ]
               }

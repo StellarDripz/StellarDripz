@@ -331,7 +331,24 @@
               },
               "durability": "persistent",
               "val": {
-                "i128": "300"
+                "map": [
+                  {
+                    "key": {
+                      "symbol": "amount"
+                    },
+                    "val": {
+                      "i128": "300"
+                    }
+                  },
+                  {
+                    "key": {
+                      "symbol": "expiration_ledger"
+                    },
+                    "val": {
+                      "u32": 999999
+                    }
+                  }
+                ]
               }
             }
           },
