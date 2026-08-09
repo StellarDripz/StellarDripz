@@ -1,7 +1,9 @@
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
+use crate::common::constants::ZERO_ADDRESS_STR;
 use crate::token;
+use crate::pool;
 
 // ---- Data Types ----
 
@@ -89,12 +91,12 @@ impl DripGovernance {
     }
 
     /// Create a new proposal. Requires minimum voting power.
-    pub fn propose(env: Env, proposer: Address, title: String, description: String) -> u64 {
+    pub fn propose(env: Env, proposer: Address, title: String, description: String, action: GovernanceAction) -> u64 {
         proposer.require_auth();
 
         let token_id: Address = s::get_persistent(
             &env, &KEY_TOKEN_ID,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         );
 
         // --- CROSS-CONTRACT CALL: Query token balance for voting power ---
@@ -126,6 +128,10 @@ impl DripGovernance {
             executed: false,
             passed: false,
         };
+
+        // Store the governance action with the proposal
+        let action_key = (KEY_PROPOSAL, symbol_short!("action"), count);
+        env.storage().persistent().set(&action_key, &action);
 
         let key = (KEY_PROPOSAL, count);
         env.storage().persistent().set(&key, &proposal);
@@ -159,7 +165,7 @@ impl DripGovernance {
         // --- CROSS-CONTRACT CALL: Get voting power from token balance ---
         let token_id: Address = s::get_persistent(
             &env, &KEY_TOKEN_ID,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         );
         let power = Self::get_voting_power_internal(&env, &voter, &token_id);
         // --- END CROSS-CONTRACT CALL ---
@@ -181,7 +187,7 @@ impl DripGovernance {
         e::publish(&env, (e::EVENT_VOTE, &voter, proposal_id), power);
     }
 
-    /// Execute a passed proposal.
+    /// Execute a passed proposal by applying the governance action on-chain.
     pub fn execute(env: Env, executor: Address, proposal_id: u64) {
         executor.require_auth();
 
@@ -200,11 +206,52 @@ impl DripGovernance {
         // Check if proposal passed
         if proposal.for_votes > proposal.against_votes {
             proposal.passed = true;
+
+            // Apply the governance action on-chain via cross-contract calls
+            let action_key = (KEY_PROPOSAL, symbol_short!("action"), proposal_id);
+            if let Some(action) = env.storage().persistent().get::<_, GovernanceAction>(&action_key) {
+                Self::apply_action(&env, &action);
+            }
         }
         proposal.executed = true;
         env.storage().persistent().set(&key, &proposal);
 
         e::publish(&env, (symbol_short!("execute"), &executor, proposal_id), proposal.passed);
+    }
+
+    /// Apply a governance action via cross-contract calls to DripPool/DripToken.
+    fn apply_action(env: &Env, action: &GovernanceAction) {
+        let admin_addr = env.current_contract_address();
+        let pool_id: Address = s::get_persistent(
+            env, &KEY_POOL_ID,
+            Address::from_string(&String::from_str(env, ZERO_ADDRESS_STR)),
+        );
+        let token_id: Address = s::get_persistent(
+            env, &KEY_TOKEN_ID,
+            Address::from_string(&String::from_str(env, ZERO_ADDRESS_STR)),
+        );
+
+        match action {
+            GovernanceAction::SetRewardRate(rate) => {
+                // Note: DripPool doesn't have set_reward_rate directly, but set_active and re-init
+                // For now, we publish a detailed event; pool admin can read and apply
+                e::publish(env, (symbol_short!("gov_set_rr"), &admin_addr), *rate);
+            }
+            GovernanceAction::SetMinStake(min) => {
+                e::publish(env, (symbol_short!("gov_set_ms"), &admin_addr), *min);
+            }
+            GovernanceAction::SetLockPeriod(period) => {
+                e::publish(env, (symbol_short!("gov_set_lp"), &admin_addr), *period);
+            }
+            GovernanceAction::SetActive(active) => {
+                let pool_client = pool::DripPoolClient::new(env, &pool_id);
+                pool_client.set_active(&admin_addr, active);
+            }
+            GovernanceAction::MintTokens(to, amount) => {
+                let token_client = token::DripTokenClient::new(env, &token_id);
+                token_client.mint(&admin_addr, to, amount);
+            }
+        }
     }
 
     /// Get voting power by querying the token contract's balance.
@@ -233,14 +280,14 @@ impl DripGovernance {
     pub fn get_voting_power(env: Env, voter: Address) -> i128 {
         let token_id: Address = s::get_persistent(
             &env, &KEY_TOKEN_ID,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         );
         Self::get_voting_power_internal(&env, &voter, &token_id)
     }
 
     pub fn get_gov_config(env: Env) -> (Address, Address, u32, i128) {
-        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
-        let pool_id: Address = s::get_persistent(&env, &KEY_POOL_ID, Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")));
+        let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        let pool_id: Address = s::get_persistent(&env, &KEY_POOL_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         let voting_period: u32 = s::get_persistent(&env, &KEY_VOTING_PERIOD, 100u32);
         let min_power: i128 = s::get_persistent(&env, &KEY_MIN_POWER, 0i128);
         (token_id, pool_id, voting_period, min_power)
@@ -280,6 +327,7 @@ mod governance_test {
             &proposer,
             &String::from_str(&env, "Reduce rewards"),
             &String::from_str(&env, "We should reduce the reward rate by 50%"),
+            &GovernanceAction::SetRewardRate(50i128),
         );
 
         assert_eq!(id, 1);
@@ -315,6 +363,7 @@ mod governance_test {
             &proposer,
             &String::from_str(&env, "Test proposal"),
             &String::from_str(&env, "Test description"),
+            &GovernanceAction::SetActive(true),
         );
 
         // Vote with real token balance as voting power
