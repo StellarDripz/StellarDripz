@@ -233,15 +233,16 @@ impl DripGovernance {
 
         match action {
             GovernanceAction::SetRewardRate(rate) => {
-                // Note: DripPool doesn't have set_reward_rate directly
-                // Pool admin can read this event and apply changes
-                e::publish(env, (symbol_short!("gov_setrr"), &admin_addr), *rate);
+                let pool_client = pool::DripPoolClient::new(env, &pool_id);
+                pool_client.set_reward_rate(&admin_addr, rate);
             }
             GovernanceAction::SetMinStake(min) => {
-                e::publish(env, (symbol_short!("gov_setms"), &admin_addr), *min);
+                let pool_client = pool::DripPoolClient::new(env, &pool_id);
+                pool_client.set_min_stake(&admin_addr, min);
             }
             GovernanceAction::SetLockPeriod(period) => {
-                e::publish(env, (symbol_short!("gov_setlp"), &admin_addr), *period);
+                let pool_client = pool::DripPoolClient::new(env, &pool_id);
+                pool_client.set_lock_period(&admin_addr, period);
             }
             GovernanceAction::SetActive(active) => {
                 let pool_client = pool::DripPoolClient::new(env, &pool_id);
@@ -303,6 +304,7 @@ mod governance_test {
     use super::*;
     use soroban_sdk::Env;
     use crate::token::DripToken;
+    use crate::pool::DripPool;
 
     #[test]
     fn test_create_proposal() {
@@ -354,9 +356,15 @@ mod governance_test {
         token_client.mint(&admin, &proposer, &1000i128);
         token_client.mint(&admin, &voter, &5000i128);
 
-        let pool_id = Address::generate(&env);
-        let contract_id = env.register(DripGovernance, ());
-        let client = DripGovernanceClient::new(&env, &contract_id);
+        // Deploy governance first so we know its address
+        let governance_id = env.register(DripGovernance, ());
+
+        // Deploy pool and initialize it with governance as admin (so governance can call set_reward_rate etc.)
+        let pool_id = env.register(DripPool, ());
+        let pool_client = pool::DripPoolClient::new(&env, &pool_id);
+        pool_client.initialize_pool(&governance_id, &token_id, &100i128, &10i128, &100u32);
+
+        let client = DripGovernanceClient::new(&env, &governance_id);
         client.initialize_governance(&admin, &token_id, &pool_id, &100u32, &0i128);
 
         let id = client.propose(
@@ -375,11 +383,15 @@ mod governance_test {
         // Advance past voting period
         env.ledger().set_sequence_number(200);
 
-        // Execute
+        // Execute — governance should now be able to call pool.set_reward_rate()
         client.execute(&admin, &id);
         let prop = client.get_proposal(&id).unwrap();
         assert!(prop.executed);
         assert!(prop.passed);
+
+        // Verify the pool's reward rate was actually changed
+        let pool_config = pool_client.get_pool_config();
+        assert_eq!(pool_config.reward_rate, 50i128);
     }
 }
 
