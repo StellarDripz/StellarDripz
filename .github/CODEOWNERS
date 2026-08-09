@@ -1,6 +1,10 @@
-# Code owners — automatically assign PR reviewers
-# Note: GitHub teams must exist in the org for auto-assignment to work.
-# Falls back to individual maintainers if teams are not configured.
+# CODEOWNERS — Automatically assigns PR reviewers
+#
+# Current maintainers (add GitHub usernames as the team grows):
+#   @StellarDripz — Lead maintainer
+#
+# To add a reviewer, add their GitHub username to the relevant section.
+# GitHub teams are supported if configured in org settings.
 
 # Root-level owners (review all PRs)
 * @StellarDripz
