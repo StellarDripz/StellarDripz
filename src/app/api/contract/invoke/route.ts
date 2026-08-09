@@ -41,10 +41,13 @@ function argToScVal(arg: unknown): StellarSdk.xdr.ScVal {
     }
     // Numeric strings → i128
     if (/^-?\d+$/.test(arg)) {
+      const num = BigInt(arg);
+      const lo = Number(num & BigInt("0xFFFFFFFFFFFFFFFF"));
+      const hi = Number(num >> BigInt(64));
       return StellarSdk.xdr.ScVal.scvI128(
         new StellarSdk.xdr.Int128Parts({
-          lo: new StellarSdk.xdr.Uint64(0),
-          hi: new StellarSdk.xdr.Int64(0),
+          lo: new StellarSdk.xdr.Uint64(lo),
+          hi: new StellarSdk.xdr.Int64(hi),
         }),
       );
     }
@@ -73,10 +76,13 @@ function argToScVal(arg: unknown): StellarSdk.xdr.ScVal {
       return StellarSdk.xdr.ScVal.scvAddress(addr.toScAddress());
     }
     if (obj.i128 !== undefined) {
+      const num = BigInt(String(obj.i128));
+      const lo = Number(num & BigInt("0xFFFFFFFFFFFFFFFF"));
+      const hi = Number(num >> BigInt(64));
       return StellarSdk.xdr.ScVal.scvI128(
         new StellarSdk.xdr.Int128Parts({
-          lo: new StellarSdk.xdr.Uint64(0),
-          hi: new StellarSdk.xdr.Int64(0),
+          lo: new StellarSdk.xdr.Uint64(lo),
+          hi: new StellarSdk.xdr.Int64(hi),
         }),
       );
     }
@@ -91,6 +97,17 @@ function argToScVal(arg: unknown): StellarSdk.xdr.ScVal {
     if (obj.vec && Array.isArray(obj.vec)) {
       const items = obj.vec.map((item: unknown) => argToScVal(item));
       return StellarSdk.xdr.ScVal.scvVec(items);
+    }
+    if (obj.map && Array.isArray(obj.map)) {
+      const entries = obj.map.map(([key, val]: [unknown, unknown]) => {
+        const scvKey = argToScVal(key);
+        const scvVal = argToScVal(val);
+        return new StellarSdk.xdr.ScMapEntry({
+          key: scvKey,
+          val: scvVal,
+        });
+      });
+      return StellarSdk.xdr.ScVal.scvMap(entries);
     }
     if (obj.bool !== undefined) {
       return StellarSdk.xdr.ScVal.scvBool(Boolean(obj.bool));
