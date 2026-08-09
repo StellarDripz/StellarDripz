@@ -27,3 +27,6 @@ pub use badge::DripBadge;
 #[cfg(test)]
 mod test;
 
+#[cfg(test)]
+mod fuzz_tests;
+
