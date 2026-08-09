@@ -1,6 +1,14 @@
 /**
  * Server-side rate limiting middleware.
- * Uses in-memory Map with automatic cleanup.
+ *
+ * Uses in-memory Map with automatic cleanup every 5 minutes.
+ *
+ * SCALING NOTE: In-memory rate limiting is per-instance and resets on
+ * server restart. For multi-instance production deployments (horizontal
+ * scaling), migrate to a shared Redis store using libraries like
+ * `@upstash/ratelimit` or `rate-limiter-flexible` with Redis backend.
+ * The current implementation is sufficient for single-instance Vercel
+ * deployments and local development.
  */
 import { NextRequest, NextResponse } from "next/server";
 
