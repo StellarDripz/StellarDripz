@@ -33,8 +33,6 @@ pub struct DripToken;
 impl DripToken {
     /// Initialize the token with name, symbol, and decimals.
     /// Can only be called once.
-    /// Initialize the token with name, symbol, and decimals.
-    /// Can only be called once.
     pub fn initialize_token(env: Env, admin: Address, name: String, symbol: String, decimals: u32) {
         // Ensure not already initialized
         if env.storage().persistent().has(&s::KEY_ADMIN) {
