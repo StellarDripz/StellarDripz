@@ -1,5 +1,12 @@
 /**
- * Horizon helper — balance fetching and payment transaction logic.
+ * Horizon helper — balance fetching, faucet, and payment transaction logic.
+ *
+ * For server-side usage, prefer src/lib/server/horizonService.ts which adds
+ * database logging, analytics, and session tracking.
+ *
+ * This module provides the client-side (direct browser→Horizon) operations
+ * used by the hybrid reads/writes architecture. It relies on walletKit.signTx
+ * for signing, which requires a connected browser wallet.
  */
 import * as StellarSdk from "@stellar/stellar-sdk";
 import { STELLAR_NETWORK } from "./network";
