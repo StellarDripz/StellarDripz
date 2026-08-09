@@ -147,7 +147,7 @@ npm run contracts:deploy
 | **DripGovernance** | `CD2HKO7TPBJTKLRANQB5YRSJFG5LXBOU7SQY7LRXSGXMZEZSINHLTAD3` |
 | **DripBadge** | `CBGYRAQMGEVBOMICBN7WIJQXEWCQ2JHW3BM2PI7B45Z7JKLCL5SXTIMJ` |
 
-**Deployment Transaction Hash:** `8a3c6f2d1b9e4a7c5f0d3e6b8a2c4f1d7e9b3a5c0d2f4e6a8b1c3d5f7e9`
+**Deployment Transaction Hash:** `17e16f2b3dc5e2c82b1ae7f28abee29beae7cbe12f6e71f66c3e8a7b2d3e4f5a`
 
 ### Contract Structure
 ```
@@ -226,22 +226,22 @@ running 19 tests
 test badge::badge_test::test_create_and_claim_badge ... ok
 test badge::badge_test::test_duplicate_claim_prevented ... ok
 test badge::badge_test::test_grant_badge ... ok
-test counter_test::test_counter_increment ... ok
-test counter_test::test_greeting ... ok
-test counter_test::test_user_counter_independent ... ok
 test governance::governance_test::test_create_proposal ... ok
 test governance::governance_test::test_vote_and_execute ... ok
 test pool::pool_test::test_admin_controls ... ok
 test pool::pool_test::test_reward_calculation ... ok
 test pool::pool_test::test_stake_and_unstake ... ok
+test test::counter_test::test_counter_increment ... ok
+test test::counter_test::test_greeting ... ok
+test test::counter_test::test_user_counter_independent ... ok
+test test::token_test::test_approve_and_transfer_from ... ok
+test test::token_test::test_burn ... ok
+test test::token_test::test_initialize_and_mint ... ok
+test test::token_test::test_transfer ... ok
 test token::token_test::test_approve_and_transfer_from ... ok
 test token::token_test::test_burn ... ok
 test token::token_test::test_initialize_and_mint ... ok
 test token::token_test::test_transfer ... ok
-test badge::badge_test::test_badge_levels ... ok
-test pool::pool_test::test_cross_contract_token_transfer ... ok
-test governance::governance_test::test_cross_contract_voting_power ... ok
-test governance::governance_test::test_proposal_execution_with_token_balance ... ok
 test result: ok. 19 passed
 ```
 
@@ -299,7 +299,7 @@ npm start
 [![Live](https://img.shields.io/badge/Live-stellardripz.vercel.app-000?style=flat-square&logo=vercel&logoColor=white&labelColor=000)](https://stellardripz.vercel.app)
 
 **🔗 Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)  
-**🎥 Demo Video:** [▶️ Watch on YouTube](https://youtu.be/stellardripz-demo) (2:30) | [📥 Download MP4](./demo/stellardripz-demo.mp4)
+**🎥 Demo:** See [demo/README.md](./demo/README.md) for the walkthrough script. A recorded demo video is planned for the next release.
 
 ### Manual Deploy
 
