@@ -160,6 +160,36 @@ impl DripPool {
         e::publish(&env, (symbol_short!("rew_fund"), &admin), amount);
     }
 
+    pub fn set_reward_rate(env: Env, admin: Address, reward_rate: i128) {
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        if admin != stored_admin { panic!("Only admin"); }
+        admin.require_auth();
+        let mut config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
+        config.reward_rate = reward_rate;
+        s::set_persistent(&env, &KEY_POOL_CONFIG, &config);
+        e::publish(&env, (symbol_short!("rew_rate"), &admin), reward_rate);
+    }
+
+    pub fn set_min_stake(env: Env, admin: Address, min_stake: i128) {
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        if admin != stored_admin { panic!("Only admin"); }
+        admin.require_auth();
+        let mut config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
+        config.min_stake = min_stake;
+        s::set_persistent(&env, &KEY_POOL_CONFIG, &config);
+        e::publish(&env, (symbol_short!("min_stk"), &admin), min_stake);
+    }
+
+    pub fn set_lock_period(env: Env, admin: Address, lock_period: u32) {
+        let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
+        if admin != stored_admin { panic!("Only admin"); }
+        admin.require_auth();
+        let mut config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
+        config.lock_period = lock_period;
+        s::set_persistent(&env, &KEY_POOL_CONFIG, &config);
+        e::publish(&env, (symbol_short!("lock_per"), &admin), lock_period);
+    }
+
     pub fn set_active(env: Env, admin: Address, active: bool) {
         let stored_admin: Address = s::get_persistent(&env, &s::KEY_ADMIN, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         if admin != stored_admin { panic!("Only admin"); }
