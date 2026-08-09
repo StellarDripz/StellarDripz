@@ -117,6 +117,10 @@ impl DripBadge {
     }
 
     /// Get a user's claimed badge IDs.
+    ///
+    /// NOTE: This iterates through all badges (O(n)). For production use
+    /// with large badge counts, consider adding pagination parameters
+    /// (offset/limit) or an index of user→badge mappings.
     pub fn get_user_badges(env: Env, user: Address) -> Vec<u64> {
         let mut badges = Vec::new(&env);
         let count: u64 = s::get_persistent(&env, &KEY_BADGE_COUNT, 0u64);
