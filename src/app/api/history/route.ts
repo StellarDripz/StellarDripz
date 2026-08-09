@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const type = url.searchParams.get("type") as TxRecord["type"] | null;
   const limit = parseInt(url.searchParams.get("limit") || "50", 10);
 
-  const transactions = getTransactions(address, type || undefined, Math.min(limit, 100));
+  const transactions = await getTransactions(address, type || undefined, Math.min(limit, 100));
 
   return NextResponse.json({ transactions, total: transactions.length });
 }

@@ -11,11 +11,11 @@ export async function GET(request: NextRequest) {
   const summary = url.searchParams.get("summary") === "true";
 
   if (summary) {
-    const data = getAnalyticsSummary();
+    const data = await getAnalyticsSummary();
     return NextResponse.json({ summary: data });
   }
 
-  const entries = getAnalytics(eventType || undefined);
+  const entries = await getAnalytics(eventType || undefined);
   return NextResponse.json({ events: entries, total: entries.length });
 }
 // Analytics endpoint: aggregated usage metrics
