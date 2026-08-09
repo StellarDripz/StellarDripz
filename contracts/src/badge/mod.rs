@@ -1,6 +1,7 @@
 use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
 use crate::common::storage as s;
 use crate::common::events as e;
+use crate::common::constants::ZERO_ADDRESS_STR;
 
 // ---- Data Types ----
 
@@ -58,7 +59,7 @@ impl DripBadge {
     ) -> u64 {
         let stored_admin: Address = s::get_persistent(
             &env, &s::KEY_ADMIN,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         );
         if admin != stored_admin {
             panic!("Only admin");
@@ -133,7 +134,7 @@ impl DripBadge {
     pub fn grant_badge(env: Env, admin: Address, user: Address, badge_id: u64) {
         let stored_admin: Address = s::get_persistent(
             &env, &s::KEY_ADMIN,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         );
         if admin != stored_admin {
             panic!("Only admin");
@@ -173,7 +174,7 @@ impl DripBadge {
     pub fn get_admin(env: Env) -> Address {
         s::get_persistent(
             &env, &s::KEY_ADMIN,
-            Address::from_string(&String::from_str(&env, "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF")),
+            Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)),
         )
     }
 }
