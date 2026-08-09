@@ -56,13 +56,15 @@ jobs:
 
       - name: Deploy to Stellar
         env:
-          STELLAR_SECRET_KEY: ${{ secrets.STELLAR_DEPLOYER_SECRET || '' }}
-          STELLAR_NETWORK: ${{ inputs.network || 'testnet' }}
+          DEPLOYER_SECRET_KEY: ${{ secrets.DEPLOYER_SECRET_KEY || '' }}
+          NEXT_PUBLIC_SOROBAN_RPC_URL: ${{ vars.NEXT_PUBLIC_SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org' }}
+          NEXT_PUBLIC_HORIZON_URL: ${{ vars.NEXT_PUBLIC_HORIZON_URL || 'https://horizon-testnet.stellar.org' }}
+          NEXT_PUBLIC_NETWORK_PASSPHRASE: ${{ vars.NEXT_PUBLIC_NETWORK_PASSPHRASE || 'Test SDF Network ; September 2015' }}
         run: |
           echo "Contract WASM built. Deployment script ready."
-          echo "Network: $STELLAR_NETWORK"
-          if [ -n "$STELLAR_SECRET_KEY" ]; then
-            echo "Deployer key configured — ready for deployment."
+          if [ -n "$DEPLOYER_SECRET_KEY" ]; then
+            echo "Deployer key configured — running deployment."
+            cd .. && npx ts-node --transpile-only scripts/deploy-contract.ts
           else
-            echo "No STELLAR_DEPLOYER_SECRET configured — skipping live deploy."
+            echo "No DEPLOYER_SECRET_KEY configured — skipping live deploy."
           fi
