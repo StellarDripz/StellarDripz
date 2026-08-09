@@ -103,6 +103,24 @@ We aim to respond to all contributions within these timeframes:
 | PR follow-up review | Within 24 hours |
 | Security reports | Within 72 hours (see SECURITY.md) |
 
+## Community & Growth
+
+We're actively growing the StellarDripz contributor community. Here's how you can get involved:
+
+### First-Time Contributors
+- Look for issues labeled `good first issue` or `help wanted`
+- Start with documentation or test improvements — they're great ways to learn the codebase
+- Join our [GitHub Discussions](https://github.com/StellarDripz/StellarDripz/discussions) to introduce yourself
+
+### Drips Wave Program
+We participate in the Stellar Drips Wave contribution program. Issues tagged with complexity labels are eligible for rewards:
+- **Trivial** (100 pts) — Typos, minor fixes, small docs improvements
+- **Medium** (150 pts) — Standard features, bug fixes
+- **High** (200 pts) — Complex architecture, major features
+
+### Recognition
+All contributors are recognized in our release notes and on the project README. Regular contributors may be invited as maintainers.
+
 ## Getting Help
 
 - **Questions?** Open a [GitHub Discussion](https://github.com/StellarDripz/StellarDripz/discussions)
