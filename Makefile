@@ -49,6 +49,12 @@ lint: ## Lint the project
 lint-fix: ## Auto-fix lint issues
 	npm run lint -- --fix
 
+# ─── Database ───────────────────────────────────────────────────────
+
+db-migrate: ## Apply Supabase schema migration
+	@echo "🗄️  Running database migration..."
+	npx ts-node --transpile-only scripts/migrate-db.ts
+
 # ─── Cleanup ────────────────────────────────────────────────────────
 
 clean: ## Clean build artifacts

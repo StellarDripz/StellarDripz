@@ -39,8 +39,8 @@ next-env.d.ts
 contracts/target/
 **/*.rs.bk
 
-# Database (JSON file for local dev)
-data/
+# Database (JSON dump files — keep .gitkeep for directory tracking)
+data/*.json
 
 # Turbo
 .turbo/

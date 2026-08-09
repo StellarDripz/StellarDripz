@@ -30,6 +30,7 @@
     "contracts:build": "cd contracts && cargo build --target wasm32v1-none --release",
     "contracts:test": "cd contracts && cargo test --verbose",
     "contracts:deploy": "npx ts-node --transpile-only scripts/deploy-contract.ts",
+    "db:migrate": "npx ts-node --transpile-only scripts/migrate-db.ts",
     "clean": "rm -rf .next contracts/target"
   },
   "dependencies": {
