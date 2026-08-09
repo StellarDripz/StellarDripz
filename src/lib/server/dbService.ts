@@ -1,37 +1,20 @@
 /**
  * Database service — transaction history, analytics, and session storage.
  *
- * Uses an in-memory store as the primary backend, making it compatible
- * with Vercel/serverless deployments where the filesystem is ephemeral.
+ * PRIMARY: Supabase/PostgreSQL (when NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY are set)
+ * FALLBACK: In-memory store with JSON file persistence (local dev / no Supabase config)
  *
- * For local development, data is also persisted to a JSON file
- * (data/stellardripz-db.json) as a convenience backup.
+ * The public API is identical regardless of backend — consumers don't need to change.
  *
- * PRODUCTION MIGRATION (Supabase/PostgreSQL):
- *   1. Create tables: transactions, analytics, sessions (see schema below)
- *   2. Set up @supabase/supabase-js client
- *   3. Replace in-memory store with Supabase queries
- *   4. Add Row Level Security (RLS) policies for multi-tenancy
- *   5. Run migration: npx supabase migration new init
- *
- * Schema:
- *   CREATE TABLE transactions (
- *     id TEXT PRIMARY KEY, type TEXT, status TEXT, hash TEXT,
- *     amount TEXT, sender_address TEXT, destination_address TEXT,
- *     function_name TEXT, contract_id TEXT, error_message TEXT,
- *     timestamp BIGINT, ip TEXT, user_agent TEXT
- *   );
- *   CREATE TABLE analytics (
- *     id TEXT PRIMARY KEY, event_type TEXT, address TEXT,
- *     timestamp BIGINT, data JSONB
- *   );
- *   CREATE TABLE sessions (
- *     address TEXT PRIMARY KEY, wallet_id TEXT, wallet_name TEXT,
- *     connected_at BIGINT, last_active BIGINT, ip TEXT
- *   );
+ * SUPABASE SETUP:
+ *   1. Create a Supabase project at https://supabase.com
+ *   2. Run src/lib/server/supabase-schema.sql in the SQL Editor
+ *   3. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
+ *   4. Deploy — the service automatically uses Supabase when configured
  */
 import fs from "fs";
 import path from "path";
+import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
 
 const DB_PATH = path.join(process.cwd(), "data", "stellardripz-db.json");
 
@@ -83,7 +66,7 @@ interface Database {
   lastCleanup: number;
 }
 
-// ---- In-Memory Store (Primary — works on serverless) ----
+// ---- In-Memory Store (Fallback) ----
 
 let _db: Database | null = null;
 
@@ -94,7 +77,6 @@ function getEmptyDb(): Database {
 function getDb(): Database {
   if (_db) return _db;
 
-  // Try loading from JSON file first (local dev convenience)
   if (typeof fs !== "undefined") {
     try {
       const dir = path.dirname(DB_PATH);
@@ -113,28 +95,127 @@ function getDb(): Database {
 }
 
 function persistDb(): void {
-  // Persist to JSON file when filesystem is available (local dev only)
   if (typeof fs !== "undefined") {
     try {
       const dir = path.dirname(DB_PATH);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(DB_PATH, JSON.stringify(_db ?? getEmptyDb(), null, 2));
     } catch {
-      /* disk full or permission error — in-memory store continues working */
+      /* disk full or permission error */
     }
   }
 }
 
+// ---- Supabase Column Mapping Helpers ----
+
+/** Map a database row to TxRecord (snake_case → camelCase) */
+function mapTxRow(row: Record<string, unknown>): TxRecord {
+  return {
+    id: String(row.id || ""),
+    type: (row.type as TxRecord["type"]) || "send",
+    status: (row.status as TxRecord["status"]) || "success",
+    hash: (row.hash as string) || null,
+    amount: String(row.amount || "0"),
+    assetCode: (row.asset_code as string) || undefined,
+    senderAddress: String(row.sender_address || ""),
+    destinationAddress: String(row.destination_address || ""),
+    functionName: (row.function_name as string) || undefined,
+    contractId: (row.contract_id as string) || undefined,
+    errorMessage: (row.error_message as string) || undefined,
+    timestamp: Number(row.timestamp || 0),
+    ip: (row.ip as string) || undefined,
+    userAgent: (row.user_agent as string) || undefined,
+  };
+}
+
+/** Map TxRecord to a database row (camelCase → snake_case) */
+function txToDbRow(tx: TxRecord): Record<string, unknown> {
+  return {
+    id: tx.id,
+    type: tx.type,
+    status: tx.status,
+    hash: tx.hash,
+    amount: tx.amount,
+    asset_code: tx.assetCode || null,
+    sender_address: tx.senderAddress,
+    destination_address: tx.destinationAddress,
+    function_name: tx.functionName || null,
+    contract_id: tx.contractId || null,
+    error_message: tx.errorMessage || null,
+    timestamp: tx.timestamp,
+    ip: tx.ip || null,
+    user_agent: tx.userAgent || null,
+  };
+}
+
+function mapAnalyticsRow(row: Record<string, unknown>): AnalyticsEntry {
+  return {
+    id: String(row.id || ""),
+    eventType: (row.event_type as AnalyticsEntry["eventType"]) || "faucet_request",
+    address: String(row.address || ""),
+    timestamp: Number(row.timestamp || 0),
+    data: (row.data as Record<string, unknown>) || undefined,
+  };
+}
+
+function mapSessionRow(row: Record<string, unknown>): SessionEntry {
+  return {
+    address: String(row.address || ""),
+    walletId: String(row.wallet_id || ""),
+    walletName: String(row.wallet_name || ""),
+    connectedAt: Number(row.connected_at || 0),
+    lastActive: Number(row.last_active || 0),
+    ip: (row.ip as string) || undefined,
+  };
+}
+
 // ---- Transactions ----
 
-export function saveTransaction(tx: TxRecord): void {
+export async function saveTransaction(tx: TxRecord): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    const { error } = await supabase
+      .from("transactions")
+      .upsert(txToDbRow(tx), { onConflict: "id" });
+
+    if (error) {
+      console.error("[StellarDripz] Supabase saveTransaction error:", error.message);
+    }
+    return;
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   db.transactions.unshift(tx);
   if (db.transactions.length > 1000) db.transactions = db.transactions.slice(0, 1000);
   persistDb();
 }
 
-export function updateTransaction(id: string, updates: Partial<TxRecord>): void {
+export async function updateTransaction(
+  id: string,
+  updates: Partial<TxRecord>,
+): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.status) dbUpdates.status = updates.status;
+    if (updates.hash !== undefined) dbUpdates.hash = updates.hash;
+    if (updates.errorMessage !== undefined) dbUpdates.error_message = updates.errorMessage;
+
+    const { error } = await supabase
+      .from("transactions")
+      .update(dbUpdates)
+      .eq("id", id);
+
+    if (error) {
+      console.error("[StellarDripz] Supabase updateTransaction error:", error.message);
+    }
+    return;
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   const idx = db.transactions.findIndex((t) => t.id === id);
   if (idx !== -1) {
@@ -143,11 +224,33 @@ export function updateTransaction(id: string, updates: Partial<TxRecord>): void 
   }
 }
 
-export function getTransactions(
+export async function getTransactions(
   address?: string,
   type?: TxRecord["type"],
   limit = 50,
-): TxRecord[] {
+): Promise<TxRecord[]> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    let query = supabase
+      .from("transactions")
+      .select("*")
+      .order("timestamp", { ascending: false })
+      .limit(Math.min(limit, 100));
+
+    if (address) query = query.eq("sender_address", address);
+    if (type) query = query.eq("type", type);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("[StellarDripz] Supabase getTransactions error:", error.message);
+      return [];
+    }
+
+    return (data as Record<string, unknown>[]).map(mapTxRow);
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   let txs = db.transactions;
   if (address) txs = txs.filter((t) => t.senderAddress === address);
@@ -157,34 +260,102 @@ export function getTransactions(
 
 // ---- Analytics ----
 
-export function logAnalytics(entry: Omit<AnalyticsEntry, "id" | "timestamp">): void {
+export async function logAnalytics(
+  entry: Omit<AnalyticsEntry, "id" | "timestamp">,
+): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  const record = {
+    id: `an-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    event_type: entry.eventType,
+    address: entry.address,
+    timestamp: Date.now(),
+    data: entry.data || {},
+  };
+
+  if (supabase) {
+    const { error } = await supabase.from("analytics").insert(record);
+    if (error) {
+      console.error("[StellarDripz] Supabase logAnalytics error:", error.message);
+    }
+    return;
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   db.analytics.push({
     ...entry,
-    id: `an-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    timestamp: Date.now(),
+    id: record.id,
+    timestamp: record.timestamp,
   });
   if (db.analytics.length > 5000) db.analytics = db.analytics.slice(-5000);
   persistDb();
 }
 
-export function getAnalytics(
+export async function getAnalytics(
   eventType?: AnalyticsEntry["eventType"],
   limit = 100,
-): AnalyticsEntry[] {
+): Promise<AnalyticsEntry[]> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    let query = supabase
+      .from("analytics")
+      .select("*")
+      .order("timestamp", { ascending: false })
+      .limit(Math.min(limit, 500));
+
+    if (eventType) query = query.eq("event_type", eventType);
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("[StellarDripz] Supabase getAnalytics error:", error.message);
+      return [];
+    }
+
+    return (data as Record<string, unknown>[]).map(mapAnalyticsRow);
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   let entries = db.analytics;
   if (eventType) entries = entries.filter((e) => e.eventType === eventType);
   return entries.slice(-limit).reverse();
 }
 
-export function getAnalyticsSummary(): Record<
-  string,
-  { total: number; uniqueAddresses: number }
+export async function getAnalyticsSummary(): Promise<
+  Record<string, { total: number; uniqueAddresses: number }>
 > {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    // Use a single query to aggregate counts
+    const { data, error } = await supabase.rpc("get_analytics_summary");
+
+    if (error) {
+      // Fall back to client-side aggregation if RPC not available
+      const entries = await getAnalytics(undefined, 5000);
+      const summary: Record<string, { total: number; addresses: Set<string> }> = {};
+      for (const entry of entries) {
+        if (!summary[entry.eventType]) {
+          summary[entry.eventType] = { total: 0, addresses: new Set() };
+        }
+        summary[entry.eventType].total++;
+        summary[entry.eventType].addresses.add(entry.address);
+      }
+      const result: Record<string, { total: number; uniqueAddresses: number }> = {};
+      for (const [key, val] of Object.entries(summary)) {
+        result[key] = { total: val.total, uniqueAddresses: val.addresses.size };
+      }
+      return result;
+    }
+
+    return (data as Record<string, { total: number; uniqueAddresses: number }>) || {};
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   const summary: Record<string, { total: number; addresses: Set<string> }> = {};
-
   for (const entry of db.analytics) {
     if (!summary[entry.eventType]) {
       summary[entry.eventType] = { total: 0, addresses: new Set() };
@@ -192,7 +363,6 @@ export function getAnalyticsSummary(): Record<
     summary[entry.eventType].total++;
     summary[entry.eventType].addresses.add(entry.address);
   }
-
   const result: Record<string, { total: number; uniqueAddresses: number }> = {};
   for (const [key, val] of Object.entries(summary)) {
     result[key] = { total: val.total, uniqueAddresses: val.addresses.size };
@@ -202,7 +372,30 @@ export function getAnalyticsSummary(): Record<
 
 // ---- Sessions ----
 
-export function saveSession(session: SessionEntry): void {
+export async function saveSession(session: SessionEntry): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    const { error } = await supabase.from("sessions").upsert(
+      {
+        address: session.address,
+        wallet_id: session.walletId,
+        wallet_name: session.walletName,
+        connected_at: session.connectedAt,
+        last_active: session.lastActive,
+        ip: session.ip || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "address" },
+    );
+
+    if (error) {
+      console.error("[StellarDripz] Supabase saveSession error:", error.message);
+    }
+    return;
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   const idx = db.sessions.findIndex((s) => s.address === session.address);
   if (idx !== -1) db.sessions[idx] = session;
@@ -210,11 +403,48 @@ export function saveSession(session: SessionEntry): void {
   persistDb();
 }
 
-export function getSession(address: string): SessionEntry | null {
+export async function getSession(address: string): Promise<SessionEntry | null> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .eq("address", address)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[StellarDripz] Supabase getSession error:", error.message);
+      return null;
+    }
+
+    return data ? mapSessionRow(data as Record<string, unknown>) : null;
+  }
+
+  // Fallback: in-memory
   return getDb().sessions.find((s) => s.address === address) || null;
 }
 
-export function getActiveSessions(): SessionEntry[] {
+export async function getActiveSessions(): Promise<SessionEntry[]> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const { data, error } = await supabase
+      .from("sessions")
+      .select("*")
+      .gt("last_active", oneDayAgo)
+      .order("last_active", { ascending: false });
+
+    if (error) {
+      console.error("[StellarDripz] Supabase getActiveSessions error:", error.message);
+      return [];
+    }
+
+    return (data as Record<string, unknown>[]).map(mapSessionRow);
+  }
+
+  // Fallback: in-memory
   const db = getDb();
   const now = Date.now();
   return db.sessions.filter((s) => now - s.lastActive < 24 * 60 * 60 * 1000);
@@ -223,22 +453,47 @@ export function getActiveSessions(): SessionEntry[] {
 // ---- Cleanup ----
 
 /** Clear all database data (for testing). */
-export function clearDb(): void {
+export async function clearDb(): Promise<void> {
+  const supabase = getSupabaseAdmin();
+
+  if (supabase) {
+    await supabase.from("transactions").delete().neq("id", "__never__");
+    await supabase.from("analytics").delete().neq("id", "__never__");
+    await supabase.from("sessions").delete().neq("address", "__never__");
+  }
+
+  // Clear in-memory store too
   _db = getEmptyDb();
   persistDb();
 }
 
-export function runPeriodicCleanup(): void {
-  const db = getDb();
+export async function runPeriodicCleanup(): Promise<void> {
+  const supabase = getSupabaseAdmin();
   const now = Date.now();
 
-  // Clean up old sessions (7 days)
+  if (supabase) {
+    // Clean up old sessions (7 days)
+    const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+    await supabase.from("sessions").delete().lt("last_active", sevenDaysAgo);
+
+    // Clean up old analytics (30 days)
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+    await supabase.from("analytics").delete().lt("timestamp", thirtyDaysAgo);
+    return;
+  }
+
+  // Fallback: in-memory cleanup
+  const db = getDb();
   db.sessions = db.sessions.filter((s) => now - s.lastActive < 7 * 24 * 60 * 60 * 1000);
-
-  // Clean up old analytics (30 days)
-  const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-  db.analytics = db.analytics.filter((e) => now - e.timestamp < thirtyDays);
-
+  db.analytics = db.analytics.filter((e) => now - e.timestamp < 30 * 24 * 60 * 60 * 1000);
   db.lastCleanup = now;
   persistDb();
+}
+
+/**
+ * Export a helper to check which backend is active.
+ * Useful for admin dashboard display.
+ */
+export function getDatabaseBackend(): "supabase" | "memory" {
+  return isSupabaseConfigured() ? "supabase" : "memory";
 }
