@@ -19,10 +19,13 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
 import * as fs from "fs";
 import * as path from "path";
+import { loadEnv } from "./env-loader";
 
-const RPC_URL = process.env.SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
-const NETWORK_PASSPHRASE = process.env.NETWORK_PASSPHRASE || "Test SDF Network ; September 2015";
-const HORIZON_URL = process.env.HORIZON_URL || "https://horizon-testnet.stellar.org";
+loadEnv();
+
+const RPC_URL = process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
+const NETWORK_PASSPHRASE = process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE || "Test SDF Network ; September 2015";
+const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org";
 const SECRET_KEY = process.env.DEPLOYER_SECRET_KEY || "";
 
 const WASM_PATH = path.join(__dirname, "..", "contracts", "target", "wasm32v1-none", "release", "stellardripz.wasm");
