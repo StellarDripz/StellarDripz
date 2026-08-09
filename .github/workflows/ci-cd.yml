@@ -71,7 +71,7 @@ jobs:
         run: npm ci
 
       - name: Run Jest tests
-        run: npm test -- --verbose
+        run: npm test -- --verbose --coverage --coverageThreshold='{"global":{"branches":50,"functions":60,"lines":60,"statements":60}}'
 
       - name: TypeScript type check
         run: npx tsc --noEmit
