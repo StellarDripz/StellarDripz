@@ -112,25 +112,28 @@ impl DripPool {
         let total_reward = existing_stake.reward_claimed + pending;
         if total_reward <= 0 { return 0; }
 
-        // Deduct from reward pool
+        // Cap reward at available pool balance (non-panicking partial payout)
         let mut reward_pool: i128 = s::get_persistent(&env, &KEY_REWARD_POOL, 0i128);
-        if reward_pool < total_reward {
-            panic!("Insufficient reward pool balance");
-        }
-        reward_pool -= total_reward;
+        let claimable = if reward_pool < total_reward { reward_pool } else { total_reward };
+        if claimable <= 0 { return 0; }
+
+        reward_pool -= claimable;
         s::set_persistent(&env, &KEY_REWARD_POOL, &reward_pool);
 
         // Transfer reward tokens to user via cross-contract call
         let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         let pool_address = env.current_contract_address();
         let token_client = token::DripTokenClient::new(&env, &token_id);
-        token_client.transfer(&pool_address, &user, &total_reward);
+        token_client.transfer(&pool_address, &user, &claimable);
 
-        existing_stake.reward_claimed = 0;
+        // Carry forward unclaimed portion if pool was insufficient
+        let unclaimed = total_reward - claimable;
+        existing_stake.reward_claimed = unclaimed;
         existing_stake.start_ledger = env.ledger().sequence();
         env.storage().persistent().set(&stake_key, &existing_stake);
-        e::publish(&env, (e::EVENT_REWARD, &user), total_reward);
-        total_reward
+
+        e::publish(&env, (e::EVENT_REWARD, &user), claimable);
+        claimable
     }
 
     pub fn calculate_reward(env: Env, user: Address) -> i128 {
