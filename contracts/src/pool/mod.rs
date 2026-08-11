@@ -1,8 +1,23 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
+use soroban_sdk::{contract, contractimpl, contracterror, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::common::constants::ZERO_ADDRESS_STR;
 use crate::token;
+
+// ---- Contract Errors ----
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum PoolError {
+    AlreadyInitialized = 1,
+    NotAuthorized = 2,
+    PoolNotActive = 3,
+    BelowMinStake = 4,
+    ExceedsMaxStake = 5,
+    InsufficientStake = 6,
+    TokensLocked = 7,
+}
 
 // ---- Data Types ----
 
@@ -67,17 +82,18 @@ impl DripPool {
         let token_client = token::DripTokenClient::new(&env, &token_id);
         token_client.transfer_from(&pool_address, &user, &pool_address, &amount);
         let stake_key = StakeKey::Stake(user.clone());
-        let mut existing_stake: StakeInfo = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
-        let new_total = existing_stake.amount + amount;
+        let existing = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
+        let new_total = existing.amount.checked_add(amount).expect("Stake overflow");
         if new_total > config.max_stake { panic!("Exceeds maximum stake"); }
-        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed += pending; } }
+        let mut existing_stake = existing;
+        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed = existing_stake.reward_claimed.checked_add(pending).expect("Reward overflow"); } }
         let current_ledger = env.ledger().sequence();
         existing_stake.amount = new_total;
         existing_stake.start_ledger = current_ledger;
         env.storage().persistent().set(&stake_key, &existing_stake);
-        let mut total_staked: i128 = s::get_persistent(&env, &KEY_TOTAL_STAKED, 0i128);
-        total_staked += amount;
-        s::set_persistent(&env, &KEY_TOTAL_STAKED, &total_staked);
+        let total: i128 = s::get_persistent(&env, &KEY_TOTAL_STAKED, 0i128);
+        let new_total_staked = total.checked_add(amount).expect("Total staked overflow");
+        s::set_persistent(&env, &KEY_TOTAL_STAKED, &new_total_staked);
         e::publish(&env, (e::EVENT_STAKE, &user), amount);
     }
 
@@ -85,18 +101,19 @@ impl DripPool {
         user.require_auth();
         let config: PoolConfig = s::get_persistent(&env, &KEY_POOL_CONFIG, PoolConfig { reward_rate: 0, min_stake: 0, max_stake: 0, lock_period: 0, active: false });
         let stake_key = StakeKey::Stake(user.clone());
-        let mut existing_stake: StakeInfo = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
-        if existing_stake.amount < amount { panic!("Insufficient staked amount"); }
+        let existing = env.storage().persistent().get(&stake_key).unwrap_or(StakeInfo { amount: 0, start_ledger: 0, reward_claimed: 0 });
+        if existing.amount < amount { panic!("Insufficient staked amount"); }
+        let mut existing_stake = existing;
         let current_ledger = env.ledger().sequence();
         let locked_until = existing_stake.start_ledger + config.lock_period;
         if current_ledger < locked_until { panic!("Tokens are locked"); }
-        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed += pending; } }
-        existing_stake.amount -= amount;
+        if existing_stake.amount > 0 { let pending = Self::calculate_reward(env.clone(), user.clone()); if pending > 0 { existing_stake.reward_claimed = existing_stake.reward_claimed.checked_add(pending).expect("Reward overflow"); } }
+        existing_stake.amount = existing_stake.amount.checked_sub(amount).expect("Stake underflow");
         existing_stake.start_ledger = current_ledger;
         if existing_stake.amount == 0 { env.storage().persistent().remove(&stake_key); } else { env.storage().persistent().set(&stake_key, &existing_stake); }
-        let mut total_staked: i128 = s::get_persistent(&env, &KEY_TOTAL_STAKED, 0i128);
-        total_staked -= amount;
-        s::set_persistent(&env, &KEY_TOTAL_STAKED, &total_staked);
+        let total: i128 = s::get_persistent(&env, &KEY_TOTAL_STAKED, 0i128);
+        let new_total = total.checked_sub(amount).expect("Total staked underflow");
+        s::set_persistent(&env, &KEY_TOTAL_STAKED, &new_total);
         let token_id: Address = s::get_persistent(&env, &KEY_TOKEN_ID, Address::from_string(&String::from_str(&env, ZERO_ADDRESS_STR)));
         let pool_address = env.current_contract_address();
         let token_client = token::DripTokenClient::new(&env, &token_id);
@@ -117,7 +134,7 @@ impl DripPool {
         let claimable = if reward_pool < total_reward { reward_pool } else { total_reward };
         if claimable <= 0 { return 0; }
 
-        reward_pool -= claimable;
+        reward_pool = reward_pool.checked_sub(claimable).expect("Reward pool underflow");
         s::set_persistent(&env, &KEY_REWARD_POOL, &reward_pool);
 
         // Transfer reward tokens to user via cross-contract call
@@ -158,7 +175,7 @@ impl DripPool {
         token_client.transfer_from(&pool_address, &admin, &pool_address, &amount);
         // Update on-chain reward pool tracking
         let mut reward_pool: i128 = s::get_persistent(&env, &KEY_REWARD_POOL, 0i128);
-        reward_pool += amount;
+        reward_pool = reward_pool.checked_add(amount).expect("Reward pool overflow");
         s::set_persistent(&env, &KEY_REWARD_POOL, &reward_pool);
         e::publish(&env, (symbol_short!("rew_fund"), &admin), amount);
     }
