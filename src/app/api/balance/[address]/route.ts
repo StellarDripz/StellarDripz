@@ -2,6 +2,7 @@
  * GET /api/balance/[address] — Fetch balance via Horizon
  */
 import { NextRequest, NextResponse } from "next/server";
+import * as StellarSdk from "@stellar/stellar-sdk";
 import { checkRateLimit } from "@/lib/server/rateLimiter";
 import { fetchBalanceServer } from "@/lib/server/horizonService";
 
@@ -13,7 +14,9 @@ export async function GET(
   const rateLimitResponse = checkRateLimit(request, "general");
   if (rateLimitResponse) return rateLimitResponse;
 
-  if (!/^G[A-Z2-7]{55}$/.test(address)) {
+  // Validate the Stellar address including the checksum (StrKey), not just the
+  // character set — otherwise Horizon rejects it with a confusing 500 later.
+  if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
   }
 
