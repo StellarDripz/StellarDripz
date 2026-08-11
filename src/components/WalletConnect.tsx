@@ -17,7 +17,6 @@ function walletIcon(id: string): string {
   if (id.includes("albedo")) return "☀️";
   if (id.includes("walletconnect")) return "📱";
   if (id.includes("lobstr")) return "🐙";
-  if (id.includes("rabet")) return "🚀";
   return "🔑";
 }
 
