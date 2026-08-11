@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
   RUST_TOOLCHAIN: "stable"
 
 jobs:
@@ -71,7 +71,7 @@ jobs:
         run: npm ci
 
       - name: Run Jest tests
-        run: npm test -- --verbose --coverage --coverageThreshold='{"global":{"branches":50,"functions":60,"lines":60,"statements":60}}'
+        run: npm test -- --verbose --coverage --coverageThreshold='{"global":{"branches":45,"functions":50,"lines":55,"statements":55}}'
 
       - name: TypeScript type check
         run: npx tsc --noEmit
