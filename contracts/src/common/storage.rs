@@ -1,4 +1,4 @@
-use soroban_sdk::{Address, Env, Symbol, symbol_short};
+use soroban_sdk::{Env, Symbol, symbol_short};
 
 // ---- Storage Keys ----
 
@@ -8,14 +8,7 @@ pub const KEY_DECIMALS: Symbol = symbol_short!("DECIMALS");
 pub const KEY_ADMIN: Symbol = symbol_short!("ADMIN");
 pub const KEY_TOTAL_SUPPLY: Symbol = symbol_short!("TOT_SUP");
 pub const KEY_BALANCE: Symbol = symbol_short!("BALANCE");
-#[allow(dead_code)]
-pub const KEY_ALLOWANCE: Symbol = symbol_short!("ALLOW");
-#[allow(dead_code)]
-pub const KEY_STAKE: Symbol = symbol_short!("STAKE");
-#[allow(dead_code)]
-pub const KEY_PROPOSAL: Symbol = symbol_short!("PROP");
-#[allow(dead_code)]
-pub const KEY_BADGE: Symbol = symbol_short!("BADGE");
+
 
 // ---- Storage Helpers ----
 
@@ -39,32 +32,7 @@ pub fn set_persistent<T: soroban_sdk::IntoVal<Env, soroban_sdk::Val>>(
     env.storage().persistent().set(key, value);
 }
 
-/// Get or default for instance storage (faster, but doesn't persist across upgrades)
-#[allow(dead_code)]
-pub fn get_instance<T: soroban_sdk::IntoVal<Env, soroban_sdk::Val> + soroban_sdk::TryFromVal<Env, soroban_sdk::Val>>(
-    env: &Env,
-    key: &Symbol,
-    default: T,
-) -> T {
-    env.storage()
-        .instance()
-        .get(key)
-        .unwrap_or(default)
-}
-
-/// Set instance storage
-#[allow(dead_code)]
-pub fn set_instance<T: soroban_sdk::IntoVal<Env, soroban_sdk::Val>>(
-    env: &Env,
-    key: &Symbol,
-    value: &T,
-) {
-    env.storage().instance().set(key, value);
-}
-
-/// Require authorization from the contract admin
-#[allow(dead_code)]
-pub fn require_admin(_env: &Env, admin: &Address) {
-    admin.require_auth();
-}
+// NOTE: Instance storage helpers and require_admin removed as dead code (C6/C5).
+// Each contract handles auth and storage independently. Instance storage
+// is available directly via env.storage().instance() when needed.
 
