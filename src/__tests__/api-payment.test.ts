@@ -54,6 +54,11 @@ jest.mock("@/lib/server/rateLimiter", () => ({
   clearRateLimits: jest.fn(),
 }));
 
+jest.mock("@/lib/server/csrf", () => ({
+  validateCsrf: jest.fn().mockReturnValue(null),
+  setCsrfCookie: jest.fn(),
+}));
+
 const mockBuildPayment = jest.fn();
 const mockSendPayment = jest.fn();
 jest.mock("@/lib/server/horizonService", () => ({

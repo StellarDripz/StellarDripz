@@ -4,10 +4,15 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rateLimiter";
+import { validateCsrf, setCsrfCookie } from "@/lib/server/csrf";
 import { sendPaymentServer, buildPaymentTransaction } from "@/lib/server/horizonService";
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF validation for state-changing operations
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const body = (await request.json()) as {
       signedXdr?: string;
       destination?: string;
@@ -57,7 +62,9 @@ export async function POST(request: NextRequest) {
       { ip, userAgent: ua },
     );
 
-    return NextResponse.json({ success: true, hash: result.hash });
+    const response = NextResponse.json({ success: true, hash: result.hash });
+    setCsrfCookie(response);
+    return response;
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Payment failed" },

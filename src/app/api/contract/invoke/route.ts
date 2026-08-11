@@ -14,6 +14,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rateLimiter";
+import { validateCsrf, setCsrfCookie } from "@/lib/server/csrf";
 import {
   simulateContractCallServer,
   buildContractInvocation,
@@ -150,8 +151,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ resultValue: result.resultValue });
     }
 
-    // Submit signed invocation
+    // Submit signed invocation (state-changing — requires CSRF)
     if (body.signedXdr) {
+      const csrfError = validateCsrf(request);
+      if (csrfError) return csrfError;
+
       const rateLimitResponse = checkRateLimit(request, "contract", body.signerAddress);
       if (rateLimitResponse) return rateLimitResponse;
 
@@ -165,11 +169,13 @@ export async function POST(request: NextRequest) {
         body.signerAddress,
         { ip, userAgent: ua },
       );
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         hash: result.hash,
         resultValue: result.resultValue,
       });
+      setCsrfCookie(response);
+      return response;
     }
 
     // Build transaction for signing
