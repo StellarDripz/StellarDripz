@@ -1,0 +1,30 @@
+# Stellar Ecosystem Configuration (SEP-0001)
+# https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0001.md
+
+FEDERATION_SERVER=""
+AUTH_SERVER=""
+TRANSFER_SERVER=""
+KYC_SERVER=""
+WEB_AUTH_ENDPOINT=""
+SIGNING_KEY=""
+HORIZON_URL="https://horizon-testnet.stellar.org"
+NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+
+ACCOUNTS=[
+  "GCNIK6CGM3DXD3NJPZBG4Z76NGCU6YNID3TK7OSTKOJXF3ALBVJWESXK"
+]
+
+# Soroban Contracts
+[[CURRENCIES]]
+code="DRIP"
+issuer="GCNIK6CGM3DXD3NJPZBG4Z76NGCU6YNID3TK7OSTKOJXF3ALBVJWESXK"
+display_decimals=7
+name="DripToken"
+desc="StellarDripz governance and staking token"
+
+# Documentation
+[DOCUMENTATION]
+ORG_NAME="StellarDripz"
+ORG_URL="https://stellardripz.vercel.app"
+ORG_DESCRIPTION="Production-grade Stellar testnet faucet and smart contract platform"
+ORG_GITHUB="https://github.com/StellarDripz/StellarDripz"

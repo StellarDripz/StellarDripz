@@ -1,0 +1,8 @@
+# Security Policy
+Contact: security@stellardripz.dev
+Expires: 2027-08-11T00:00:00Z
+Encryption: https://stellardripz.dev/.well-known/pgp-key.txt
+Preferred-Languages: en
+Canonical: https://stellardripz.vercel.app/.well-known/security.txt
+Policy: https://stellardripz.vercel.app/SECURITY.md
+Acknowledgments: https://stellardripz.vercel.app/SECURITY_HOF.md
