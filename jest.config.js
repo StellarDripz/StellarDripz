@@ -14,5 +14,13 @@ module.exports = {
   transformIgnorePatterns: [
     "/node_modules/(?!@(stellar|noble|walletconnect)|uint8array|feaxios|eventsource|smol-toml|multiformats|@lit|idb-keyval|@stablelib|uint8arrays)",
   ],
+  coverageThreshold: {
+    global: {
+      branches: 50,
+      functions: 60,
+      lines: 65,
+      statements: 65,
+    },
+  },
 };
 
