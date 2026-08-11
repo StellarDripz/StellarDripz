@@ -5,6 +5,13 @@
 import { STELLAR_NETWORK } from "../stellar/network";
 import { connectFreighter, signFreighter } from "./freighter";
 import { connectLobstr, signLobstr, isLobstrInstalled } from "./lobstr";
+import {
+  isWalletConnectAvailable,
+  startWalletConnectPairing,
+  connectWalletConnect,
+  signWalletConnect,
+  disconnectWalletConnect,
+} from "./walletconnect";
 import type { NetworkType, SupportedWallet } from "@/types/stellar";
 
 // ---- Wallet Registry ----
@@ -43,6 +50,13 @@ const WALLET_REGISTRY: {
     icon: "🐙",
     installUrl: "https://lobstr.co/",
     checkInstalled: () => isLobstrInstalled(),
+  },
+  {
+    id: "walletconnect",
+    name: "WalletConnect",
+    icon: "📱",
+    installUrl: "https://walletconnect.com/",
+    checkInstalled: () => isWalletConnectAvailable(),
   },
   {
     id: "rabet",
@@ -107,9 +121,12 @@ export function clearPersistedWallet(): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("stellardripz_wc_topic");
   } catch {
     /* ignore */
   }
+  disconnectWalletConnect().catch(() => {});
+  _wcPairing = null;
 }
 
 /** Reset the wallet kit state — clears all tracked connections without localStorage. */
@@ -147,6 +164,13 @@ export async function checkWalletStillConnected(): Promise<boolean> {
     }
   }
 
+  // For WalletConnect: check if session still exists
+  if (persisted.walletId === "walletconnect") {
+    const { reconnectWalletConnect } = await import("./walletconnect");
+    const reconnected = await reconnectWalletConnect();
+    return reconnected !== null;
+  }
+
   // For other wallets, assume connected if recently used (< 5 min)
   return Date.now() - persisted.connectedAt < 5 * 60 * 1000;
 }
@@ -172,6 +196,8 @@ export async function connectWithWallet(walletId: string): Promise<{
       return connectAlbedo(walletId, wallet.name);
     case "lobstr":
       return connectLobstr(walletId, wallet.name);
+    case "walletconnect":
+      return connectWalletConnectFlow(walletId, wallet.name);
     default:
       throw new Error(`Wallet "${wallet.name}" is not yet fully integrated. Please use Freighter.`);
   }
@@ -223,6 +249,43 @@ async function connectAlbedo(
   }
 }
 
+// ---- WalletConnect Pairing ----
+
+let _wcPairing: Awaited<ReturnType<typeof startWalletConnectPairing>> | null = null;
+
+/** Get the current WalletConnect pairing URI for QR display. */
+export function getWalletConnectPairingUri(): string | null {
+  return _wcPairing?.uri || null;
+}
+
+/** Clear the current WalletConnect pairing state. */
+export function clearWalletConnectPairing(): void {
+  _wcPairing = null;
+}
+
+async function connectWalletConnectFlow(
+  walletId: string,
+  walletName: string,
+): Promise<{
+  publicKey: string;
+  network: NetworkType;
+  walletId: string;
+  walletName: string;
+}> {
+  if (!isWalletConnectAvailable()) throw new Error("WC_NO_PROJECT_ID");
+
+  _wcPairing = await startWalletConnectPairing();
+
+  try {
+    const result = await connectWalletConnect(walletId, walletName, _wcPairing);
+    _wcPairing = null;
+    return result;
+  } catch (err) {
+    _wcPairing = null;
+    throw err;
+  }
+}
+
 // ---- Signing ----
 
 export async function signTx(xdr: string, publicKey: string): Promise<string> {
@@ -249,6 +312,8 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
     }
     case "lobstr":
       return signLobstr(xdr);
+    case "walletconnect":
+      return signWalletConnect(xdr);
     default:
       throw new Error(`Signing not supported for wallet: ${walletId}`);
   }

@@ -12,7 +12,7 @@ module.exports = {
   testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
   setupFiles: ["<rootDir>/jest.setup.js"],
   transformIgnorePatterns: [
-    "/node_modules/(?!@(stellar|noble)|uint8array|feaxios|eventsource|smol-toml)",
+    "/node_modules/(?!@(stellar|noble|walletconnect)|uint8array|feaxios|eventsource|smol-toml|multiformats|@lit|idb-keyval|@stablelib|uint8arrays)",
   ],
 };
 

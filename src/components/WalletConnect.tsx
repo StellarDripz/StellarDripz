@@ -1,16 +1,21 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAppContext } from "@/context/AppContext";
 import QrModal from "./QrModal";
 import QRFundModal from "./QRFundModal";
 import type { SupportedWallet } from "@/types/stellar";
-import { getSupportedWallets } from "@/lib/wallets/walletKit";
+import {
+  getSupportedWallets,
+  getWalletConnectPairingUri,
+  clearWalletConnectPairing,
+} from "@/lib/wallets/walletKit";
 
 function walletIcon(id: string): string {
   if (id.includes("freighter")) return "🦊";
   if (id.includes("xbull")) return "🐂";
   if (id.includes("albedo")) return "☀️";
+  if (id.includes("walletconnect")) return "📱";
   if (id.includes("lobstr")) return "🐙";
   if (id.includes("rabet")) return "🚀";
   return "🔑";
@@ -18,7 +23,8 @@ function walletIcon(id: string): string {
 
 /**
  * Multi-wallet selector component.
- * Shows wallet picker modal and connected/disconnected states.
+ * Supports browser extensions (Freighter, xBull, LOBSTR), web wallet (Albedo),
+ * and mobile QR pairing via WalletConnect.
  */
 export default function WalletConnect() {
   const { state, connect, disconnect } = useAppContext();
@@ -29,6 +35,13 @@ export default function WalletConnect() {
   const [copied, setCopied] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
 
+  // ── WalletConnect QR state ──────────────────────────────────────
+  const [wcUri, setWcUri] = useState<string | null>(null);
+  const [showWcQr, setShowWcQr] = useState(false);
+  const wcPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Keyboard dismiss ────────────────────────────────────────────
+
   useEffect(() => {
     if (!showPicker) return;
     const onKey = (e: KeyboardEvent) => {
@@ -38,18 +51,69 @@ export default function WalletConnect() {
     return () => window.removeEventListener("keydown", onKey);
   }, [showPicker]);
 
+  // ── WalletConnect pairing URI poll ──────────────────────────────
+
+  const startWcPoll = () => {
+    wcPollRef.current = setInterval(() => {
+      const uri = getWalletConnectPairingUri();
+      if (uri) {
+        setWcUri(uri);
+        setShowWcQr(true);
+        stopWcPoll();
+      }
+    }, 300);
+  };
+
+  const stopWcPoll = () => {
+    if (wcPollRef.current) {
+      clearInterval(wcPollRef.current);
+      wcPollRef.current = null;
+    }
+  };
+
+  // Clean up on unmount
+  useEffect(() => () => stopWcPoll(), []);
+
+  // Clean up WC state on disconnect
+  useEffect(() => {
+    if (!wallet.connected) {
+      setWcUri(null);
+      setShowWcQr(false);
+      stopWcPoll();
+    }
+  }, [wallet.connected]);
+
+  // ── Connection handler ──────────────────────────────────────────
+
   const handleConnect = async (walletId: string) => {
     setConnecting(true);
     setError(null);
     setShowPicker(false);
+
+    if (walletId === "walletconnect") {
+      startWcPoll();
+    }
+
     try {
       await connect(walletId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connection failed");
     } finally {
       setConnecting(false);
+      stopWcPoll();
     }
   };
+
+  const handleCancelWc = () => {
+    stopWcPoll();
+    clearWalletConnectPairing();
+    setWcUri(null);
+    setShowWcQr(false);
+    setConnecting(false);
+    setError(null);
+  };
+
+  // ── Copy ────────────────────────────────────────────────────────
 
   const handleCopy = async () => {
     if (!wallet.publicKey) return;
@@ -67,7 +131,8 @@ export default function WalletConnect() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Connected
+  // ── Connected state ─────────────────────────────────────────────
+
   if (wallet.connected && wallet.publicKey) {
     return (
       <>
@@ -119,12 +184,62 @@ export default function WalletConnect() {
     );
   }
 
-  // Disconnected with picker
+  // ── Disconnected state ──────────────────────────────────────────
+
   const wallets =
     wallet.availableWallets.length > 0 ? wallet.availableWallets : getSupportedWallets();
 
   return (
     <div className="rounded-2xl border border-white/10 bg-surface-800/60 p-6 backdrop-blur-md text-center">
+      {/* ── WalletConnect QR Modal ────────────────────────────────── */}
+      {showWcQr && wcUri && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={handleCancelWc}
+          />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl border border-stellar-blue/20 bg-surface-800 p-6 shadow-2xl animate-scale-in">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-white">
+                📱 Scan with WalletConnect
+              </h3>
+              <button
+                onClick={handleCancelWc}
+                className="text-white/40 hover:text-white/80"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* QR Code */}
+            <div className="mb-4 flex justify-center">
+              <div className="rounded-2xl bg-white p-4">
+                {/* qrcode.react is already a project dependency */}
+                <WCQrCode uri={wcUri} />
+              </div>
+            </div>
+
+            <p className="mb-4 text-sm text-white/60">
+              Open your Stellar mobile wallet (LOBSTR, xBull, etc.), tap{" "}
+              <strong>WalletConnect</strong>, and scan this QR code.
+            </p>
+
+            <div className="flex items-center justify-center gap-2 text-sm text-stellar-blue">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-stellar-blue/30 border-t-stellar-blue" />
+              Waiting for connection...
+            </div>
+
+            <button
+              onClick={handleCancelWc}
+              className="mt-4 w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/40 hover:bg-white/10"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Wallet Picker Modal ───────────────────────────────────── */}
       {showPicker && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -141,7 +256,7 @@ export default function WalletConnect() {
                 ✕
               </button>
             </div>
-            <div className="space-y-2 max-h-[320px] overflow-y-auto">
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {wallets.map((w: SupportedWallet) => (
                 <button
                   key={w.id}
@@ -164,6 +279,7 @@ export default function WalletConnect() {
         </div>
       )}
 
+      {/* ── Main connect card ─────────────────────────────────────── */}
       <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-stellar-blue/10">
         <svg
           className="h-8 w-8 text-stellar-blue"
@@ -181,7 +297,8 @@ export default function WalletConnect() {
       </div>
       <h2 className="text-lg font-semibold text-white mb-2">Connect Wallet</h2>
       <p className="mb-4 text-sm text-white/60 max-w-xs mx-auto">
-        Link any Stellar wallet to get testnet XLM, send assets, and interact with smart contracts.
+        Link any Stellar wallet to get testnet XLM, send assets, and interact with smart
+        contracts.
       </p>
 
       {error && (
@@ -190,7 +307,9 @@ export default function WalletConnect() {
             ? "Connection rejected."
             : error === "CONNECTION_FAILED"
               ? "Connection failed."
-              : error}
+              : error === "WC_NO_PROJECT_ID"
+                ? "WalletConnect not configured."
+                : error}
         </p>
       )}
 
@@ -222,4 +341,26 @@ export default function WalletConnect() {
       </div>
     </div>
   );
+}
+
+/**
+ * Lightweight QR code renderer using qrcode.react.
+ * Wrapped to avoid SSR issues (qrcode.react requires canvas/DOM).
+ */
+function WCQrCode({ uri }: { uri: string }) {
+  const [QrCode, setQrCode] = useState<React.ElementType | null>(null);
+
+  useEffect(() => {
+    import("qrcode.react").then((mod) => setQrCode(() => mod.QRCodeSVG));
+  }, []);
+
+  if (!QrCode) {
+    return (
+      <div className="flex h-56 w-56 items-center justify-center text-white/20 text-sm">
+        Loading QR...
+      </div>
+    );
+  }
+
+  return <QrCode value={uri} size={224} />;
 }
