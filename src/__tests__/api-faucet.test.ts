@@ -69,6 +69,13 @@ jest.mock("@/lib/server/horizonService", () => ({
   requestFaucetFundsServer: (...args: unknown[]) => mockRequestFaucetFundsServer(...args),
 }));
 
+// Mock CSRF to always pass in tests
+jest.mock("@/lib/server/csrf", () => ({
+  validateCsrf: jest.fn().mockReturnValue(null),
+  setCsrfCookie: jest.fn(),
+  generateCsrfToken: jest.fn().mockReturnValue("test-csrf-token"),
+}));
+
 import { NextRequest, NextResponse } from "next/server";
 
 let POST: (req: InstanceType<typeof NextRequest>) => Promise<InstanceType<typeof NextResponse>>;
