@@ -1,7 +1,19 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
+use soroban_sdk::{contract, contractimpl, contracterror, contracttype, Address, Env, String, Symbol, symbol_short, Vec};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::common::constants::ZERO_ADDRESS_STR;
+
+// ---- Contract Errors ----
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum BadgeError {
+    AlreadyInitialized = 1,
+    NotAuthorized = 2,
+    BadgeNotFound = 3,
+    AlreadyClaimed = 4,
+}
 
 // ---- Data Types ----
 
