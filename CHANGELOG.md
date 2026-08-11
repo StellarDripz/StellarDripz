@@ -10,20 +10,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **Security headers**: CSP (`frame-ancestors 'self'`, clickjacking protection), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` applied to all routes via `next.config.js`
-- **`getDatabaseStatus()`**: Health check now reports DB backend + whether the JSON fallback actually persists (or is ephemeral on serverless)
-- **`getLatestLedgerServer()`**: Resolves the head ledger for efficient event-stream startup
+- **CSRF protection**: Double-submit cookie pattern on all state-changing POST endpoints (faucet, payment, contract)
+- **Contract ID validation**: `isValidContractId()` with Stellar checksum verification and user-friendly error messages
+- **`getWalletConnectStatus()`**: Returns availability + human-readable message when project ID is missing (W2)
+- **SCF roadmap**: 4-tranche milestone plan in `docs/SCF_ROADMAP.md` for GrantFox/SCF submissions
 
 ### Fixed
-- **P1: `/api/status` friendbot false negative**: Reachability check no longer pings Friendbot with the null account (which Friendbot always rejects) — any HTTP response from the root path now counts as reachable
-- **P1: `/api/balance` 500 on invalid addresses**: Addresses are now validated with `StrKey.isValidEd25519PublicKey` (checksum) and return a clean 400 instead of a 500
-- **P1: JSON fallback on read-only serverless FS**: dbService probes the project data dir for writability and falls back to `/tmp` instead of silently failing; logs a warning when persistence is disabled
-- **P2: SSE cold-start efficiency**: `/api/events` starts streaming near the head ledger (latest − 100) instead of scanning from ledger 0; `maxDuration` set to 300s
-- **P2: Stale README contract IDs**: Removed fabricated contract IDs (they failed StrKey checksum validation and the documented TX hash returned 404 from Horizon) and replaced with accurate deployment status + instructions
-- **P2: Vercel deploy env wiring**: CI/CD now forwards `NEXT_PUBLIC_CONTRACT_*` + Supabase variables to Vercel preview/production builds
+- **P0: Governance MintTokens cross-contract bug (C8)**: DripToken now supports `set_minter()` — admin can authorize governance contract to mint tokens. Governance `MintTokens` action works correctly.
+- **P0: Checked arithmetic (C1)**: All contract arithmetic now uses `checked_add`/`checked_sub`/`checked_mul` instead of bare `+`/`-`/`*` operators across token, pool, badge, and governance contracts
+- **P1: Contract errors (C7)**: Added `#[contracterror]` enums (TokenError, PoolError, BadgeError) for machine-parseable error codes
+- **P1: Duplicate token tests (C2/T2)**: Removed 4 duplicate tests from `contracts/src/test.rs`; token tests live only in `token/mod.rs`
+- **P1: Dead code cleanup (C5/C6)**: Removed unused `KEY_ALLOWANCE`, `KEY_STAKE`, `KEY_PROPOSAL`, `KEY_BADGE` storage keys; removed dead `get_instance`, `set_instance`, `require_admin` helpers
+- **P1: CSP hardening (S4)**: Added `form-action 'self'` and `base-uri 'self'` directives; removed broad `frame-src https:`
+- **P2: Deployer key removal (S5)**: `.env.local` deployer key replaced with placeholder comment
+- **P2: FUNDING.yml cleanup (O4)**: Replaced stale contract ID with project URL
+- **P2: Env tests (T1)**: Fixed 2 failing tests that expected null contract IDs after deployment
+- **P2: WalletConnect messaging (W2)**: `getWalletConnectStatus()` shows helpful message instead of silent disable
+- **P2: Contract ID input validation (F2)**: Frontend now validates Stellar contract ID checksum before submission
 
 ### Changed
-- **README**: Production setup checklist (contract deploy → Supabase → GitHub vars), security headers section, and serverless limitations documentation
+- **README**: Deployed contract IDs table with live Stellar Expert explorer links (all 5 contracts deployed to testnet); SEP-41 labeling updated to "SEP-41 inspired"
+- **Contracts deployed**: All 5 contracts live on Stellar Testnet at ledger 4,085,848
+- **Token minter pattern**: New `set_minter`/`get_minter` API for delegating mint authority (governance integration)
+- **Rust edition**: Clean build with zero warnings (removed unused `Address` import from `storage.rs`)
+
+### Security
+- **CSRF tokens**: All POST endpoints now validate `x-csrf-token` header against `stellardripz_csrf` cookie
+- **Checked arithmetic**: Overflow/underflow panics now use `.expect()` with descriptive messages
+- **Contract error codes**: Machine-parseable `#[contracterror]` enums replace bare `panic!()` strings
 
 ---
 
