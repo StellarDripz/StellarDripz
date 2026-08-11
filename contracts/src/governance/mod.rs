@@ -1,9 +1,41 @@
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env, String, Symbol, symbol_short};
+use soroban_sdk::{contract, contractimpl, contracterror, contractevent, contracttype, Address, Env, String, Symbol, symbol_short};
 use crate::common::storage as s;
 use crate::common::events as e;
 use crate::common::constants::ZERO_ADDRESS_STR;
 use crate::token;
 use crate::pool;
+
+// ---- Contract Errors ----
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum GovError {
+    AlreadyInitialized = 1,
+    ProposalNotFound = 2,
+    VotingEnded = 3,
+    AlreadyExecuted = 4,
+    VotingActive = 5,
+    AlreadyVoted = 6,
+    NoVotingPower = 7,
+    InsufficientPower = 8,
+}
+
+// ---- Contract Events (SDK 27 pattern) ----
+
+#[contractevent]
+pub struct ProposalCreatedEvent {
+    pub proposal_id: u64,
+    pub proposer: Address,
+    pub title: String,
+}
+
+#[contractevent]
+pub struct VoteCastEvent {
+    pub proposal_id: u64,
+    pub voter: Address,
+    pub power: i128,
+}
 
 // ---- Data Types ----
 
@@ -109,11 +141,12 @@ impl DripGovernance {
         // --- END CROSS-CONTRACT CALL ---
 
         let mut count: u64 = s::get_persistent(&env, &KEY_PROPOSAL_COUNT, 0u64);
-        count += 1;
+        count = count.checked_add(1).expect("Proposal count overflow");
         s::set_persistent(&env, &KEY_PROPOSAL_COUNT, &count);
 
         let current_ledger = env.ledger().sequence();
         let voting_period: u32 = s::get_persistent(&env, &KEY_VOTING_PERIOD, 100u32);
+        let voting_end = current_ledger.checked_add(voting_period).expect("Voting end overflow");
 
         let proposal = Proposal {
             id: count,
@@ -124,7 +157,7 @@ impl DripGovernance {
             against_votes: 0,
             abstain_votes: 0,
             created_ledger: current_ledger,
-            voting_end: current_ledger + voting_period,
+            voting_end,
             executed: false,
             passed: false,
         };
@@ -175,9 +208,9 @@ impl DripGovernance {
         }
 
         match choice {
-            VoteChoice::For => proposal.for_votes += power,
-            VoteChoice::Against => proposal.against_votes += power,
-            VoteChoice::Abstain => proposal.abstain_votes += power,
+            VoteChoice::For => proposal.for_votes = proposal.for_votes.checked_add(power).expect("Vote overflow"),
+            VoteChoice::Against => proposal.against_votes = proposal.against_votes.checked_add(power).expect("Vote overflow"),
+            VoteChoice::Abstain => proposal.abstain_votes = proposal.abstain_votes.checked_add(power).expect("Vote overflow"),
         }
 
         let vote_record = VoteRecord { proposal_id, vote: choice, power };
