@@ -27,6 +27,17 @@ jest.mock("@stellar/stellar-sdk", () => ({
       getEvents: (...args: unknown[]) => mockGetEvents(...args),
       getLatestLedger: (...args: unknown[]) => mockGetLatestLedger(...args),
     })),
+    Api: {
+      isSimulationError: jest.fn().mockReturnValue(false),
+      GetTransactionStatus: {
+        SUCCESS: "SUCCESS",
+        NOT_FOUND: "NOT_FOUND",
+        FAILED: "FAILED",
+      },
+    },
+    assembleTransaction: jest.fn((tx: unknown, sim: unknown) => ({
+      built: { toXDR: () => "AAAA...==" },
+    })),
   },
   Contract: jest.fn().mockImplementation((id: string) => ({
     call: jest.fn().mockReturnValue({}),
@@ -36,11 +47,6 @@ jest.mock("@stellar/stellar-sdk", () => ({
     setTimeout: jest.fn().mockReturnThis(),
     build: jest.fn().mockReturnValue({}),
   })),
-  SorobanRpc: {
-    Api: {
-      isSimulationError: jest.fn().mockReturnValue(false),
-    },
-  },
   scValToNative: jest.fn(),
   xdr: {
     ScVal: {

@@ -7,12 +7,12 @@ module.exports = {
     "^@/(.*)$": "<rootDir>/src/$1",
   },
   transform: {
-    "^.+\\.tsx?$": ["ts-jest", { tsconfig: "tsconfig.json" }],
+    "^.+\\.[tj]sx?$": ["ts-jest", { tsconfig: "tsconfig.json", allowJs: true }],
   },
   testMatch: ["**/__tests__/**/*.test.ts", "**/__tests__/**/*.test.tsx"],
-  setupFiles: [],
+  setupFiles: ["<rootDir>/jest.setup.js"],
   transformIgnorePatterns: [
-    "node_modules/(?!@stellar/stellar-sdk)",
+    "/node_modules/(?!@(stellar|noble)|uint8array|feaxios|eventsource|smol-toml)",
   ],
 };
 
