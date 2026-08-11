@@ -275,7 +275,7 @@ test.describe("Contract interaction", () => {
   test("POST /api/contract/invoke requires source address", async ({ request }) => {
     const response = await request.post("/api/contract/invoke", {
       data: {
-        contractId: "CDLZFC3SYJYDZT7K67VQ75BQHHPYXSOF3K5K5G3L6YP2MQUBQ7SJVMHV",
+        contractId: "CCAIIGMOBRZ2P6OHSYABBB35TJDSXBTC2T5IX7KVPXNIQKXGDJ46R2AE",
         method: "get_global",
         args: [],
         source: "",
