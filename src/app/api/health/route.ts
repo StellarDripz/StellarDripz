@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server";
 import { validateEnv, getAppConfig } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { getDatabaseBackend } from "@/lib/server/dbService";
+import { getDatabaseStatus } from "@/lib/server/dbService";
 
 const startTime = Date.now();
 
@@ -84,9 +84,7 @@ export async function GET() {
         governance: config.contractIdGovernance ? "configured" : "not set",
         badge: config.contractIdBadge ? "configured" : "not set",
       },
-      database: {
-        backend: getDatabaseBackend(),
-      },
+      database: getDatabaseStatus(),
       warnings: env.warnings,
     },
     {
