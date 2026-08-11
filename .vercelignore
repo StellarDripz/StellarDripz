@@ -1,0 +1,25 @@
+# Dependencies (Vercel installs from package.json)
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+contracts/target/
+
+# Dev scripts
+scripts/explore-sdk.js
+scripts/probe-*.js
+
+# Local env
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.tsbuildinfo
+
+# Misc
+*.pem
+.DS_Store
+npm-debug.log*
