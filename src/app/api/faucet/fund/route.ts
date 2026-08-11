@@ -1,13 +1,18 @@
 /**
- * POST /api/faucet/fund — Rate-limited Friendbot funding
+ * POST /api/faucet/fund — Rate-limited Friendbot funding with CSRF protection
  * Body: { address: string }
  */
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rateLimiter";
 import { requestFaucetFundsServer } from "@/lib/server/horizonService";
+import { validateCsrf, setCsrfCookie } from "@/lib/server/csrf";
 
 export async function POST(request: NextRequest) {
   try {
+    // CSRF validation for state-changing operations
+    const csrfError = validateCsrf(request);
+    if (csrfError) return csrfError;
+
     const body = (await request.json()) as { address?: string };
     const address = body?.address?.trim();
 
@@ -28,11 +33,13 @@ export async function POST(request: NextRequest) {
 
     const result = await requestFaucetFundsServer(address, { ip, userAgent: ua });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       hash: result.hash,
       newBalance: result.newBalance,
     });
+    setCsrfCookie(response);
+    return response;
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Faucet request failed" },
