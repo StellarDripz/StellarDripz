@@ -85,6 +85,24 @@ mod fuzz_tests {
         assert_eq!(sum_balances, total_minted);
     }
 
+    /// Verify that burning more than balance panics.
+    #[test]
+    #[should_panic(expected = "Insufficient balance")]
+    fn fuzz_burn_exceeds_balance_panics() {
+        let env = Env::default();
+        env.mock_all_auths();
+
+        let admin = Address::generate(&env);
+        let alice = Address::generate(&env);
+        let token_id = env.register(DripToken, ());
+        let client = DripTokenClient::new(&env, &token_id);
+        client.initialize_token(
+            &admin, &String::from_str(&env, "FB"), &String::from_str(&env, "F"), &7u32,
+        );
+        client.mint(&admin, &alice, &100i128);
+        client.burn(&alice, &101i128);
+    }
+
     /// Verify that transferring 0 or negative amounts panics.
     #[test]
     #[should_panic(expected = "Amount must be positive")]
