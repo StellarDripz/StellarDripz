@@ -147,10 +147,31 @@ export async function submitContractInvocation(
 
 // ---- Events ----
 
+/** Resolve the latest ledger sequence from the Soroban RPC server. */
+export async function getLatestLedgerServer(): Promise<number> {
+  const ledger = await sorobanServer.getLatestLedger();
+  return Number(ledger.sequence);
+}
+
+/**
+ * If startLedger is 0 (first connection), start from a recent window instead of
+ * scanning the entire chain history — fast on cold serverless starts.
+ */
+async function resolveStartLedger(startLedger: number): Promise<number> {
+  if (startLedger > 0) return startLedger;
+  try {
+    const latest = await getLatestLedgerServer();
+    return Math.max(0, latest - 100);
+  } catch {
+    return 0;
+  }
+}
+
 export async function getContractEventsServer(
   contractId: string,
   startLedger: number,
 ): Promise<{ events: Array<{ topic: string; value: string }>; latestLedger: number }> {
+  startLedger = await resolveStartLedger(startLedger);
   try {
     const response = await sorobanServer.getEvents({
       startLedger,
