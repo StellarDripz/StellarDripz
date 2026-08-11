@@ -57,7 +57,9 @@ let GET: (
   ctx: { params: Promise<{ address: string }> },
 ) => Promise<InstanceType<typeof NextResponse>>;
 
-const VALID_ADDR = "GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+// A checksum-valid Ed25519 public key (StrKey) — the old null address
+// "GAAAA..." fails checksum validation and is correctly rejected.
+const VALID_ADDR = "GC2MCTJBOATQKMURSX443SX25PGV34SK7U56UJ3Y7HHXQ2JK57OR23SX";
 
 beforeAll(async () => {
   const mod = await import("@/app/api/balance/[address]/route");
