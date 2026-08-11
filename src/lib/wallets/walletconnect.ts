@@ -52,6 +52,25 @@ export function isWalletConnectAvailable(): boolean {
   return Boolean(PROJECT_ID);
 }
 
+/**
+ * Return a human-readable status message about WalletConnect availability.
+ * When the project ID is not configured, returns a helpful message for the UI
+ * instead of silently hiding the option (audit finding W2).
+ */
+export function getWalletConnectStatus(): {
+  available: boolean;
+  message: string;
+} {
+  if (PROJECT_ID) {
+    return { available: true, message: "Scan QR with your mobile wallet" };
+  }
+  return {
+    available: false,
+    message:
+      "WalletConnect requires NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID. Get one at https://cloud.reown.com",
+  };
+}
+
 // ── Connection ────────────────────────────────────────────────────
 
 export interface WCPairingInfo {
