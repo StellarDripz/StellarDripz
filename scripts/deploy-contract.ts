@@ -3,8 +3,17 @@
  * StellarDripz Multi-Contract Deployment Script
  *
  * Deploys all StellarDripz smart contracts to Stellar Testnet.
- * The WASM is uploaded once (WASM-write deduplication).
- * Each contract is deployed as a separate instance.
+ *
+ * Protocol 27 notes:
+ *  - The WASM is uploaded first (deduplicated by stellar-core by wasm hash).
+ *  - Each contract instance is created via `createContract` with:
+ *      * preimage  = ContractIdPreimage::FromAddress(deployer_address, salt)
+ *      * executable = ContractExecutable::Wasm(wasm_hash)
+ *  - The contract ID is derived deterministically:
+ *      contract_id = sha256( xdr(HashIdPreimageContractId {
+ *          network_id: sha256(network_passphrase),
+ *          contract_id_preimage: FromAddress { deployer, salt },
+ *      }) )
  *
  * Usage:
  *   export DEPLOYER_SECRET_KEY="S..."
@@ -19,24 +28,73 @@
 import * as StellarSdk from "@stellar/stellar-sdk";
 import * as fs from "fs";
 import * as path from "path";
-import { loadEnv } from "./env-loader";
+import { fileURLToPath } from "url";
+import { loadEnv } from "./env-loader.ts";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 loadEnv();
 
 const RPC_URL = process.env.NEXT_PUBLIC_SOROBAN_RPC_URL || "https://soroban-testnet.stellar.org";
-const NETWORK_PASSPHRASE = process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE || "Test SDF Network ; September 2015";
+const NETWORK_PASSPHRASE =
+  process.env.NEXT_PUBLIC_NETWORK_PASSPHRASE || "Test SDF Network ; September 2015";
 const HORIZON_URL = process.env.NEXT_PUBLIC_HORIZON_URL || "https://horizon-testnet.stellar.org";
 const SECRET_KEY = process.env.DEPLOYER_SECRET_KEY || "";
 
-const WASM_PATH = path.join(__dirname, "..", "contracts", "target", "wasm32v1-none", "release", "stellardripz.wasm");
+const WASM_PATH = path.join(
+  __dirname,
+  "..",
+  "contracts",
+  "target",
+  "wasm32v1-none",
+  "release",
+  "stellardripz.wasm",
+);
 
-async function waitForTx(server: StellarSdk.rpc.Server, hash: string, label: string): Promise<StellarSdk.SorobanRpc.Api.GetTransactionResponse> {
-  for (let i = 0; i < 30; i++) {
+/** Deterministic 32-byte salt derived from the contract name. */
+function saltFromName(name: string): Buffer {
+  return StellarSdk.hash(Buffer.from(`stellardripz:${name}`, "utf-8"));
+}
+
+/** Build the account ScAddress XDR for a given public key. */
+function accountScAddress(deployerPub: string): StellarSdk.xdr.ScAddress {
+  return StellarSdk.xdr.ScAddress.scAddressTypeAccount(
+    StellarSdk.xdr.AccountId.publicKeyTypeEd25519(
+      StellarSdk.StrKey.decodeEd25519PublicKey(deployerPub),
+    ),
+  );
+}
+
+/** Derive the deterministic contract ID (StrKey C...) for a given deployer + salt. */
+function deriveContractId(deployerPub: string, salt: Buffer): string {
+  const networkId = StellarSdk.hash(Buffer.from(NETWORK_PASSPHRASE, "utf-8"));
+  const idPreimage = StellarSdk.xdr.HashIdPreimage.envelopeTypeContractId(
+    new StellarSdk.xdr.HashIdPreimageContractId({
+      networkId,
+      contractIdPreimage: StellarSdk.xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+        new StellarSdk.xdr.ContractIdPreimageFromAddress({
+          address: accountScAddress(deployerPub),
+          salt,
+        }),
+      ),
+    }),
+  );
+  const contractIdBytes = StellarSdk.hash(idPreimage.toXDR());
+  return StellarSdk.StrKey.encodeContract(contractIdBytes);
+}
+
+async function waitForTx(
+  server: StellarSdk.rpc.Server,
+  hash: string,
+  label: string,
+): Promise<StellarSdk.rpc.Api.GetTransactionResponse> {
+  for (let i = 0; i < 120; i++) {
     const tx = await server.getTransaction(hash);
-    if (tx.status !== StellarSdk.SorobanRpc.Api.GetTransactionStatus.NOT_FOUND) {
+    if (tx.status !== StellarSdk.rpc.Api.GetTransactionStatus.NOT_FOUND) {
       return tx;
     }
-    await new Promise((r) => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1500));
   }
   throw new Error(`Timeout waiting for ${label} — TX: ${hash}`);
 }
@@ -63,7 +121,8 @@ async function main() {
   console.log(`🔑 Key:   ${deployerPub}`);
 
   const account = await horizon.loadAccount(deployerPub);
-  const xlmBalance = account.balances.find((b) => b.asset_type === "native")?.balance || "0";
+  const xlmBalance =
+    account.balances.find((b) => b.asset_type === "native")?.balance || "0";
   console.log(`💰 XLM:   ${xlmBalance}`);
 
   const wasmBuffer = fs.readFileSync(WASM_PATH);
@@ -72,107 +131,117 @@ async function main() {
   console.log(`📦 WASM:  ${(wasmBuffer.length / 1024).toFixed(2)} KB`);
   console.log(`🔐 Hash:  ${wasmHashHex}`);
 
-  // Step 1: Upload WASM (reuses Stellar's write dedup)
-  console.log("\n─── Step 1: Upload WASM ───");
   const feeStats = await horizon.fetchBaseFee();
-  const fee = String(Math.floor(Number(feeStats) * 2));
-  const sourceAccount = await horizon.loadAccount(deployerPub);
+  const fee = String(Math.max(1000, Math.floor(Number(feeStats) * 10)));
 
+  // Step 1: Upload WASM (stellar-core dedups by hash — safe to repeat)
+  console.log("\n─── Step 1: Upload WASM ───");
   const uploadOp = StellarSdk.Operation.invokeHostFunction({
     func: StellarSdk.xdr.HostFunction.hostFunctionTypeUploadContractWasm(wasmBuffer),
     auth: [],
   });
 
-  let uploadTx = new StellarSdk.TransactionBuilder(sourceAccount, { fee, networkPassphrase: NETWORK_PASSPHRASE })
-    .addOperation(uploadOp).setTimeout(30).build();
+  let uploadTx = new StellarSdk.TransactionBuilder(
+    await horizon.loadAccount(deployerPub),
+    { fee, networkPassphrase: NETWORK_PASSPHRASE },
+  )
+    .addOperation(uploadOp)
+    .setTimeout(30)
+    .build();
 
   console.log("🔄 Simulating upload...");
-  const simResult = await rpc.simulateTransaction(uploadTx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResult)) {
-    // WASM may already exist — try with create-only
-    console.log("   WASM may already exist, trying create-only...");
+  let uploadSim = await rpc.simulateTransaction(uploadTx);
+  if (StellarSdk.rpc.Api.isSimulationError(uploadSim)) {
+    // WASM already uploaded — proceed (create step references it by hash).
+    console.log("   ⚠️  Upload simulation warning (may already exist) — continuing.");
+  } else {
+    try {
+      const prepared = StellarSdk.rpc.assembleTransaction(uploadTx, uploadSim).build();
+      prepared.sign(keypair);
+      const resp = await rpc.sendTransaction(prepared);
+      console.log(`   📝 TX: ${resp.hash}`);
+      const result = await waitForTx(rpc, resp.hash, "WASM upload");
+      if (result.status === StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS) {
+        console.log("   ✅ WASM uploaded");
+      } else {
+        console.log("   ⚠️  Upload tx did not report success — wasm may already be present.");
+      }
+    } catch {
+      // Deduplicated by stellar-core (same wasm hash) — non-fatal.
+      console.log("   ⚠️  Upload skipped (wasm likely already on-chain) — continuing.");
+    }
   }
 
-  // Step 2: Deploy each contract with unique salt
+  // Step 2: Deploy each contract instance with a deterministic salt
   console.log("\n─── Step 2: Deploy Contracts ───\n");
 
-  const contracts: Array<{ name: string; salt: Buffer; initFn?: string; initArgs?: StellarSdk.xdr.ScVal[] }> = [
-    { name: "Counter",  salt: Buffer.from("DRIP_COUNTER_00", "utf-8") },
-    { name: "DripToken", salt: Buffer.from("DRIP_TOKEN_0000", "utf-8") },
-    { name: "DripPool", salt: Buffer.from("DRIP_POOL_00000", "utf-8") },
-    { name: "Governance", salt: Buffer.from("DRIP_GOVERN_000", "utf-8") },
-    { name: "Badge",    salt: Buffer.from("DRIP_BADGE_0000", "utf-8") },
-  ];
-
+  const contracts = ["Counter", "DripToken", "DripPool", "Governance", "Badge"];
   const deployed: Record<string, string> = {};
 
-  for (const contract of contracts) {
+  for (const name of contracts) {
+    const salt = saltFromName(name);
+    const cid = deriveContractId(deployerPub, salt);
+    console.log(`🔧 Deploying ${name}...`);
+    console.log(`   (expected ID: ${cid})`);
+
     const preimage = StellarSdk.xdr.ContractIdPreimage.contractIdPreimageFromAddress(
       new StellarSdk.xdr.ContractIdPreimageFromAddress({
-        address: StellarSdk.xdr.ScAddress.scAddressTypeAccount(
-          StellarSdk.StrKey.decodeEd25519PublicKey(deployerPub)
-        ),
-        salt: contract.salt,
-      })
+        address: accountScAddress(deployerPub),
+        salt,
+      }),
     );
 
     const createOp = StellarSdk.Operation.invokeHostFunction({
       func: StellarSdk.xdr.HostFunction.hostFunctionTypeCreateContract(
         new StellarSdk.xdr.CreateContractArgs({
           contractIdPreimage: preimage,
-          executable: StellarSdk.xdr.ContractExecutable.contractExecutableWasm(wasmBuffer),
-        })
+          executable: StellarSdk.xdr.ContractExecutable.contractExecutableWasm(wasmHash),
+        }),
       ),
       auth: [],
     });
 
-    const srcAccount = await horizon.loadAccount(deployerPub);
-    const tx = new StellarSdk.TransactionBuilder(srcAccount, { fee, networkPassphrase: NETWORK_PASSPHRASE })
-      .addOperation(uploadOp).addOperation(createOp).setTimeout(30).build();
-
-    console.log(`🔧 Deploying ${contract.name}...`);
-
     try {
+      const srcAccount = await horizon.loadAccount(deployerPub);
+      const tx = new StellarSdk.TransactionBuilder(srcAccount, {
+        fee,
+        networkPassphrase: NETWORK_PASSPHRASE,
+      })
+        .addOperation(createOp)
+        .setTimeout(30)
+        .build();
+
       const sim = await rpc.simulateTransaction(tx);
-      if (StellarSdk.SorobanRpc.Api.isSimulationError(sim)) {
-        console.log(`   ⚠️  ${contract.name}: Simulation error — ${sim.error}`);
+      if (StellarSdk.rpc.Api.isSimulationError(sim)) {
+        const errText = JSON.stringify(sim);
+        if (/already exists|ContractAlreadyExists|contract_id.*exist/i.test(errText)) {
+          console.log(`   ✅ ${name} already deployed — ${cid}`);
+          deployed[name] = cid;
+        } else {
+          console.log(`   ⚠️  ${name}: Simulation error — ${sim.error}`);
+        }
         continue;
       }
 
-      const prepared = StellarSdk.SorobanRpc.assembleTransaction(tx, sim);
+      const prepared = StellarSdk.rpc.assembleTransaction(tx, sim).build();
       prepared.sign(keypair);
       const resp = await rpc.sendTransaction(prepared);
       console.log(`   📝 TX: ${resp.hash}`);
 
-      await waitForTx(rpc, resp.hash, contract.name);
-      const cid = StellarSdk.contractIdFromWasmHash(wasmBuffer, contract.salt).toString("hex");
-      deployed[contract.name] = cid;
-      console.log(`   ✅ ${contract.name}: ${cid}`);
-    } catch (err) {
-      // Try create-only (WASM may already be uploaded)
-      try {
-        const createOnlyTx = new StellarSdk.TransactionBuilder(
-          await horizon.loadAccount(deployerPub),
-          { fee, networkPassphrase: NETWORK_PASSPHRASE }
-        ).addOperation(createOp).setTimeout(30).build();
-
-        const sim = await rpc.simulateTransaction(createOnlyTx);
-        if (StellarSdk.SorobanRpc.Api.isSimulationError(sim)) {
-          console.log(`   ⚠️  ${contract.name}: ${sim.error} (may already be deployed)`);
-          continue;
-        }
-
-        const prepared = StellarSdk.SorobanRpc.assembleTransaction(createOnlyTx, sim);
-        prepared.sign(keypair);
-        const resp = await rpc.sendTransaction(prepared);
-        console.log(`   📝 TX (create): ${resp.hash}`);
-        await waitForTx(rpc, resp.hash, `${contract.name} (create)`);
-        const cid = StellarSdk.contractIdFromWasmHash(wasmBuffer, contract.salt).toString("hex");
-        deployed[contract.name] = cid;
-        console.log(`   ✅ ${contract.name}: ${cid}`);
-      } catch (err2) {
-        console.log(`   ❌ ${contract.name}: ${err2 instanceof Error ? err2.message : "Failed"}`);
+      const result = await waitForTx(rpc, resp.hash, name);
+      if (
+        result.status === StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS ||
+        /already exists/i.test(JSON.stringify(result))
+      ) {
+        deployed[name] = cid;
+        console.log(`   ✅ ${name}: ${cid}`);
+      } else {
+        console.log(`   ❌ ${name}: ${JSON.stringify(result)}`);
       }
+    } catch (err) {
+      console.log(
+        `   ❌ ${name}: ${err instanceof Error ? err.message : "Failed"}`,
+      );
     }
   }
 
@@ -186,7 +255,7 @@ async function main() {
   }
   console.log("=".repeat(64));
 
-  // Print env vars
+  // Print env vars for the CI/CD pipeline + Vercel project
   if (deployed.Counter) console.log(`\nNEXT_PUBLIC_CONTRACT_COUNTER=${deployed.Counter}`);
   if (deployed.DripToken) console.log(`NEXT_PUBLIC_CONTRACT_DRIP_TOKEN=${deployed.DripToken}`);
   if (deployed.DripPool) console.log(`NEXT_PUBLIC_CONTRACT_DRIP_POOL=${deployed.DripPool}`);
