@@ -3,21 +3,40 @@ name: Bundle Analysis
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-  bundle-analysis:
+  analyze:
     name: Analyze Bundle Size
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".node-version"
           cache: "npm"
-      - run: npm ci
-      - uses: preactjs/compressed-size-action@v2
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          build-script: "build"
-          pattern: ".next/static/**/*.{js,css,woff2}"
-          minimum-change-threshold: 1024
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Analyze bundle
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          du -sh .next/static/chunks/*.js | sort -rh | head -20 >> $GITHUB_STEP_SUMMARY || true
+          du -sh .next/static/css/*.css 2>/dev/null | sort -rh | head -5 >> $GITHUB_STEP_SUMMARY || true
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check bundle size limits
+        run: |
+          JS_SIZE=$(du -sb .next/static/chunks/ 2>/dev/null | cut -f1 || echo 0)
+          JS_SIZE_MB=$((JS_SIZE / 1024 / 1024))
+          echo "JavaScript chunks: ${JS_SIZE_MB}MB"
+          if [ "$JS_SIZE_MB" -gt 5 ]; then
+            echo "⚠️  JS bundle exceeds 5MB limit (current: ${JS_SIZE_MB}MB)"
+          fi
