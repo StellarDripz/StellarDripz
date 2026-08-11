@@ -4,6 +4,7 @@
  */
 import { STELLAR_NETWORK } from "../stellar/network";
 import { connectFreighter, signFreighter } from "./freighter";
+import { connectLobstr, signLobstr, isLobstrInstalled } from "./lobstr";
 import type { NetworkType, SupportedWallet } from "@/types/stellar";
 
 // ---- Wallet Registry ----
@@ -41,14 +42,14 @@ const WALLET_REGISTRY: {
     name: "LOBSTR",
     icon: "🐙",
     installUrl: "https://lobstr.co/",
-    checkInstalled: () => typeof window !== "undefined" && "lobstr" in window,
+    checkInstalled: () => isLobstrInstalled(),
   },
   {
     id: "rabet",
-    name: "Rabet",
+    name: "Rabet (Discontinued)",
     icon: "🚀",
-    installUrl: "https://rabet.io/",
-    checkInstalled: () => typeof window !== "undefined" && "rabet" in window,
+    installUrl: "",
+    checkInstalled: () => false,
   },
 ];
 
@@ -136,6 +137,16 @@ export async function checkWalletStillConnected(): Promise<boolean> {
     }
   }
 
+  // For LOBSTR: check via the extension API
+  if (persisted.walletId === "lobstr") {
+    try {
+      const { isConnected } = await import("@lobstrco/signer-extension-api");
+      return await isConnected();
+    } catch {
+      return false;
+    }
+  }
+
   // For other wallets, assume connected if recently used (< 5 min)
   return Date.now() - persisted.connectedAt < 5 * 60 * 1000;
 }
@@ -159,6 +170,8 @@ export async function connectWithWallet(walletId: string): Promise<{
       return connectXBull(walletId, wallet.name);
     case "albedo":
       return connectAlbedo(walletId, wallet.name);
+    case "lobstr":
+      return connectLobstr(walletId, wallet.name);
     default:
       throw new Error(`Wallet "${wallet.name}" is not yet fully integrated. Please use Freighter.`);
   }
@@ -234,6 +247,8 @@ export async function signTx(xdr: string, publicKey: string): Promise<string> {
       const result = await albedo.default.tx({ xdr, network: "testnet" });
       return result.signed_envelope_xdr;
     }
+    case "lobstr":
+      return signLobstr(xdr);
     default:
       throw new Error(`Signing not supported for wallet: ${walletId}`);
   }
