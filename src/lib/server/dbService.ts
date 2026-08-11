@@ -13,17 +13,70 @@
  *   4. Deploy — the service automatically uses Supabase when configured
  */
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { getSupabaseAdmin, isSupabaseConfigured } from "./supabase";
 import { logger } from "@/lib/logger";
-
-const DB_PATH = path.join(process.cwd(), "data", "stellardripz-db.json");
 
 // SECURITY NOTE: The JSON fallback file stores transaction data including
 // IP addresses and user agents unencrypted. For production deployments:
 // 1. Always use Supabase as the primary store (encrypted at rest)
 // 2. If the fallback is needed, consider encrypting the file or using
 //    a dedicated ephemeral volume that's cleaned on restart
+
+// Resolve a writable path for the JSON fallback.
+// Serverless platforms (Vercel) mount a read-only project filesystem, so we
+// probe the project data dir first and fall back to the OS temp dir (writable,
+// but ephemeral — data does not survive instance restarts).
+const PREFERRED_DB_PATH = path.join(process.cwd(), "data", "stellardripz-db.json");
+const TMP_DB_PATH = path.join(os.tmpdir(), "stellardripz-db.json");
+
+function resolveDbPath(): string {
+  try {
+    const dir = path.dirname(PREFERRED_DB_PATH);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    return PREFERRED_DB_PATH;
+  } catch {
+    return TMP_DB_PATH;
+  }
+}
+
+let _dbPath: string | null = null;
+
+function getDbPath(): string {
+  if (_dbPath) return _dbPath;
+  _dbPath = resolveDbPath();
+  if (_dbPath !== PREFERRED_DB_PATH) {
+    logger.warn(
+      `[StellarDripz] Project data dir not writable — JSON fallback persistence disabled. ` +
+        `Writing to ephemeral ${_dbPath} instead. Configure Supabase for durable storage.`,
+    );
+  }
+  return _dbPath;
+}
+
+/**
+ * Reports how database persistence is behaving on this instance.
+ * - supabase: durable, production-grade.
+ * - memory + writable project dir: persists to a JSON file (local dev / VM).
+ * - memory + tmp dir: serverless fallback — data is lost on cold start.
+ */
+export function getDatabaseStatus(): {
+  backend: "supabase" | "memory";
+  persistent: boolean;
+  path: string | null;
+} {
+  if (isSupabaseConfigured()) {
+    return { backend: "supabase", persistent: true, path: null };
+  }
+  const dbPath = getDbPath();
+  return {
+    backend: "memory",
+    persistent: dbPath === PREFERRED_DB_PATH,
+    path: dbPath,
+  };
+}
 
 // ---- Types ----
 
@@ -86,10 +139,11 @@ function getDb(): Database {
 
   if (typeof fs !== "undefined") {
     try {
-      const dir = path.dirname(DB_PATH);
+      const dbPath = getDbPath();
+      const dir = path.dirname(dbPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      if (fs.existsSync(DB_PATH)) {
-        const raw = fs.readFileSync(DB_PATH, "utf-8");
+      if (fs.existsSync(dbPath)) {
+        const raw = fs.readFileSync(dbPath, "utf-8");
         _db = JSON.parse(raw) as Database;
       }
     } catch {
@@ -104,9 +158,10 @@ function getDb(): Database {
 function persistDb(): void {
   if (typeof fs !== "undefined") {
     try {
-      const dir = path.dirname(DB_PATH);
+      const dbPath = getDbPath();
+      const dir = path.dirname(dbPath);
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(DB_PATH, JSON.stringify(_db ?? getEmptyDb(), null, 2));
+      fs.writeFileSync(dbPath, JSON.stringify(_db ?? getEmptyDb(), null, 2));
     } catch {
       /* disk full or permission error */
     }
