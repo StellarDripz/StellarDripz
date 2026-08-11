@@ -137,17 +137,21 @@ export DEPLOYER_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 npm run contracts:deploy
 ```
 
-**Deployed Contract IDs (Stellar Testnet):**
+> ⚠️ **Deployment status:** The smart contracts have **not yet been deployed to Stellar Testnet**.
+> Earlier versions of this README listed contract IDs, but those IDs failed Stellar checksum
+> validation and the associated transaction hash returns 404 from Horizon — they were
+> placeholder values. Until you run the deployment script below, contract features
+> (DripToken, DripPool, DripGovernance, DripBadge) will report "not set" in `/api/health`.
+
+After running the deploy script, fill in the real IDs here:
 
 | Contract | Contract ID |
 |----------|------------|
-| **Counter** | `CDLZFC3SYJYDZT7K67VQ75BQHHPYXSOF3K5K5G3L6YP2MQUBQ7SJVMHV` |
-| **DripToken** | `CAOZK3JQVVXENUFHZ7ROZIZRYUWYXOPQ4WTG7Y6SLXQ36KI3ZXBGFQAP` |
-| **DripPool** | `CBQH2R4TJY7MP4ZXOQY5KHQSWCJJ5VB3LUM3PR4YKMDRIMTJMATJDGYT` |
-| **DripGovernance** | `CD2HKO7TPBJTKLRANQB5YRSJFG5LXBOU7SQY7LRXSGXMZEZSINHLTAD3` |
-| **DripBadge** | `CBGYRAQMGEVBOMICBN7WIJQXEWCQ2JHW3BM2PI7B45Z7JKLCL5SXTIMJ` |
-
-**Deployment Transaction Hash:** `17e16f2b3dc5e2c82b1ae7f28abee29beae7cbe12f6e71f66c3e8a7b2d3e4f5a`
+| **Counter** | `C...` (set after deploy) |
+| **DripToken** | `C...` (set after deploy) |
+| **DripPool** | `C...` (set after deploy) |
+| **DripGovernance** | `C...` (set after deploy) |
+| **DripBadge** | `C...` (set after deploy) |
 
 ### Contract Structure
 ```
@@ -291,8 +295,34 @@ npm start
 
 1. Push to GitHub
 2. Connect to Vercel
-3. Set environment variables
+3. Set environment variables (see below)
 4. Deploy!
+
+**Production setup checklist (for a fully functional deployment):**
+
+1. **Deploy the smart contracts** — set a funded testnet `DEPLOYER_SECRET_KEY`, run `npm run contracts:deploy`, and copy the printed `NEXT_PUBLIC_CONTRACT_*` IDs.
+2. **Configure persistence (recommended)** — create a Supabase project, run [`src/lib/server/supabase-schema.sql`](./src/lib/server/supabase-schema.sql), and set `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`. Without this, analytics/transaction history fall back to an in-memory store that is **ephemeral on serverless** (data resets on cold start).
+3. **Add the variables** below to GitHub (repo Variables/Secrets) — the CI/CD pipeline forwards them to every Vercel deployment.
+
+**Required GitHub Variables** (forwarded to Vercel by the CI/CD pipeline):
+
+```
+NEXT_PUBLIC_SOROBAN_RPC_URL
+NEXT_PUBLIC_HORIZON_URL
+NEXT_PUBLIC_STELLAR_NETWORK
+NEXT_PUBLIC_CONTRACT_COUNTER          # after contracts:deploy
+NEXT_PUBLIC_CONTRACT_DRIP_TOKEN       # after contracts:deploy
+NEXT_PUBLIC_CONTRACT_DRIP_POOL        # after contracts:deploy
+NEXT_PUBLIC_CONTRACT_GOVERNANCE       # after contracts:deploy
+NEXT_PUBLIC_CONTRACT_BADGE            # after contracts:deploy
+NEXT_PUBLIC_SUPABASE_URL              # if using Supabase
+```
+
+**Required GitHub Secrets:**
+
+```
+SUPABASE_SERVICE_ROLE_KEY             # if using Supabase
+```
 
 ### Live Deployment
 
@@ -300,6 +330,16 @@ npm start
 
 **🔗 Live Demo:** [https://stellardripz.vercel.app](https://stellardripz.vercel.app)  
 **🎥 Demo:** See [demo/README.md](./demo/README.md) for the walkthrough script. A recorded demo video is planned for the next release.
+
+### Security Headers
+
+The app ships production security headers via `next.config.js`: CSP (with clickjacking protection via `frame-ancestors 'self'`), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy`. No global `Access-Control-Allow-Origin` is set — only `/api/health` exposes CORS (for external monitoring), so cross-origin reads of API data remain blocked.
+
+### Serverless Notes (Vercel)
+
+- **SSE `/api/events`** — Vercel caps function duration (`maxDuration` = 300s is set; Hobby plans may cut streams sooner). The frontend automatically falls back to direct Soroban RPC polling, so event streaming keeps working.
+- **Rate limiting** — the in-memory limiter is per-instance. For multi-instance deployments, migrate to a shared store (Upstash/Redis).
+- **DB fallback** — the JSON fallback writes to `/tmp` when the project dir is read-only; data is lost on cold start. Configure Supabase for durable storage.
 
 ### Manual Deploy
 
@@ -341,6 +381,18 @@ VERCEL_PROJECT_ID   — Vercel project ID
 NEXT_PUBLIC_SOROBAN_RPC_URL
 NEXT_PUBLIC_HORIZON_URL
 NEXT_PUBLIC_STELLAR_NETWORK
+NEXT_PUBLIC_CONTRACT_COUNTER
+NEXT_PUBLIC_CONTRACT_DRIP_TOKEN
+NEXT_PUBLIC_CONTRACT_DRIP_POOL
+NEXT_PUBLIC_CONTRACT_GOVERNANCE
+NEXT_PUBLIC_CONTRACT_BADGE
+NEXT_PUBLIC_SUPABASE_URL
+```
+
+### Required Secrets
+
+```
+SUPABASE_SERVICE_ROLE_KEY
 ```
 
 ---
