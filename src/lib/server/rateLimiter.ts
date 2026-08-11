@@ -3,12 +3,33 @@
  *
  * Uses in-memory Map with automatic cleanup every 5 minutes.
  *
- * SCALING NOTE: In-memory rate limiting is per-instance and resets on
- * server restart. For multi-instance production deployments (horizontal
- * scaling), migrate to a shared Redis store using libraries like
- * `@upstash/ratelimit` or `rate-limiter-flexible` with Redis backend.
+ * ## Current Architecture
+ * - Per-address tracking for faucet (1 req/min), payment (10/min), contract (5/min)
+ * - Per-IP tracking for wallet (20/min) and general (30/min)
+ * - Automatic cleanup of expired entries every 5 minutes
+ * - Memory footprint: ~1KB per 100 active users (negligible)
+ *
+ * ## Scaling Path (SCF Tranche 2)
+ * For multi-instance Vercel deployments (horizontal scaling), migrate to a shared
+ * Redis store. Recommended approach:
+ *
+ * ```
+ * npm install @upstash/ratelimit @upstash/redis
+ * ```
+ *
+ * Then replace Map with:
+ * ```ts
+ * import { Ratelimit } from "@upstash/ratelimit";
+ * import { Redis } from "@upstash/redis";
+ *
+ * const ratelimit = new Ratelimit({
+ *   redis: Redis.fromEnv(),
+ *   limiter: Ratelimit.slidingWindow(10, "60 s"),
+ * });
+ * ```
+ *
  * The current implementation is sufficient for single-instance Vercel
- * deployments and local development.
+ * deployments (<100 concurrent users) and local development.
  */
 import { NextRequest, NextResponse } from "next/server";
 
