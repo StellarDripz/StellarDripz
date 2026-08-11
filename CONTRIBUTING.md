@@ -90,7 +90,7 @@ See the [README](./README.md#-project-structure) for a complete file tree.
 Key architectural decisions are documented in the [README](./README.md#-hybrid-architecture):
 - **Hybrid reads/writes**: Direct Horizon reads, proxied API writes
 - **API Gateway pattern**: All writes go through rate-limited Next.js API routes
-- **Multi-wallet abstraction**: Unified interface for Freighter, xBull, Albedo, LOBSTR, Rabet
+- **Multi-wallet abstraction**: Unified interface for Freighter, xBull, Albedo, LOBSTR, WalletConnect
 
 ## Reviewer Response Time
 

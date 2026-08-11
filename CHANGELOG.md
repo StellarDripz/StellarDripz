@@ -132,7 +132,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **API Gateway**: 11 rate-limited API routes with session management
 - **Admin dashboard**: Analytics and transaction monitoring at `/admin`
 - **Error handling**: ErrorBoundary, AsyncBoundary, Skeleton loading states
-- **Multi-wallet support**: Freighter, xBull, Albedo, LOBSTR, Rabet
+- **Multi-wallet support**: Freighter, xBull, Albedo, LOBSTR, WalletConnect
 - **Comprehensive documentation**: 23-section README with architecture diagrams and API reference
 
 ### Changed

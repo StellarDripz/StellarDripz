@@ -35,7 +35,7 @@ A full-featured Stellar testnet faucet and smart contract platform built with Ne
 ## ✨ Features
 
 ### 🎯 Core Functionality
-- **Multi-Wallet Faucet** — Request 10,000 testnet XLM with Freighter, xBull, Albedo, LOBSTR, or Rabet
+- **Multi-Wallet Faucet** — Request 10,000 testnet XLM with Freighter, xBull, Albedo, LOBSTR, or WalletConnect
 - **Send Payments** — Transfer XLM between any Stellar testnet addresses
 - **Smart Contract Interaction** — Deploy and interact with Soroban smart contracts
 - **Real-time Event Streaming** — Live contract events via SSE with polling fallback
@@ -558,7 +558,7 @@ All components use relative units, flexbox/grid, and Tailwind responsive classes
 
 ### Multi-Wallet Connect
 ![Wallet Connect](./screenshots/wallet-connect.png)
-*Multi-wallet picker supporting Freighter, xBull, Albedo, LOBSTR, and Rabet.*
+*Multi-wallet picker supporting Freighter, xBull, Albedo, LOBSTR, and WalletConnect.*
 
 ### Soroban Smart Contract Demo
 ![Soroban Demo](./screenshots/soroban-demo.png)
