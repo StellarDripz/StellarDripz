@@ -1,4 +1,13 @@
-use soroban_sdk::{contract, contractimpl, contractevent, symbol_short, Env, Symbol, String, Address};
+use soroban_sdk::{contract, contractimpl, contracterror, contractevent, symbol_short, Env, Symbol, String, Address};
+
+// ---- Contract Errors ----
+
+#[contracterror]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
+#[repr(u32)]
+pub enum CounterError {
+    Overflow = 1,
+}
 
 const GLOBAL_COUNTER: Symbol = symbol_short!("GLOBAL");
 const USER_COUNTER: Symbol = symbol_short!("USER_CTR");
@@ -30,7 +39,7 @@ impl StellarDripzCounter {
             .persistent()
             .get(&GLOBAL_COUNTER)
             .unwrap_or(0);
-        global += 1;
+        global = global.checked_add(1).expect("Counter overflow");
         env.storage().persistent().set(&GLOBAL_COUNTER, &global);
 
         // Per-user counter — keyed by user address
@@ -40,7 +49,7 @@ impl StellarDripzCounter {
             .persistent()
             .get(&user_key)
             .unwrap_or(0);
-        user_count += 1;
+        user_count = user_count.checked_add(1).expect("Counter overflow");
         env.storage().persistent().set(&user_key, &user_count);
 
         IncrementEvent {
