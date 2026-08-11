@@ -35,7 +35,7 @@ export async function simulateContractCall(
     .build();
 
   const simResponse = await rpcServer.simulateTransaction(tx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
+  if (StellarSdk.rpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Contract simulation failed: ${simResponse.error}`);
   }
 
@@ -69,11 +69,11 @@ export async function callContractFunction(
     .build();
 
   const simResponse = await rpcServer.simulateTransaction(tx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
+  if (StellarSdk.rpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Contract simulation failed: ${simResponse.error}`);
   }
 
-  const preparedTx = StellarSdk.SorobanRpc.assembleTransaction(tx, simResponse);
+  const preparedTx = StellarSdk.rpc.assembleTransaction(tx, simResponse);
   const assembled = preparedTx as unknown as { built: { toXDR: () => string } };
   const xdr = assembled.built.toXDR();
   const signedXdr = await signTx(xdr, signerPublicKey);
@@ -91,7 +91,7 @@ export async function callContractFunction(
   let getTxResponse = await rpcServer.getTransaction(response.hash);
   let attempts = 0;
   while (
-    getTxResponse.status === StellarSdk.SorobanRpc.Api.GetTransactionStatus.NOT_FOUND &&
+    getTxResponse.status === StellarSdk.rpc.Api.GetTransactionStatus.NOT_FOUND &&
     attempts < 30
   ) {
     await new Promise((r) => setTimeout(r, 1000));
@@ -101,7 +101,7 @@ export async function callContractFunction(
 
   let resultValue: string | undefined;
   let events: ContractEventData[] = [];
-  if (getTxResponse.status === StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+  if (getTxResponse.status === StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS) {
     if (getTxResponse.returnValue) {
       resultValue = StellarSdk.scValToNative(getTxResponse.returnValue)?.toString();
     }
@@ -175,7 +175,7 @@ function extractEvents(
       try {
         const rawContractId = event.contractId();
         if (!rawContractId) continue;
-        const evtContractId = StellarSdk.StrKey.encodeContract(rawContractId);
+        const evtContractId = StellarSdk.StrKey.encodeContract(rawContractId as unknown as Buffer);
         if (evtContractId !== contractId) continue;
 
         const topic =

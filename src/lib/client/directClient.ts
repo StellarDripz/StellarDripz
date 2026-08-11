@@ -125,7 +125,7 @@ export async function directSimulateContract(
     .build();
 
   const simResponse = await soroban().simulateTransaction(tx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
+  if (StellarSdk.rpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Contract simulation failed: ${simResponse.error}`);
   }
 

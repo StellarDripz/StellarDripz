@@ -33,7 +33,7 @@ export async function simulateContractCallServer(
     .build();
 
   const simResponse = await sorobanServer.simulateTransaction(tx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
+  if (StellarSdk.rpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Simulation failed: ${simResponse.error}`);
   }
 
@@ -83,11 +83,11 @@ export async function submitContractInvocation(
   );
 
   const simResponse = await sorobanServer.simulateTransaction(signedTx);
-  if (StellarSdk.SorobanRpc.Api.isSimulationError(simResponse)) {
+  if (StellarSdk.rpc.Api.isSimulationError(simResponse)) {
     throw new Error(`Simulation failed: ${simResponse.error}`);
   }
 
-  const preparedTx = StellarSdk.SorobanRpc.assembleTransaction(signedTx, simResponse);
+  const preparedTx = StellarSdk.rpc.assembleTransaction(signedTx, simResponse);
   const assembled = preparedTx as unknown as { built: { toXDR: () => string } };
   const finalXdr = assembled.built.toXDR();
 
@@ -104,7 +104,7 @@ export async function submitContractInvocation(
   let getTx = await sorobanServer.getTransaction(response.hash);
   let attempts = 0;
   while (
-    getTx.status === StellarSdk.SorobanRpc.Api.GetTransactionStatus.NOT_FOUND &&
+    getTx.status === StellarSdk.rpc.Api.GetTransactionStatus.NOT_FOUND &&
     attempts < 30
   ) {
     await new Promise((r) => setTimeout(r, 1000));
@@ -114,7 +114,7 @@ export async function submitContractInvocation(
 
   let resultValue: string | undefined;
   if (
-    getTx.status === StellarSdk.SorobanRpc.Api.GetTransactionStatus.SUCCESS &&
+    getTx.status === StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS &&
     getTx.returnValue
   ) {
     resultValue = StellarSdk.scValToNative(getTx.returnValue)?.toString();
