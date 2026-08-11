@@ -7,7 +7,10 @@ import * as StellarSdk from "@stellar/stellar-sdk";
 import { STELLAR_NETWORK } from "@/lib/stellar/network";
 
 export async function GET() {
-  const results: Record<string, { status: "ok" | "error"; latency?: number; error?: string }> = {};
+  const results: Record<
+    string,
+    { status: "ok" | "error"; latency?: number; error?: string; httpStatus?: number }
+  > = {};
 
   // Check Horizon
   try {
@@ -35,12 +38,24 @@ export async function GET() {
     };
   }
 
-  // Check Friendbot
+  // Check Friendbot reachability.
+  // NOTE: Friendbot only serves funded/creating accounts, so we can't ping it
+  // with an arbitrary address (it rejects unknown accounts with 4xx). Instead we
+  // verify the service is reachable: any HTTP response (even 4xx/5xx from the
+  // root path) proves the endpoint is up.
   try {
     const start = Date.now();
-    const url = `${STELLAR_NETWORK.friendbotUrl}?addr=GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA`;
-    const res = await fetch(url);
-    results.friendbot = { status: res.ok ? "ok" : "error", latency: Date.now() - start };
+    const res = await fetch(`${STELLAR_NETWORK.friendbotUrl}/`, {
+      signal: AbortSignal.timeout(5000),
+    });
+    // A resolved fetch means Friendbot is reachable. The root path returns 4xx
+    // for requests without an account (expected), so treat <500 as healthy while
+    // flagging genuine server errors (5xx).
+    results.friendbot = {
+      status: res.status < 500 ? "ok" : "error",
+      latency: Date.now() - start,
+      httpStatus: res.status,
+    };
   } catch (err) {
     results.friendbot = {
       status: "error",
