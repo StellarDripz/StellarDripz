@@ -8,14 +8,27 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { getContractEventsServer } from "@/lib/server/sorobanService";
+import {
+  getContractEventsServer,
+  getLatestLedgerServer,
+} from "@/lib/server/sorobanService";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+// Vercel function timeout: Hobby ~10s (60s max), Pro up to 300s for streaming.
+// Set to the platform maximum so SSE streams live as long as the plan allows.
+export const maxDuration = 300;
 
 async function* streamEvents(contractId: string, pollMs: number) {
+  // Start near the head of the chain instead of ledger 0 (fast cold starts).
   let startLedger = 0;
+  try {
+    const latest = await getLatestLedgerServer();
+    startLedger = Math.max(0, latest - 100);
+  } catch {
+    startLedger = 0;
+  }
 
   while (true) {
     try {
