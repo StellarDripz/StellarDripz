@@ -45,7 +45,7 @@ A full-featured Stellar testnet faucet and smart contract platform built with Ne
 | Contract | Description | Features |
 |----------|-------------|----------|
 | **StellarDripzCounter** | Simple counter + greeting | Increment, get_global, set_greeting, get_user |
-| **DripToken** | SEP-41 compatible fungible token | Mint, transfer, approve, transfer_from, burn |
+| **DripToken** | Soroban fungible token (SEP-41 inspired) | Mint (admin + authorized minter), transfer, approve, transfer_from, burn |
 | **DripPool** | Staking pool with rewards | Stake, unstake, claim rewards, lock periods, admin controls |
 | **DripGovernance** | On-chain governance | Proposals, voting (For/Against/Abstain), execute |
 | **DripBadge** | Achievement NFT badges | Create, claim, grant (Bronze → Silver → Gold → Platinum) |
@@ -137,21 +137,19 @@ export DEPLOYER_SECRET_KEY="SXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 npm run contracts:deploy
 ```
 
-> ⚠️ **Deployment status:** The smart contracts have **not yet been deployed to Stellar Testnet**.
-> Earlier versions of this README listed contract IDs, but those IDs failed Stellar checksum
-> validation and the associated transaction hash returns 404 from Horizon — they were
-> placeholder values. Until you run the deployment script below, contract features
-> (DripToken, DripPool, DripGovernance, DripBadge) will report "not set" in `/api/health`.
+> **Deployment status:** All 5 smart contracts are deployed to Stellar Testnet (2026-08-11).
+> Deployer: `GCNIK6CGM3DXD3NJPZBG4Z76NGCU6YNID3TK7OSTKOJXF3ALBVJWESXK`
+> Ledger: 4,085,848
 
-After running the deploy script, fill in the real IDs here:
+**Deployed Contract IDs:**
 
-| Contract | Contract ID |
-|----------|------------|
-| **Counter** | `C...` (set after deploy) |
-| **DripToken** | `C...` (set after deploy) |
-| **DripPool** | `C...` (set after deploy) |
-| **DripGovernance** | `C...` (set after deploy) |
-| **DripBadge** | `C...` (set after deploy) |
+| Contract | Contract ID | Explorer |
+|----------|------------|----------|
+| **Counter** | `CCAIIGMOBRZ2P6OHSYABBB35TJDSXBTC2T5IX7KVPXNIQKXGDJ46R2AE` | [View →](https://stellar.expert/explorer/testnet/contract/CCAIIGMOBRZ2P6OHSYABBB35TJDSXBTC2T5IX7KVPXNIQKXGDJ46R2AE) |
+| **DripToken** | `CD3YTU3JCBEMNNVISPTLPVYQATDGIRBJPLVJ2MIO3W56O7TYSWDG3GY6` | [View →](https://stellar.expert/explorer/testnet/contract/CD3YTU3JCBEMNNVISPTLPVYQATDGIRBJPLVJ2MIO3W56O7TYSWDG3GY6) |
+| **DripPool** | `CCBNJTZ22HDJTQHIINS22FNIK5KRYIW3CPORFAKNCBMWWL7SRJMZIR6X` | [View →](https://stellar.expert/explorer/testnet/contract/CCBNJTZ22HDJTQHIINS22FNIK5KRYIW3CPORFAKNCBMWWL7SRJMZIR6X) |
+| **Governance** | `CD3NIJCGVECTGPOUQOWYERWXQMOXJFSX6AKVI4KZVXGO4ZBYO7G6AIVH` | [View →](https://stellar.expert/explorer/testnet/contract/CD3NIJCGVECTGPOUQOWYERWXQMOXJFSX6AKVI4KZVXGO4ZBYO7G6AIVH) |
+| **Badge** | `CAZFH3S7JUEI7LZSQGHMM6OF5UKWLNZ3CSOX2KNUX3RBFPP5Q6GEEUWE` | [View →](https://stellar.expert/explorer/testnet/contract/CAZFH3S7JUEI7LZSQGHMM6OF5UKWLNZ3CSOX2KNUX3RBFPP5Q6GEEUWE) |
 
 ### Contract Structure
 ```
