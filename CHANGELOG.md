@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- **Security headers**: CSP (`frame-ancestors 'self'`, clickjacking protection), `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, and `Permissions-Policy` applied to all routes via `next.config.js`
+- **`getDatabaseStatus()`**: Health check now reports DB backend + whether the JSON fallback actually persists (or is ephemeral on serverless)
+- **`getLatestLedgerServer()`**: Resolves the head ledger for efficient event-stream startup
+
+### Fixed
+- **P1: `/api/status` friendbot false negative**: Reachability check no longer pings Friendbot with the null account (which Friendbot always rejects) — any HTTP response from the root path now counts as reachable
+- **P1: `/api/balance` 500 on invalid addresses**: Addresses are now validated with `StrKey.isValidEd25519PublicKey` (checksum) and return a clean 400 instead of a 500
+- **P1: JSON fallback on read-only serverless FS**: dbService probes the project data dir for writability and falls back to `/tmp` instead of silently failing; logs a warning when persistence is disabled
+- **P2: SSE cold-start efficiency**: `/api/events` starts streaming near the head ledger (latest − 100) instead of scanning from ledger 0; `maxDuration` set to 300s
+- **P2: Stale README contract IDs**: Removed fabricated contract IDs (they failed StrKey checksum validation and the documented TX hash returned 404 from Horizon) and replaced with accurate deployment status + instructions
+- **P2: Vercel deploy env wiring**: CI/CD now forwards `NEXT_PUBLIC_CONTRACT_*` + Supabase variables to Vercel preview/production builds
+
+### Changed
+- **README**: Production setup checklist (contract deploy → Supabase → GitHub vars), security headers section, and serverless limitations documentation
+
+---
+
 ## [2.2.0] — 2026-08-09
 
 ### Added
